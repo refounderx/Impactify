@@ -189,13 +189,21 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 - [ ] **Mock data only** — `getNpDashboardData()` in `queries-orgs.ts` (the old Supabase-backed dashboard query) is now unused dead code; left in place rather than deleted since a future real per-org dashboard may still want it. Revisit once these admin pages need real per-org, per-auth data.
 - [ ] No search/filter/sort functionality is wired — `SearchFilterBar` and the table sort arrows are visual only
 - [ ] Table pages have no dedicated mobile layout (horizontal scroll only) — the admin sidebar is desktop-only (`hidden md:flex`); mobile users navigate via `BottomNav` instead
-- [ ] Updates page dropdown ("פעולה 1/2/3") and "יצירת עדכון חדש" button are non-functional placeholders
+- [ ] Updates page dropdown ("פעולה 1/2/3") is a non-functional placeholder; "יצירת עדכון חדש" is now wired — see "Nonprofit Admin — Create Update Wizard" below
 - [x] Campaigns-dashboard and products-dashboard header/sub-nav links swapped per user request: "ניהול קמפיינים" now opens the table dashboard (`/nonprofit`) and "דשבורד קמפיינים" the grid (`/nonprofit/campaigns`) — page content at each URL is unchanged, only which sidebar label points where
 - [x] Row-expansion detail panels added to both dashboard tables (click the chevron at the end of a row):
   - Campaigns dashboard → `CampaignDetailPanel`: SKU code, per-product donation bars with month/year filter dropdowns + monthly total, a raised/goal donut chart, and linked-communities pills
   - Products dashboard → `ProductDetailPanel`: SKU code, per-month donation bars with year/campaign filter dropdowns + yearly total, and a donated/goal donut chart
   - Both built from reference screenshots; dropdowns are functional (open/select/close) but don't actually refilter the mock bar data
 - [x] `/nonprofit/communities` built from a reference screenshot: table (name, activity area, join date, active campaigns, products sold, total raised, contact) + a "שליחת עדכון למנהלי הקהילות" button + stat header — the ⋮ actions button is a non-functional placeholder
+
+**Nonprofit Admin — Create Update Wizard (2026-08-18)** — second half of the 2-screen plan sourced from client PDFs (see "Donor Profile + Updates Screens" above); this is the admin-authoring counterpart to the donor's "עדכוני מערכת" tab:
+- [x] `src/components/nonprofit-admin/CreateUpdateWizard.tsx` (new) + `CreateUpdateWizardSteps.tsx` (new, step components extracted to stay near the 200-line target — the two-file split is a single cohesive wizard, same precedent as the existing 6-step campaign wizard exception in `DECISIONS.md`) — full-screen 3-step overlay: (1) recipients — product donors / campaign donors / all donors, with chip multi-select sourced from `adminProductRows`/`adminCampaignRows`; (2) channels (Push/Email/SMS) + timing (now / scheduled / by-trigger, with a 3-option deterministic trigger list); (3) title/body/CTA/image-or-video picker, with a live teal preview panel throughout
+- [x] Wired to the previously-dead "יצירת עדכון חדש" button in `/nonprofit/(admin)/updates/page.tsx`; on send, prepends a derived row to the on-page table (local component state, seeded from `adminUpdateRows`)
+- [x] Translations: `adm.uw.*` keys (Hebrew + English)
+- [ ] **Mock data only, consistent with the rest of the nonprofit-admin section** — created updates are held in local React state and are lost on refresh; they are **not** written to the `system_updates` table added for the donor-side updates tab, so an admin-created update does not yet actually appear for donors. Wiring that write-through is the natural next step once nonprofit-admin gets a real backend.
+- [ ] Image/video picker only captures the filename client-side — no Supabase Storage upload wired (same open item noted for the donor-side plan)
+- [ ] "Scheduled" and "by-trigger" timing are captured in the draft but not enforced by anything — there's no scheduler/trigger-evaluation backend
 
 **Community admin section (2026-08-11)** — `/community` rebuilt from a single leaderboard/stats page into a full admin tree mirroring `nonprofit/(admin)/`, built from a reference screenshot plus a client-provided PDF ("COMMUNITY PAGES.pdf"):
 - [x] `AdminShell` now takes a `variant: "nonprofit" | "community"` prop; community variant hides the Products nav group and points routes at `/community/*`. Default variant is `"nonprofit"` so existing nonprofit admin pages are unaffected.

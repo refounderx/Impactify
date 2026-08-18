@@ -3,23 +3,64 @@ import { useState } from "react";
 import { Pencil, MoreVertical } from "lucide-react";
 import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
-import { adminUpdateRows } from "@/lib/nonprofit-admin-data";
+import { adminUpdateRows, adminProductRows, adminCampaignRows, type AdminUpdateRow } from "@/lib/nonprofit-admin-data";
+import CreateUpdateWizard, { type NewUpdateDraft } from "@/components/nonprofit-admin/CreateUpdateWizard";
 
 type Tab = "trigger" | "schedule";
+
+const TRIGGER_LABELS: Record<NewUpdateDraft["trigger"], [string, string]> = {
+  donation: ["לאחר ביצוע תרומה", "After a donation is made"],
+  quantity: ["כשכמות המוצר מגיעה ליעד", "When product quantity reaches its goal"],
+  days: ["מספר ימים מאז התרומה האחרונה", "Days since last donation"],
+};
+
+function draftToRow(draft: NewUpdateDraft): AdminUpdateRow {
+  const pool = draft.audience === "products" ? adminProductRows : adminCampaignRows;
+  const names = draft.audience === "all"
+    ? [["כל התורמים", "All donors"] as [string, string]]
+    : pool.filter((o) => draft.targetIds.includes(o.id)).map((o) => [o.name, o.nameEn] as [string, string]);
+  const [category, categoryEn] = names[0] ?? ["—", "—"];
+  const [trigger, triggerEn] = draft.timing === "trigger" ? TRIGGER_LABELS[draft.trigger] : ["מיידי", "Immediate"];
+
+  return {
+    id: `au-new-${Date.now()}`,
+    category, categoryEn,
+    quantity: names.length,
+    trigger, triggerEn,
+    timeOffset: draft.timing === "scheduled" ? draft.scheduledAt : "--",
+    timeOffsetEn: draft.timing === "scheduled" ? draft.scheduledAt : "--",
+    date: new Date().toLocaleDateString("he-IL"),
+    sentSoFar: 0,
+  };
+}
 
 export default function UpdatesPage() {
   const { lang, t } = useLang();
   const [tab, setTab] = useState<Tab>("trigger");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [rows, setRows] = useState(adminUpdateRows);
+  const [creating, setCreating] = useState(false);
+
+  function handleCreate(draft: NewUpdateDraft) {
+    setRows((rs) => [draftToRow(draft), ...rs]);
+    setCreating(false);
+  }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-800">{t("adm.updatesTitle")}</h1>
-        <button className="bg-raz-teal text-white rounded-xl px-5 py-2.5 font-bold text-sm hover:bg-raz-teal-dark transition-colors">
+        <button
+          onClick={() => setCreating(true)}
+          className="bg-raz-teal text-white rounded-xl px-5 py-2.5 font-bold text-sm hover:bg-raz-teal-dark transition-colors"
+        >
           {t("adm.createUpdate")}
         </button>
       </div>
+
+      {creating && (
+        <CreateUpdateWizard lang={lang} t={t} onClose={() => setCreating(false)} onCreate={handleCreate} />
+      )}
 
       <div className="bg-white rounded-2xl p-5">
         <div className="flex gap-2 mb-5">
@@ -53,7 +94,7 @@ export default function UpdatesPage() {
               </tr>
             </thead>
             <tbody>
-              {adminUpdateRows.map((row) => (
+              {rows.map((row) => (
                 <tr key={row.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                   <td className="py-3 px-2 font-medium text-gray-800 whitespace-nowrap">{lang === "en" ? row.categoryEn : row.category}</td>
                   <td className="py-3 px-2 text-gray-500 font-numeric">{row.quantity}</td>
