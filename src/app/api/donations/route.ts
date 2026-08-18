@@ -32,7 +32,13 @@ export async function POST(request: NextRequest) {
       status: "completed",
       is_recurring: Boolean(is_recurring),
       dedication_name: dedication_name ?? null,
+      dedication_message: null,
+      community_id: null,
+      psp_token: null,
+      last_four: null,
+      card_brand: null,
       receipt_id: receiptId,
+      receipt_url: null,
     })
     .select()
     .single();

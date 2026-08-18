@@ -22,6 +22,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["profiles"]["Row"], "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
+        Relationships: [];
       };
       organizations: {
         Row: {
@@ -42,6 +43,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["organizations"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["organizations"]["Insert"]>;
+        Relationships: [];
       };
       campaigns: {
         Row: {
@@ -67,6 +69,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["campaigns"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["campaigns"]["Insert"]>;
+        Relationships: [];
       };
       products: {
         Row: {
@@ -83,11 +86,13 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["products"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
+        Relationships: [];
       };
       campaign_products: {
         Row: { campaign_id: string; product_id: string };
         Insert: Database["public"]["Tables"]["campaign_products"]["Row"];
         Update: never;
+        Relationships: [];
       };
       donations: {
         Row: {
@@ -111,6 +116,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["donations"]["Row"], "id" | "created_at">;
         Update: never; // append-only
+        Relationships: [];
       };
       recurring_donations: {
         Row: {
@@ -128,6 +134,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["recurring_donations"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Pick<Database["public"]["Tables"]["recurring_donations"]["Row"], "status" | "next_charge_date">;
+        Relationships: [];
       };
       communities: {
         Row: {
@@ -144,6 +151,7 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["communities"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["communities"]["Insert"]>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
