@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-raz-teal: #00B5AD;
+  --color-raz-teal-dark: #009b94;
+  --color-raz-dark: #1A1A2E;
+  --color-raz-surface: #F5F5F5;
+  --color-raz-success: #27AE60;
+  --color-raz-danger: #E74C3C;
+
+  --font-hebrew: var(--font-heebo), "Heebo", Arial, sans-serif;
+  --font-caption: var(--font-assistant), "Assistant", Arial, sans-serif;
+  --font-numeric: var(--font-roboto), "Roboto", Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-heebo), "Heebo", Arial, sans-serif;
+  background-color: #1A1A2E;
+  color: #333333;
+  direction: rtl;
+}
+
+/* LTR override: when html[dir=ltr], inputs should align start (left) not force-right */
+html[dir="ltr"] input,
+html[dir="ltr"] textarea {
+  text-align: start;
+}
+/* Email, card numbers always LTR regardless of page direction */
+[dir="ltr"] {
+  direction: ltr;
+  text-align: start;
+}
+
+/* ── Explicit color utilities (fallback for Tailwind v4 @theme) ── */
+.bg-raz-teal       { background-color: #00B5AD; }
+.bg-raz-teal-dark  { background-color: #009b94; }
+.bg-raz-dark       { background-color: #1A1A2E; }
+.bg-raz-surface    { background-color: #F5F5F5; }
+.bg-raz-success    { background-color: #27AE60; }
+.bg-raz-danger     { background-color: #E74C3C; }
+
+.text-raz-teal     { color: #00B5AD; }
+.text-raz-dark     { color: #1A1A2E; }
+.text-raz-success  { color: #27AE60; }
+.text-raz-danger   { color: #E74C3C; }
+
+.border-raz-teal   { border-color: #00B5AD; }
+
+.ring-raz-teal     { --tw-ring-color: #00B5AD; }
+
+/* Opacity variants */
+.bg-raz-teal\/10     { background-color: rgba(0,181,173,0.10); }
+.bg-raz-teal\/20     { background-color: rgba(0,181,173,0.20); }
+.bg-raz-success\/10  { background-color: rgba(39,174,96,0.10); }
+.text-raz-teal\/80   { color: rgba(0,181,173,0.80); }
+
+/* ── Font utilities ── */
+.font-hebrew  { font-family: var(--font-heebo), "Heebo", Arial, sans-serif; }
+.font-caption { font-family: var(--font-assistant), "Assistant", Arial, sans-serif; }
+.font-numeric { font-family: var(--font-roboto), "Roboto", Arial, sans-serif; }
+
+/* ── Scrollbar ── */
+.no-scrollbar              { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── Mobile phone container ── */
+.phone-frame {
+  max-width: 430px;
+  min-height: 100dvh;
+  margin-inline: auto;
+  position: relative;
+  background-color: #F5F5F5;
+  box-shadow: 0 0 60px rgba(0,0,0,0.4);
+  overflow-x: hidden;
 }

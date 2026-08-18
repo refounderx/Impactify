@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Impactify
 
-## Getting Started
+Bilingual (Hebrew/English) Israeli-market charitable donation platform. Connects donors, non-profits, and community managers. Hebrew RTL ↔ English LTR.
 
-First, run the development server:
+## Tech Stack
 
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Database + Auth | Supabase (PostgreSQL + RLS + Auth) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 |
+| Icons | lucide-react |
+| Fonts | Heebo · Assistant · Roboto (Google Fonts) |
+
+## Quick Start
+
+### 1. Install dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd donation-platform
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Supabase
+Copy `.env.local` and fill in your values (Settings → API in Supabase dashboard):
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...   # server-only, never commit
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Run the database schema
+In Supabase Dashboard → SQL Editor → paste and run:
+1. `supabase/schema.sql` — creates all tables, RLS policies, triggers
+2. `supabase/seed.sql` — populates with demo data (6 campaigns, 5 orgs, etc.)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Start dev server
+```bash
+npm run dev   # http://localhost:3000
+```
 
-## Learn More
+Pages fall back to mock data if Supabase is unreachable or tables are empty.
 
-To learn more about Next.js, take a look at the following resources:
+## Route Map
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Route | Screen |
+|---|---|
+| `/` | Donor home feed |
+| `/search` | Campaign search & filters |
+| `/campaign/[id]` | Campaign detail |
+| `/donate/[id]/amount` | Donation amount selection |
+| `/donate/[id]/payment` | Payment form (mock) |
+| `/donate/[id]/thanks` | Thank you / confirmation |
+| `/nonprofit` | Org dashboard |
+| `/nonprofit/create-campaign` | 6-step campaign creation wizard |
+| `/community` | Community manager dashboard |
+| `/profile` | Donor profile & history |
+| `/recurring` | Standing orders (הוראות קבע) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Demo Mode
 
-## Deploy on Vercel
+Every screen has a **demo bar** (top) for switching roles + language:
+- **תורם / Donor** → `/`
+- **עמותה / Org** → `/nonprofit`
+- **מנהל קהילה / Community** → `/community`
+- **עב / EN** toggle — switches full RTL/LTR + all translations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Key Docs
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md) — product scope, user types, build status
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — system architecture, Supabase schema, data flow
+- [INTERFACES.md](./INTERFACES.md) — env vars, table contracts, API boundaries
+- [DECISIONS.md](./DECISIONS.md) — key technical decisions and rationale
+- [TASKS.md](./TASKS.md) — remaining work and known gaps

@@ -1,0 +1,67 @@
+"use client";
+import { Download, RotateCcw } from "lucide-react";
+import StatHeader from "@/components/nonprofit-admin/StatHeader";
+import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
+import { useLang } from "@/contexts/LanguageContext";
+import { formatNIS } from "@/lib/mock-data";
+import { adminDonationRows, adminDonationsTotal, adminDonationsCount } from "@/lib/nonprofit-admin-data";
+
+const AS_OF = "12/08/23";
+
+export default function DonationsPage() {
+  const { lang, t } = useLang();
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">{t("adm.donationsTitle")}</h1>
+
+      <div className="bg-white rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+          <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות העמותה"} />
+          <StatHeader
+            stats={[
+              { label: t("adm.depositsCount"), value: adminDonationsCount.toLocaleString("he-IL") },
+              { label: `${t("adm.totalDonated")} (${lang === "en" ? "as of" : "נכון לתאריך"} ${AS_OF})`, value: formatNIS(adminDonationsTotal) },
+            ]}
+          />
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" dir={lang === "en" ? "ltr" : "rtl"}>
+            <thead>
+              <tr className="border-b border-gray-100">
+                {["תאריך", "שם התורם/ת", "קמפיין", "מוצר", "כמות", "סכום התרומה", "תדירות", "אמצעי תשלום", "קבלה", "החזר כספי"].map((h) => (
+                  <th key={h} className="pb-3 pt-1 text-raz-teal font-bold text-start px-2 whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {adminDonationRows.map((row) => (
+                <tr key={row.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                  <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{row.date}</td>
+                  <td className="py-3 px-2 font-medium text-gray-800 whitespace-nowrap">{row.donorName}</td>
+                  <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{row.campaign}</td>
+                  <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{row.product}</td>
+                  <td className="py-3 px-2 text-gray-500 font-numeric">{row.quantity}</td>
+                  <td className="py-3 px-2 font-bold text-gray-800 font-numeric">{formatNIS(row.amount)}</td>
+                  <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{lang === "en" ? row.frequencyEn : row.frequency}</td>
+                  <td className="py-3 px-2 text-gray-500 font-numeric" dir="ltr">{"*".repeat(6)}{row.paymentLast4}</td>
+                  <td className="py-3 px-2">
+                    <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
+                      <Download size={14} />
+                    </button>
+                  </td>
+                  <td className="py-3 px-2">
+                    <button className="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+                      <RotateCcw size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
