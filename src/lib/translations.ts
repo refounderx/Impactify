@@ -197,6 +197,20 @@ const he = {
   "myDon.type": "סוג",
   "myDon.payment": "אמצעי תשלום",
   "myDon.receiptDl": "הורדת קבלה",
+  // My profile panel
+  "myProf.title": "הפרטים שלי", "myProf.personalDetails": "פרטים אישיים",
+  "myProf.fullName": "שם פרטי", "myProf.phone": "טלפון",
+  "myProf.email": "מייל", "myProf.idNumber": "תעודת זהות",
+  "myProf.joinDate": "יום הצטרפות", "myProf.edit": "עריכה",
+  "myProf.save": "שמירה", "myProf.cancel": "ביטול",
+  "myProf.paymentMethods": "אמצעי תשלום",
+  "myProf.addPaymentMethod": "הוספת אמצעי תשלום",
+  "myProf.removePaymentMethod": "הסרה",
+  "myProf.cardBrand": "סוג כרטיס", "myProf.last4": "4 ספרות אחרונות",
+  "myProf.consentText": "מאשר/ת קבלת הצעות התאמה בהתאם למדיניות הפרטיות",
+  // Updates panel
+  "myUpd.title": "העדכונים שלי", "myUpd.tabDonations": "עדכוני תרומות",
+  "myUpd.tabSystem": "עדכוני מערכת", "myUpd.empty": "אין עדכונים להצגה",
   // Landing page
   "landing.nav.talk": "דברו איתנו", "landing.nav.about": "אודות",
   "landing.nav.campaign": "קמפיין אישי", "landing.nav.who": "למי תעניקו היום",
@@ -458,6 +472,20 @@ const en: Record<string, string> = {
   "myDon.type": "Type",
   "myDon.payment": "Payment Method",
   "myDon.receiptDl": "Download Receipt",
+  // My profile panel
+  "myProf.title": "My Details", "myProf.personalDetails": "Personal Details",
+  "myProf.fullName": "Full Name", "myProf.phone": "Phone",
+  "myProf.email": "Email", "myProf.idNumber": "ID Number",
+  "myProf.joinDate": "Member Since", "myProf.edit": "Edit",
+  "myProf.save": "Save", "myProf.cancel": "Cancel",
+  "myProf.paymentMethods": "Payment Methods",
+  "myProf.addPaymentMethod": "Add Payment Method",
+  "myProf.removePaymentMethod": "Remove",
+  "myProf.cardBrand": "Card Brand", "myProf.last4": "Last 4 digits",
+  "myProf.consentText": "I agree to receive tailored offers per the privacy policy",
+  // Updates panel
+  "myUpd.title": "My Updates", "myUpd.tabDonations": "Donation Updates",
+  "myUpd.tabSystem": "System Updates", "myUpd.empty": "No updates to show",
   // Landing page
   "landing.nav.talk": "Talk to Us", "landing.nav.about": "About",
   "landing.nav.campaign": "Personal Campaign", "landing.nav.who": "Who Will You Give To Today",

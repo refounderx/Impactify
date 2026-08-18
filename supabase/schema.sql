@@ -313,3 +313,56 @@ create index if not exists idx_campaign_updates_campaign
   on public.campaign_updates(campaign_id);
 create index if not exists idx_campaign_updates_created
   on public.campaign_updates(created_at desc);
+
+-- ── Migration 2026-08-18: donor profile details + payment methods + system updates ──
+
+alter table public.profiles
+  add column if not exists id_number text;
+
+-- Payment methods: brand + last 4 digits only. No raw card number is ever
+-- stored — real tokenized storage depends on the PSP choice, still open
+-- (Tranzilla / Cardcom / PayMe).
+create table if not exists public.payment_methods (
+  id         uuid primary key default gen_random_uuid(),
+  donor_id   uuid references auth.users(id) on delete cascade,
+  brand      text not null,
+  last_four  text not null,
+  psp_token  text,
+  created_at timestamptz default now() not null
+);
+
+alter table public.payment_methods enable row level security;
+
+create policy "payment_methods_own_read" on public.payment_methods
+  for select using (donor_id = auth.uid());
+create policy "payment_methods_own_insert" on public.payment_methods
+  for insert with check (donor_id = auth.uid());
+create policy "payment_methods_own_delete" on public.payment_methods
+  for delete using (donor_id = auth.uid());
+
+create index if not exists idx_payment_methods_donor on public.payment_methods(donor_id);
+
+-- System-originated updates surfaced in the donor's "עדכוני מערכת" tab.
+-- donor_id null = broadcast to all donors. The nonprofit-admin authoring
+-- wizard that writes into this table is separate, not-yet-built work.
+create table if not exists public.system_updates (
+  id               uuid primary key default gen_random_uuid(),
+  donor_id         uuid references auth.users(id) on delete cascade,
+  org_id           uuid references public.organizations(id),
+  title            text not null,
+  title_en         text,
+  detail           text,
+  detail_en        text,
+  status           text not null default 'info', -- 'info' | 'pending' | 'action_required'
+  action_label     text,
+  action_label_en  text,
+  created_at       timestamptz default now() not null
+);
+
+alter table public.system_updates enable row level security;
+
+create policy "system_updates_own_read" on public.system_updates
+  for select using (donor_id = auth.uid() or donor_id is null);
+
+create index if not exists idx_system_updates_donor on public.system_updates(donor_id);
+create index if not exists idx_system_updates_created on public.system_updates(created_at desc);

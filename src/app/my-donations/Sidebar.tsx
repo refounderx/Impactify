@@ -3,7 +3,7 @@ import React from "react";
 import { Heart, LayoutList, Receipt, Flag, Bell, UserCircle, Megaphone, HelpCircle } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 
-type View = "my-donations" | "manage" | "tax-refund";
+type View = "my-donations" | "manage" | "tax-refund" | "updates" | "profile";
 
 type NavItem = {
   key: string;
@@ -17,8 +17,8 @@ const NAV_ITEMS: NavItem[] = [
   { key: "myDon.manage",         icon: LayoutList,  view: "manage" },
   { key: "myDon.taxRefund",      icon: Receipt,     view: "tax-refund" as View },
   { key: "myDon.navMyCampaigns", icon: Flag,        view: null, sub: "ניהול קמפיינים" },
-  { key: "myDon.navUpdates",     icon: Bell,        view: null },
-  { key: "myDon.navProfile",     icon: UserCircle,  view: null },
+  { key: "myDon.navUpdates",     icon: Bell,        view: "updates" as View },
+  { key: "myDon.navProfile",     icon: UserCircle,  view: "profile" as View },
 ];
 
 interface Props {

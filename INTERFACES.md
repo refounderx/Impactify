@@ -97,8 +97,33 @@ Key columns only — see `supabase/schema.sql` for full definitions.
 | `app_role` | enum | `donor\|org_admin\|org_member\|community_manager` |
 | `org_id` | uuid | Nullable — set for org members |
 | `community_id` | uuid | Nullable — set for community managers |
+| `id_number` | text | Nullable — donor ID number, editable via `/my-donations` profile view |
 
-Auto-created by trigger on `auth.users` insert.
+Auto-created by trigger on `auth.users` insert. `full_name`, `phone`, `id_number` are donor-editable (`profiles_own_update` RLS policy); `email` is not (tied to auth).
+
+### `payment_methods`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `donor_id` | uuid | FK → auth.users |
+| `brand` | text | e.g. `Visa`, `Mastercard` |
+| `last_four` | text | Display only — **no raw card number is ever stored** |
+| `psp_token` | text | Nullable — reserved for real PSP tokenization once a provider is chosen (see Phase 4 — Payments in `TASKS.md`); currently unused |
+
+RLS: donor can only read/insert/delete their own rows.
+
+### `system_updates`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `donor_id` | uuid | Nullable — `null` = broadcast to all donors |
+| `org_id` | uuid | FK → organizations |
+| `title` / `title_en` | text | |
+| `detail` / `detail_en` | text | Nullable — expandable detail text |
+| `status` | text | `info \| pending \| action_required` |
+| `action_label` / `action_label_en` | text | Nullable |
+
+RLS: readable when `donor_id = auth.uid()` or `donor_id is null`. Surfaced in the "עדכוני מערכת" tab of `/my-donations` (updates view). The nonprofit-admin authoring flow that writes into this table is not yet built.
 
 ## SQL Files
 

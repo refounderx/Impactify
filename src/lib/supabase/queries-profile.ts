@@ -1,0 +1,146 @@
+import { createClient } from "@/lib/supabase/client";
+import {
+  savedPaymentMethods, systemUpdates,
+  DONOR_NAME, DONOR_PHONE, DONOR_EMAIL, DONOR_ID_NUMBER, DONOR_JOIN_DATE,
+} from "@/lib/mock-data";
+
+// ── Personal details ─────────────────────────────────────────
+
+export type DonorProfile = {
+  fullName: string;
+  phone: string;
+  email: string;
+  idNumber: string;
+  joinDate: string;
+};
+
+const MOCK_PROFILE: DonorProfile = {
+  fullName: DONOR_NAME,
+  phone: DONOR_PHONE,
+  email: DONOR_EMAIL,
+  idNumber: DONOR_ID_NUMBER,
+  joinDate: DONOR_JOIN_DATE,
+};
+
+type ProfileRow = {
+  full_name: string | null;
+  phone: string | null;
+  email: string | null;
+  id_number: string | null;
+  created_at: string;
+};
+
+export async function getDonorProfile(userId: string): Promise<DonorProfile> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("profiles")
+    .select("full_name, phone, email, id_number, created_at")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) return MOCK_PROFILE;
+  const row = data as ProfileRow;
+  return {
+    fullName: row.full_name ?? MOCK_PROFILE.fullName,
+    phone: row.phone ?? MOCK_PROFILE.phone,
+    email: row.email ?? MOCK_PROFILE.email,
+    idNumber: row.id_number ?? MOCK_PROFILE.idNumber,
+    joinDate: new Date(row.created_at).toLocaleDateString("he-IL"),
+  };
+}
+
+export async function updateDonorProfile(
+  userId: string,
+  patch: { fullName: string; phone: string; idNumber: string }
+): Promise<boolean> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("profiles")
+    .update({ full_name: patch.fullName, phone: patch.phone, id_number: patch.idNumber })
+    .eq("id", userId);
+  return !error;
+}
+
+// ── Payment methods ──────────────────────────────────────────
+// Stores only brand + last 4 digits — no raw card number ever passes through
+// the app. Real tokenized storage depends on the still-open PSP choice
+// (Tranzilla / Cardcom / PayMe — see project memory).
+
+type PaymentMethodRow = { id: string; brand: string; last_four: string };
+
+export async function getPaymentMethods(userId: string): Promise<typeof savedPaymentMethods> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("payment_methods")
+    .select("id, brand, last_four")
+    .eq("donor_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data || data.length === 0) return savedPaymentMethods;
+  return (data as PaymentMethodRow[]).map((r) => ({ id: r.id, brand: r.brand, last4: r.last_four }));
+}
+
+export async function addPaymentMethod(
+  userId: string,
+  brand: string,
+  last4: string
+): Promise<{ id: string; brand: string; last4: string } | null> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("payment_methods")
+    .insert({ donor_id: userId, brand, last_four: last4 })
+    .select("id, brand, last_four")
+    .single();
+
+  if (error || !data) return null;
+  const row = data as PaymentMethodRow;
+  return { id: row.id, brand: row.brand, last4: row.last_four };
+}
+
+export async function removePaymentMethod(userId: string, id: string): Promise<boolean> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("payment_methods")
+    .delete()
+    .eq("id", id)
+    .eq("donor_id", userId);
+  return !error;
+}
+
+// ── System updates ───────────────────────────────────────────
+// RLS on system_updates already scopes rows to the caller (own donor_id or
+// broadcast rows with donor_id null), so no client-side filtering is needed.
+
+type SystemUpdateRow = {
+  id: string;
+  title: string;
+  title_en: string | null;
+  detail: string | null;
+  detail_en: string | null;
+  status: string;
+  action_label: string | null;
+  action_label_en: string | null;
+  created_at: string;
+};
+
+export async function getSystemUpdates(): Promise<typeof systemUpdates> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("system_updates")
+    .select("id, title, title_en, detail, detail_en, status, action_label, action_label_en, created_at")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error || !data || data.length === 0) return systemUpdates;
+  return (data as SystemUpdateRow[]).map((r) => ({
+    id: r.id,
+    date: new Date(r.created_at).toLocaleDateString("he-IL"),
+    title: r.title,
+    titleEn: r.title_en ?? "",
+    detail: r.detail ?? "",
+    detailEn: r.detail_en ?? "",
+    status: (r.status as "info" | "pending" | "action_required") ?? "info",
+    actionLabel: r.action_label ?? "",
+    actionLabelEn: r.action_label_en ?? "",
+  }));
+}

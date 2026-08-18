@@ -1,5 +1,9 @@
 export const DONOR_NAME = "ישראל ישראלי";
 export const DONOR_NAME_EN = "Israel Israelson";
+export const DONOR_PHONE = "0501234567";
+export const DONOR_EMAIL = "israel@example.com";
+export const DONOR_ID_NUMBER = "203456789";
+export const DONOR_JOIN_DATE = "13/05/2022";
 export const ORG_NAME = "אוכל לכולם";
 export const ORG_NAME_EN = "Food For All";
 export const COMMUNITY_NAME = "קהילת רמת אביב";
@@ -365,6 +369,54 @@ export const donorUpdates = [
     description: "מעניקים לגדוד לביא את הפינוקים שתרמתם",
     descriptionEn: "Delivering your treats to the Lavi Brigade soldiers",
     gradient: "from-gray-700 to-gray-900",
+  },
+];
+
+export type SystemUpdate = {
+  id: string;
+  date: string;
+  title: string;
+  titleEn: string;
+  detail: string;
+  detailEn: string;
+  status: "info" | "pending" | "action_required";
+  actionLabel: string;
+  actionLabelEn: string;
+};
+
+export const systemUpdates: SystemUpdate[] = [
+  {
+    id: "su1",
+    date: "12.03.22",
+    title: "התקבלה בקשה להוראת קבע",
+    titleEn: "Standing order request received",
+    detail: "בקשתך להפעלת הוראת קבע התקבלה ותיכנס לתוקף בחיוב הבא",
+    detailEn: "Your standing order request was received and will take effect on the next charge",
+    status: "pending" as const,
+    actionLabel: "לצפייה",
+    actionLabelEn: "View",
+  },
+  {
+    id: "su2",
+    date: "12.03.22",
+    title: "הופקה תרומה חדשה עבור פעולת שיוך",
+    titleEn: "A new donation was issued for an allocation action",
+    detail: "",
+    detailEn: "",
+    status: "info" as const,
+    actionLabel: "",
+    actionLabelEn: "",
+  },
+  {
+    id: "su3",
+    date: "12.03.22",
+    title: "חיוב הוראת קבע בוצע בהצלחה",
+    titleEn: "Standing order charge completed successfully",
+    detail: "",
+    detailEn: "",
+    status: "info" as const,
+    actionLabel: "",
+    actionLabelEn: "",
   },
 ];
 

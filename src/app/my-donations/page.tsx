@@ -5,6 +5,8 @@ import BottomNav from "@/components/layout/BottomNav";
 import DonationCard from "./DonationCard";
 import ManagePanel from "./ManagePanel";
 import TaxRefundView from "./TaxRefundView";
+import UpdatesPanel from "./UpdatesPanel";
+import ProfilePanel from "./ProfilePanel";
 import { Popups, type PopupName } from "./Popups";
 import NewDonationPopup from "./NewDonationPopup";
 import Sidebar from "./Sidebar";
@@ -17,7 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function MyDonationsPage() {
   const { lang, t } = useLang();
   const { user, signOut } = useAuth();
-  const [view, setView] = useState<"my-donations" | "manage" | "tax-refund">("my-donations");
+  const [view, setView] = useState<"my-donations" | "manage" | "tax-refund" | "updates" | "profile">("my-donations");
   const [popup, setPopup] = useState<PopupName>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -85,7 +87,10 @@ export default function MyDonationsPage() {
               {/* Updates carousel */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <button className="bg-raz-teal text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-teal-500 transition-colors">
+                  <button
+                    onClick={() => setView("updates")}
+                    className="bg-raz-teal text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-teal-500 transition-colors"
+                  >
                     {lang === "en" ? "View all updates" : "צפיה בכל העדכונים"}
                   </button>
                   <h2 className="font-bold text-gray-800 text-lg">
@@ -162,6 +167,10 @@ export default function MyDonationsPage() {
           )}
 
           {view === "tax-refund" && <TaxRefundView lang={lang} />}
+
+          {view === "updates" && <UpdatesPanel lang={lang} t={t} updates={updates} />}
+
+          {view === "profile" && <ProfilePanel t={t} />}
         </div>
 
         <BottomNav variant="donor" />
