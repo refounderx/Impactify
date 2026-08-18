@@ -2,6 +2,15 @@
 
 ---
 
+## 2026-08-18 — Unblock Vercel production build: fix Supabase `Relationships` typing, ignore remaining pre-existing TS errors
+
+**Decision:** Added the missing `Relationships: []` field to every table in `src/lib/supabase/types.ts` (required by `@supabase/postgrest-js`'s `GenericTable`, its absence was silently collapsing all `.insert()`/`.update()` typing to `never[]`), and set `typescript.ignoreBuildErrors: true` in `next.config.ts`.
+**Context:** First Vercel deploy attempt failed `next build` on a type error in `src/app/api/donations/route.ts` (`donor_id` not assignable to `never[]`). Fixing the root cause (missing `Relationships`) reduced total `tsc --noEmit` errors from 74 to 51 (confirmed via `git stash` A/B comparison against the pre-fix commit), but exposed 51 pre-existing embedded-join typing errors across the query layer (`queries-campaigns.ts`, `queries-donations.ts`, `queries-community.ts`, `queries-profile.ts`) that already existed before this session and are unrelated to the `Relationships` fix — they stem from `types.ts` being a hand-maintained approximation of the schema rather than CLI-generated.
+**Rationale:** Every affected query already wraps its Supabase call in `try/catch` with a mock-data fallback, so these are type-only gaps with no runtime behavior impact. Spending a full session hand-fixing embedded-join typing for 7+ tables was disproportionate to the immediate goal (get a working deploy live); user explicitly chose "unblock now, fix later" over a full typing pass.
+**Consequences:** `next build` on Vercel will no longer fail on TypeScript errors, including *any* future one, not just the known 51 — this is a broad escape hatch, not a scoped suppression. The real fix is to regenerate `types.ts` via `npx supabase gen types typescript --project-id <id> > src/lib/supabase/types.ts` (already noted in `PROJECT_CONTEXT.md`) once the pending schema migration is applied, then remove `ignoreBuildErrors`. Tracked in `TASKS.md`.
+
+---
+
 ## 2026-08-11 — Site rebrand: "ישראל תורמת" → "Impactify"
 
 **Decision:** Renamed the product from "ישראל תורמת" (Israel Donates) to "Impactify" everywhere the brand name is rendered or referenced: `translations.ts` `brand` key (both `he` and `en`), the root `<title>` in `layout.tsx`, the hardcoded logo text on `/auth` and `/auth/setup`, SQL file header comments, and the doc titles/README.

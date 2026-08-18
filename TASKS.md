@@ -109,6 +109,21 @@ Full desktop demo with 11 screens, responsive layout, bilingual (Hebrew/English)
 
 ---
 
+## Donor Profile + Updates Screens ✅
+
+- [x] `Sidebar.tsx` — wired the previously dead "עדכונים" (Bell) and "הפרופיל שלי" nav items to new `updates` / `profile` views
+- [x] `ProfilePanel.tsx` (new) — personal-details edit (name/phone/ID; email read-only, tied to auth) + payment-methods list with add/remove
+- [x] `UpdatesPanel.tsx` (new) — two-tab updates screen: "עדכוני תרומות" (reuses existing `donorUpdates`) and "עדכוני מערכת" (new `system_updates`-backed tab, expandable rows); reachable from the sidebar bell and from the previously no-op "View all updates" button on `/my-donations`
+- [x] `src/lib/supabase/queries-profile.ts` (new) — `getDonorProfile`/`updateDonorProfile`, `getPaymentMethods`/`addPaymentMethod`/`removePaymentMethod`, `getSystemUpdates`; mock fallback pattern, matching `queries-my-donations.ts`
+- [x] **Schema migration** (`supabase/schema.sql` — appended): `profiles.id_number`; new `payment_methods` table (brand + last-4 only, no raw card data); new `system_updates` table — see `INTERFACES.md`
+- [x] **Seed data** (`supabase/seed.sql` — appended): 2 `payment_methods` rows, 3 `system_updates` rows (donor_id=null; replace with real UUID post-user-creation)
+- [ ] **⚠️ Pending SQL**: the migration/seed blocks above are not yet applied to live Supabase — run in Supabase Dashboard → SQL Editor
+- [ ] Payment-method "add" only collects brand + last 4 digits client-side (no raw PAN handled) — real card entry/tokenization is blocked on the Phase 4 PSP choice
+- [ ] Skipped splitting `full_name` into first/last name and adding a `birth_date` column — the donor-profile mockup's field labels didn't line up with its own sample data for those fields; kept `full_name` as the single existing field instead of guessing
+- [ ] Nonprofit-admin "create update" wizard that would write into `system_updates` is not built (separate task)
+
+---
+
 ## Public Landing Page (`/landing`) ✅ structure
 
 - [x] `src/app/landing/page.tsx` — new public marketing route, separate from the signed-in donor dashboard at `/` (not touched)
@@ -251,6 +266,7 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 - `BottomNav` active state uses `pathname === href` which breaks for nested routes like `/donate/[id]/amount`
 - No error boundaries or loading states on any page
 - No `not-found.tsx` pages for invalid campaign IDs
+- **`next.config.ts` has `typescript.ignoreBuildErrors: true`** (added 2026-08-18 to unblock the first Vercel deploy) — this suppresses ALL TypeScript errors at build time, not just the known ones. 51 pre-existing errors exist today, mostly embedded-join typing in `queries-campaigns.ts`, `queries-donations.ts`, `queries-community.ts`, `queries-profile.ts` (e.g. `.select("*, organizations(*)")` results typing as `never` because `types.ts` is hand-maintained, not CLI-generated, and its `Relationships: []` fields don't describe real foreign keys). Runtime is unaffected — every one of these queries has a mock-data fallback. **Real fix:** after applying the pending Supabase SQL migration, run `npx supabase gen types typescript --project-id <id> > src/lib/supabase/types.ts` to replace the hand-maintained types with CLI-generated ones (which include real `Relationships` metadata), then remove `ignoreBuildErrors`.
 
 ---
 
