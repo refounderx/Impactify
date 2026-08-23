@@ -5,6 +5,7 @@ import { getCampaignById } from "@/lib/supabase/queries";
 import { getCampaign, formatNIS } from "@/lib/mock-data";
 import { RotateCcw, Heart, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
+import EditableText from "@/components/admin/EditableText";
 
 const PRESETS = [50, 100, 200, 500];
 
@@ -41,7 +42,7 @@ export default function AmountPage({ params }: { params: Promise<{ id: string }>
           <button onClick={() => router.back()} className="text-white/70 hover:text-white">
             <ArrowRight size={24} />
           </button>
-          <h1 className="text-white font-bold text-xl">{t("amount.title")}</h1>
+          <h1 className="text-white font-bold text-xl"><EditableText tKey="amount.title" /></h1>
         </div>
       </div>
 
@@ -58,7 +59,7 @@ export default function AmountPage({ params }: { params: Promise<{ id: string }>
         </div>
 
         {/* Preset amounts */}
-        <p className="text-sm text-gray-500 mb-3 text-center">{t("amount.prompt")}</p>
+        <p className="text-sm text-gray-500 mb-3 text-center"><EditableText tKey="amount.prompt" /></p>
         <div className="grid grid-cols-4 gap-3 mb-4">
           {PRESETS.map((p) => (
             <button
@@ -77,7 +78,7 @@ export default function AmountPage({ params }: { params: Promise<{ id: string }>
 
         {/* Custom input */}
         <div className="bg-white rounded-2xl border-2 border-gray-100 flex items-center px-5 py-4 mb-5">
-          <span className="text-gray-400 text-sm me-2">{t("amount.custom")}</span>
+          <span className="text-gray-400 text-sm me-2"><EditableText tKey="amount.custom" /></span>
           <span className="text-gray-700 font-bold text-lg">₪</span>
           <input
             type="number"
@@ -103,11 +104,11 @@ export default function AmountPage({ params }: { params: Promise<{ id: string }>
                 <RotateCcw size={20} className={recurring ? "text-white" : "text-gray-500"} />
               </div>
               <div>
-                <p className={`font-bold ${recurring ? "text-raz-teal" : "text-gray-800"}`}>{t("recurring.title")}</p>
+                <p className={`font-bold ${recurring ? "text-raz-teal" : "text-gray-800"}`}><EditableText tKey="recurring.title" /></p>
                 <p className="text-xs text-gray-500">
                   {recurring && amount && (amount as number) > 0
                     ? `${formatNIS(amount as number)} ${t("recurring.active")}`
-                    : t("recurring.sub")}
+                    : <EditableText tKey="recurring.sub" />}
                 </p>
               </div>
             </div>
@@ -126,8 +127,8 @@ export default function AmountPage({ params }: { params: Promise<{ id: string }>
               <div className="flex items-center gap-3">
                 <Heart size={20} className="text-pink-400" />
                 <div>
-                  <p className="font-medium text-gray-800">{t("dedication.title")}</p>
-                  <p className="text-xs text-gray-500">{t("dedication.sub")}</p>
+                  <p className="font-medium text-gray-800"><EditableText tKey="dedication.title" /></p>
+                  <p className="text-xs text-gray-500"><EditableText tKey="dedication.sub" /></p>
                 </div>
               </div>
               <button
@@ -156,7 +157,7 @@ export default function AmountPage({ params }: { params: Promise<{ id: string }>
             amount && amount > 0 ? "bg-raz-teal text-white hover:bg-raz-teal-dark" : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}
         >
-          {amount && amount > 0 ? `${t("amount.ctaWith")} ${formatNIS(amount)}` : t("amount.ctaEmpty")}
+          {amount && amount > 0 ? `${t("amount.ctaWith")} ${formatNIS(amount)}` : <EditableText tKey="amount.ctaEmpty" />}
         </button>
       </div>
     </div>

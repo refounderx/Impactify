@@ -8,6 +8,7 @@ import { getProductsByIds } from "@/lib/supabase/queries";
 import { getCampaignsByOrg, formatNIS } from "@/lib/mock-data";
 import { Share2, Mail, MessageCircle, BadgeCheck, Calendar, User, Users, MapPin, Phone, Minus, Plus } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
+import EditableText from "@/components/admin/EditableText";
 
 type Tab = "products" | "about" | "activity";
 
@@ -53,7 +54,7 @@ export default function NonprofitProfile() {
 
   if (!org) return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <p className="text-gray-500 text-lg">{t("org.notFound")}</p>
+      <EditableText tKey="org.notFound" as="p" className="text-gray-500 text-lg" />
       <Link href="/" className="text-raz-teal font-medium">{lang === "en" ? "Back home" : "חזרה לדף הבית"}</Link>
     </div>
   );
@@ -106,7 +107,7 @@ export default function NonprofitProfile() {
                   <p className="font-bold text-gray-800">{orgName}</p>
                   {org.verified && (
                     <span className="inline-flex items-center gap-1 text-raz-teal text-xs font-medium mt-0.5">
-                      <BadgeCheck size={14} /> {t("campaign.orgVerified")}
+                      <BadgeCheck size={14} /> <EditableText tKey="campaign.orgVerified" />
                     </span>
                   )}
                 </div>
@@ -115,19 +116,19 @@ export default function NonprofitProfile() {
                 {founded && (
                   <div className="flex items-center gap-2 text-gray-500">
                     <Calendar size={15} className="text-raz-teal flex-shrink-0" />
-                    <span>{t("org.founded")}: {founded}</span>
+                    <span><EditableText tKey="org.founded" />: {founded}</span>
                   </div>
                 )}
                 {ceo && (
                   <div className="flex items-center gap-2 text-gray-500">
                     <User size={15} className="text-raz-teal flex-shrink-0" />
-                    <span>{t("org.ceo")}: {ceo}</span>
+                    <span><EditableText tKey="org.ceo" />: {ceo}</span>
                   </div>
                 )}
                 {volunteers !== undefined && (
                   <div className="flex items-center gap-2 text-gray-500">
                     <Users size={15} className="text-raz-teal flex-shrink-0" />
-                    <span>{t("org.volunteers")}: {volunteers}</span>
+                    <span><EditableText tKey="org.volunteers" />: {volunteers}</span>
                   </div>
                 )}
                 {phone && (
@@ -203,7 +204,7 @@ export default function NonprofitProfile() {
                     })}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">{t("org.activityEmpty")}</p>
+                  <EditableText tKey="org.activityEmpty" as="p" className="text-gray-400 text-sm" />
                 )}
 
                 <div className="bg-white rounded-2xl p-4 mt-1">
@@ -211,7 +212,7 @@ export default function NonprofitProfile() {
                     onClick={() => setUseCustom((v) => !v)}
                     className="text-xs text-raz-teal font-medium mb-2"
                   >
-                    {useCustom ? t("org.selectAmountAbove") : t("org.customAmount")}
+                    {useCustom ? <EditableText tKey="org.selectAmountAbove" /> : <EditableText tKey="org.customAmount" />}
                   </button>
                   {useCustom ? (
                     <div className="flex items-center border-2 border-gray-100 rounded-xl px-4 py-2 mb-3">
@@ -225,7 +226,7 @@ export default function NonprofitProfile() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-gray-500">{t("org.total")}</span>
+                      <EditableText tKey="org.total" className="text-sm text-gray-500" />
                       <span className="text-2xl font-bold text-gray-800 font-numeric">{formatNIS(total)}</span>
                     </div>
                   )}
@@ -236,7 +237,7 @@ export default function NonprofitProfile() {
                       total > 0 && targetCampaignId ? "bg-raz-teal text-white hover:bg-raz-teal-dark" : "bg-gray-200 text-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    {t("org.donateNow")}
+                    <EditableText tKey="org.donateNow" />
                   </button>
                 </div>
               </>
@@ -245,14 +246,14 @@ export default function NonprofitProfile() {
             {tab === "about" && (
               <div className="bg-white rounded-2xl p-5">
                 <p className="text-gray-600 leading-relaxed" dir={lang === "en" ? "ltr" : "rtl"}>
-                  {bio ?? t("org.activityEmpty")}
+                  {bio ?? <EditableText tKey="org.activityEmpty" />}
                 </p>
               </div>
             )}
 
             {tab === "activity" && (
               <div className="bg-white rounded-2xl p-5">
-                <p className="text-gray-400 text-sm">{t("org.activityEmpty")}</p>
+                <EditableText tKey="org.activityEmpty" as="p" className="text-gray-400 text-sm" />
               </div>
             )}
           </div>

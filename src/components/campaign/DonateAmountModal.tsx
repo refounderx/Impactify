@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { formatNIS } from "@/lib/mock-data";
 import { useLang } from "@/contexts/LanguageContext";
+import EditableText from "@/components/admin/EditableText";
 
 const PRESETS = [50, 100, 200, 500];
 
@@ -78,7 +79,7 @@ export default function DonateAmountModal({ campaignId, title, gradient, emoji, 
             amount && amount > 0 ? "bg-raz-teal text-white hover:bg-raz-teal-dark" : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}
         >
-          {t("campaign.continueDonate")}
+          <EditableText tKey="campaign.continueDonate" />
         </button>
       </div>
     </div>

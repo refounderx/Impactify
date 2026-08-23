@@ -4,6 +4,7 @@ import { Pencil, MoreVertical } from "lucide-react";
 import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
 import { communityUpdateRows, communityUpdateScheduleRows } from "@/lib/community-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 type Tab = "trigger" | "schedule";
 
@@ -11,16 +12,16 @@ const TRIGGER_HEADERS = ["סוג התראה", "כמות", "טריגר", "שעה"
 const SCHEDULE_HEADERS = ["סוג התראה", "כמות", "תזמון", "יום", "שעה", "תאריך", "נשלחה עד כה", "עריכה", "פעולות"];
 
 export default function CommunityUpdatesPage() {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const [tab, setTab] = useState<Tab>("trigger");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">{t("adm.updatesTitle")}</h1>
+        <h1 className="text-3xl font-bold text-gray-800"><EditableText tKey="adm.updatesTitle" /></h1>
         <button className="bg-raz-teal text-white rounded-xl px-5 py-2.5 font-bold text-sm hover:bg-raz-teal-dark transition-colors">
-          {t("adm.createUpdate")}
+          <EditableText tKey="adm.createUpdate" />
         </button>
       </div>
 
@@ -32,7 +33,7 @@ export default function CommunityUpdatesPage() {
               tab === "trigger" ? "bg-raz-teal/10 text-raz-teal" : "text-gray-400 hover:bg-gray-50"
             }`}
           >
-            {t("adm.tabTrigger")}
+            <EditableText tKey="adm.tabTrigger" />
           </button>
           <button
             onClick={() => setTab("schedule")}
@@ -40,7 +41,7 @@ export default function CommunityUpdatesPage() {
               tab === "schedule" ? "bg-raz-teal/10 text-raz-teal" : "text-gray-400 hover:bg-gray-50"
             }`}
           >
-            {t("adm.tabSchedule")}
+            <EditableText tKey="adm.tabSchedule" />
           </button>
         </div>
 

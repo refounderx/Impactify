@@ -2,6 +2,7 @@
 import React from "react";
 import { Heart, LayoutList, Receipt, Flag, Bell, UserCircle, Megaphone, HelpCircle } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
+import EditableText from "@/components/admin/EditableText";
 
 type View = "my-donations" | "manage" | "tax-refund" | "updates" | "profile";
 
@@ -27,7 +28,7 @@ interface Props {
 }
 
 export default function Sidebar({ view, onNav }: Props) {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
 
   return (
     <aside className="hidden md:flex flex-col w-52 bg-raz-teal flex-shrink-0 self-start sticky top-20 min-h-[calc(100vh-5rem)]">
@@ -49,7 +50,7 @@ export default function Sidebar({ view, onNav }: Props) {
                 }`}
               >
                 <Icon size={17} className="flex-shrink-0" />
-                {t(key)}
+                <EditableText tKey={key} />
               </button>
               {sub && <p className="text-teal-200/60 text-xs ps-8 pb-1">{sub}</p>}
             </div>

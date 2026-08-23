@@ -6,6 +6,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { adminGreetingName, adminGreetingNameEn, adminLastLogin, adminLastLoginTime } from "@/lib/nonprofit-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 const NONPROFIT_ROUTES = {
   campaignsGrid: "/nonprofit/campaigns",
@@ -30,7 +31,7 @@ const PRODUCTS_DASHBOARD = "/nonprofit/products/dashboard";
 
 export default function AdminShell({ children, variant = "nonprofit" }: { children: React.ReactNode; variant?: "nonprofit" | "community" }) {
   const pathname = usePathname();
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const { signOut } = useAuth();
 
   const routes = variant === "community" ? COMMUNITY_ROUTES : NONPROFIT_ROUTES;
@@ -63,7 +64,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
                 pathname === CAMPAIGNS_DASHBOARD ? "bg-white/20 text-white" : campaignsGroupActive ? "bg-white/10 text-white" : "text-teal-100 hover:bg-white/10"
               }`}
             >
-              <span className="flex items-center gap-2.5"><Flag size={17} className="flex-shrink-0" />{t("adm.navCampaigns")}</span>
+              <span className="flex items-center gap-2.5"><Flag size={17} className="flex-shrink-0" /><EditableText tKey="adm.navCampaigns" /></span>
               {campaignsGroupActive ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </Link>
             {campaignsGroupActive && (
@@ -73,7 +74,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
                   pathname === CAMPAIGNS_GRID ? "bg-white/20 text-white font-bold" : "text-teal-100 hover:bg-white/10"
                 }`}
               >
-                {t("adm.navCampaignsDashboard")}
+                <EditableText tKey="adm.navCampaignsDashboard" />
               </Link>
             )}
           </div>
@@ -87,7 +88,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
                   pathname === PRODUCTS_GRID ? "bg-white/20 text-white" : productsGroupActive ? "bg-white/10 text-white" : "text-teal-100 hover:bg-white/10"
                 }`}
               >
-                <span className="flex items-center gap-2.5"><Package size={17} className="flex-shrink-0" />{t("adm.navProducts")}</span>
+                <span className="flex items-center gap-2.5"><Package size={17} className="flex-shrink-0" /><EditableText tKey="adm.navProducts" /></span>
                 {productsGroupActive ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
               </Link>
               {productsGroupActive && (
@@ -97,7 +98,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
                     pathname === PRODUCTS_DASHBOARD ? "bg-white/20 text-white font-bold" : "text-teal-100 hover:bg-white/10"
                   }`}
                 >
-                  {t("adm.navProductsDashboard")}
+                  <EditableText tKey="adm.navProductsDashboard" />
                 </Link>
               )}
             </div>
@@ -109,7 +110,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
               pathname === DONATIONS ? "bg-white/20 text-white" : "text-teal-100 hover:bg-white/10"
             }`}
           >
-            <LineChart size={17} className="flex-shrink-0" />{t("adm.navDonations")}
+            <LineChart size={17} className="flex-shrink-0" /><EditableText tKey="adm.navDonations" />
           </Link>
           <Link
             href={UPDATES}
@@ -117,7 +118,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
               pathname === UPDATES ? "bg-white/20 text-white" : "text-teal-100 hover:bg-white/10"
             }`}
           >
-            <Bell size={17} className="flex-shrink-0" />{pathname === UPDATES ? t("adm.updatesTitle") : t("adm.navUpdates")}
+            <Bell size={17} className="flex-shrink-0" />{pathname === UPDATES ? <EditableText tKey="adm.updatesTitle" /> : <EditableText tKey="adm.navUpdates" />}
           </Link>
           <Link
             href={LAST_NAV}
@@ -125,7 +126,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
               pathname === LAST_NAV ? "bg-white/20 text-white" : "text-teal-100 hover:bg-white/10"
             }`}
           >
-            <Users size={17} className="flex-shrink-0" />{t(routes.lastNavKey)}
+            <Users size={17} className="flex-shrink-0" /><EditableText tKey={routes.lastNavKey} />
           </Link>
         </nav>
 
@@ -135,7 +136,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
             className="w-full bg-white text-raz-teal text-sm font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
           >
             <Megaphone size={15} />
-            {t(variant === "community" ? "cm.newOrJoinCampaign" : "adm.newCampaign")}
+            <EditableText tKey={variant === "community" ? "cm.newOrJoinCampaign" : "adm.newCampaign"} />
           </Link>
         </div>
       </aside>
@@ -145,7 +146,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
           <div className="flex items-center gap-2">
             <button onClick={signOut} className="bg-raz-dark text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5 hover:bg-gray-800 transition-colors">
               <LogOut size={13} />
-              {t("adm.logout")}
+              <EditableText tKey="adm.logout" />
             </button>
             <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
               <User size={16} />
@@ -153,11 +154,11 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
           </div>
           <div className="text-end">
             <p className="text-sm">
-              <span className="text-gray-500">{t("adm.greetingMorning")} </span>
+              <span className="text-gray-500"><EditableText tKey="adm.greetingMorning" /> </span>
               <span className="font-bold text-raz-teal">{greeting}</span>
             </p>
             <p className="text-gray-400 text-xs">
-              {t("adm.lastLogin")} {adminLastLogin} {t("adm.at")} {adminLastLoginTime}
+              <EditableText tKey="adm.lastLogin" /> {adminLastLogin} <EditableText tKey="adm.at" /> {adminLastLoginTime}
             </p>
           </div>
         </div>

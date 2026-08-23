@@ -5,7 +5,8 @@
 Full desktop demo with 11 screens, responsive layout, bilingual (Hebrew/English), desktop TopNav, mobile BottomNav. Mock data throughout. No backend, no auth, no real payments.
 
 ### Screens complete
-- `/` — Donor home: teal header, featured campaign, responsive 2→4 column grid
+- `/` — Marketing landing page (changed 2026-08-23, previously donor home; see Known Tech Debt)
+- `/landing` — same content as `/` (duplicate route, not deduplicated)
 - `/search` — Search with live filter, category chips, sort, 2→4 column grid
 - `/campaign/[id]` — Two-column desktop: story/products left, donation sidebar right (sticky)
 - `/donate/[id]/amount` — Centered card, 4-preset grid, recurring + dedication toggles
@@ -117,7 +118,7 @@ Full desktop demo with 11 screens, responsive layout, bilingual (Hebrew/English)
 - [x] `src/lib/supabase/queries-profile.ts` (new) — `getDonorProfile`/`updateDonorProfile`, `getPaymentMethods`/`addPaymentMethod`/`removePaymentMethod`, `getSystemUpdates`; mock fallback pattern, matching `queries-my-donations.ts`
 - [x] **Schema migration** (`supabase/schema.sql` — appended): `profiles.id_number`; new `payment_methods` table (brand + last-4 only, no raw card data); new `system_updates` table — see `INTERFACES.md`
 - [x] **Seed data** (`supabase/seed.sql` — appended): 2 `payment_methods` rows, 3 `system_updates` rows (donor_id=null; replace with real UUID post-user-creation)
-- [ ] **⚠️ Pending SQL**: the migration/seed blocks above are not yet applied to live Supabase — run in Supabase Dashboard → SQL Editor
+- [x] **Applied to live Supabase (2026-08-23, via Supabase CLI):** the migration/seed blocks above are now live on the linked project — see `DECISIONS.md`
 - [ ] Payment-method "add" only collects brand + last 4 digits client-side (no raw PAN handled) — real card entry/tokenization is blocked on the Phase 4 PSP choice
 - [ ] Skipped splitting `full_name` into first/last name and adding a `birth_date` column — the donor-profile mockup's field labels didn't line up with its own sample data for those fields; kept `full_name` as the single existing field instead of guessing
 - [ ] Nonprofit-admin "create update" wizard that would write into `system_updates` is not built (separate task)
@@ -133,9 +134,10 @@ Full desktop demo with 11 screens, responsive layout, bilingual (Hebrew/English)
 - [ ] **Confirm whether repeated content is intentional**: the 7-icon audience row repeats קשיש/ה and חייל/ת twice, and the "why join" 3-column section repeats the same paragraph under all 3 icons in the source Figma mock — built as-is, but this looks like a Figma placeholder duplication rather than final per-column copy.
 - [ ] Impact-stats tile captions are best-effort readings of small screenshot text, not verified letter-for-letter — needs a copy pass against the actual Figma text layers.
 - [ ] Footer contact info (`Lorem@ipsum.com`, placeholder phone) is literally Lorem Ipsum in the source design — replace with real contact details before shipping.
-- [ ] No real hero/product photography, no real video asset, mascot is a placeholder emoji (no illustration asset in the repo)
+- [x] Hero image+bubble placeholders (2026-08-23): 3 distinct color-block placeholders + distinct captions, backed by a new `hero_cards` Supabase table (`image_url` nullable — swap in real photos later, no code change needed). See `ARCHITECTURE.md` and `INTERFACES.md`.
+- [ ] No real hero/product photography yet (`hero_cards.image_url` all null), no real video asset, mascot is a placeholder emoji (no illustration asset in the repo)
 - [ ] Signup form, contact form, and social/auth-provider buttons are visual only — not wired to any backend or OAuth provider
-- [ ] Brand name shown in this design, "נתינה בקליק", differs from the app's brand string ("Impactify" in `translations.ts`, renamed 2026-08-11; also "יב קליק" in one footer link) — reconcile before this page is treated as canonical
+- [x] Brand name inconsistency resolved (2026-08-23): all "נתינה בקליק" / "יב קליק" / "Netina BeClick" occurrences in `translations.ts` replaced with "Impactify"
 
 ### Audience filter + checkout wizard ✅
 
@@ -269,6 +271,13 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 
 ## Known Tech Debt
 
+- **Admin content-editing mode (2026-08-23, operable — partial rollout):** `AdminModeProvider` mounted in `layout.tsx`, "עריכה / Admin" toggle added to `DemoBar` (localStorage-persisted, all pages). `EditableText` wired into `Hero.tsx` (title/body/CTA) and `WhyJoinSection.tsx` (heading1/heading2/sub) — hover a wrapped text in admin mode to see the pencil icon, click to edit He/En, saves to live `site_content` table. Verified end-to-end via direct DB upsert (RLS write path confirmed working). Remaining work:
+  - Full site-wide rollout in progress (started 2026-08-23, background agent sweep across ~46 files / ~270 real call sites — corrected count from the initial ~354 estimate, which included false-positive grep matches on unrelated `.select("...(...)")`-style calls in Supabase query files). Not complete as of this note — final file/call-site tally and verification to follow once the sweep finishes.
+  - `site_content` RLS currently allows public write (no real admin auth exists in this app) — must be gated by a real role/auth check before production. Right now anyone with the site open (in admin mode) can edit any text.
+- **Supabase CLI connected (2026-08-23):** `supabase link --project-ref yyfntsplkrmzkjzzikjq` done; `supabase db push` now applies `supabase/migrations/*.sql` directly to the live project (confirmed working — see `DECISIONS.md`). Remaining open question: whether to retire the historical `schema.sql`/`seed.sql` append-only-block workflow in favor of `migrations/` only, or keep both (not decided).
+- **Root route swap (2026-08-23):** `/` now serves the marketing landing page (same content as `/landing`, duplicated). The old donor-home screen was archived to `app/_archive/old-home/page.tsx` (Next.js private folder, excluded from routing) rather than deleted or re-routed. Two follow-ups from this, not yet decided:
+  - Where should donor-home live now? (e.g. new route like `/home` or `/dashboard`) — currently unreachable via any link.
+  - These pages still `Link`/`redirect` to `/` expecting donor-home and will now land on the marketing page instead: `my-donations`, `auth`, `nonprofit/[id]`, `campaign/[id]`, `TopNav.tsx`, `recurring`, `donate/[id]/thanks`.
 - Amount state not threaded through donation flow (hardcoded ₪100)
 - `CategoryFilter` state is local — doesn't filter the home page grid (only UI state, no effect on campaign list)
 - `BottomNav` active state uses `pathname === href` which breaks for nested routes like `/donate/[id]/amount`

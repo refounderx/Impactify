@@ -1,6 +1,6 @@
 "use client";
-import { useLang } from "@/contexts/LanguageContext";
 import { audienceIcons, type AudienceKind } from "@/lib/landing-data";
+import EditableText from "@/components/admin/EditableText";
 
 export default function AudienceIconRow({
   selected,
@@ -9,8 +9,6 @@ export default function AudienceIconRow({
   selected: AudienceKind | null;
   onSelect: (kind: AudienceKind) => void;
 }) {
-  const { t } = useLang();
-
   return (
     <div className="grid grid-cols-4 sm:grid-cols-7 gap-4">
       {audienceIcons.map((a, i) => {
@@ -24,7 +22,7 @@ export default function AudienceIconRow({
             }`}
           >
             <span className="text-4xl">{a.emoji}</span>
-            <span className="font-bold">{t(a.labelKey)}</span>
+            <span className="font-bold"><EditableText tKey={a.labelKey} /></span>
           </button>
         );
       })}

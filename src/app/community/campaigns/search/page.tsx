@@ -6,6 +6,7 @@ import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import { communityCampaignCards } from "@/lib/community-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 const SORT_OPTIONS_HE = [
   "תאריך סיום קרוב להרחוק", "תאריך סיום רחוק לקרוב",
@@ -15,7 +16,7 @@ const SORT_OPTIONS_HE = [
 const FILTER_OPTIONS_HE = ["תחומי פעילות", "אזור פעילות"];
 
 export default function CommunitySearchCampaignsPage() {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const [openDropdown, setOpenDropdown] = useState<"sort" | "filter" | null>(null);
   const [requested, setRequested] = useState<Set<string>>(new Set());
 
@@ -34,9 +35,9 @@ export default function CommunitySearchCampaignsPage() {
           href="/community"
           className="bg-raz-teal text-white rounded-xl px-5 py-2.5 font-bold text-sm hover:bg-raz-teal-dark transition-colors order-2"
         >
-          {t("adm.createCampaign")}
+          <EditableText tKey="adm.createCampaign" />
         </Link>
-        <h1 className="text-3xl font-bold text-gray-800 order-1">{t("adm.searchCampaignsTitle")}</h1>
+        <h1 className="text-3xl font-bold text-gray-800 order-1"><EditableText tKey="adm.searchCampaignsTitle" /></h1>
       </div>
 
       <div className="flex items-center gap-3 mb-6 flex-wrap">
@@ -55,7 +56,7 @@ export default function CommunitySearchCampaignsPage() {
             className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
           >
             <ArrowUpDown size={14} />
-            {t("adm.sortBy")}
+            <EditableText tKey="adm.sortBy" />
           </button>
           {openDropdown === "sort" && (
             <div className="absolute z-10 top-11 start-0 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[220px] text-start">
@@ -78,7 +79,7 @@ export default function CommunitySearchCampaignsPage() {
             className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
           >
             <SlidersHorizontal size={14} />
-            {t("adm.filterBy")}
+            <EditableText tKey="adm.filterBy" />
           </button>
           {openDropdown === "filter" && (
             <div className="absolute z-10 top-11 start-0 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[160px] text-start">
@@ -135,7 +136,7 @@ export default function CommunitySearchCampaignsPage() {
                   isRequested ? "bg-gray-100 text-gray-400" : "bg-raz-teal text-white hover:bg-raz-teal-dark"
                 }`}
               >
-                {isRequested ? (lang === "en" ? "Request Sent" : "הבקשה נשלחה") : t("adm.requestToJoin")}
+                {isRequested ? (lang === "en" ? "Request Sent" : "הבקשה נשלחה") : <EditableText tKey="adm.requestToJoin" />}
               </button>
             </div>
           );

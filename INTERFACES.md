@@ -125,6 +125,27 @@ RLS: donor can only read/insert/delete their own rows.
 
 RLS: readable when `donor_id = auth.uid()` or `donor_id is null`. Surfaced in the "עדכוני מערכת" tab of `/my-donations` (updates view). The nonprofit-admin authoring flow that writes into this table is not yet built.
 
+### `hero_cards`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `image_url` | text | Nullable — null shows the app's color-block placeholder instead |
+| `bubble_text` / `bubble_text_en` | text | `bubble_text` required, `bubble_text_en` nullable |
+| `display_order` | int | Determines card position on landing hero |
+
+RLS: public read. Consumed by `getHeroCards()` in `src/lib/supabase/queries-landing.ts` for the 3 image+caption pairs in the landing page hero (`Hero.tsx`); falls back to `heroCards` mock data in `mock-data.ts` if the table doesn't exist yet or is empty. Image+bubble are stored as one row (a unit), not separate image/text lists, so a future admin screen can edit or reorder a pair together.
+
+### `site_content`
+| Column | Type | Notes |
+|---|---|---|
+| `key` | text | PK — matches a key in `src/lib/translations.ts` (e.g. `"landing.hero.title"`) |
+| `text_he` / `text_en` | text | Nullable — a row overrides the static `translations.ts` value for that key at runtime |
+| `updated_at` | timestamptz | |
+
+RLS: public read **and public write** (no real admin auth exists in this app yet — see `TASKS.md` note to lock this down before production). Read via `getSiteContentOverrides()`, written via `upsertSiteContent(key, he, en)`, both in `src/lib/supabase/queries-content.ts`. `LanguageContext`'s `t()` checks this override map before falling back to `translations.ts`. `EditableText` (`src/components/admin/EditableText.tsx`) wraps a single `t(tKey)` call with a pencil-icon inline editor, gated by `AdminModeContext` (`src/contexts/AdminModeContext.tsx`, a localStorage-persisted boolean toggle in `DemoBar` — no route, no real permission check).
+
+**Operable, partial rollout:** `AdminModeProvider` is mounted in `layout.tsx`, the toggle is wired into `DemoBar`, and `Hero.tsx`/`WhyJoinSection.tsx` are converted to `EditableText` — edits there save live and are verified working. Most of the site's ~270 other `t()` call sites are not yet converted. See `TASKS.md`.
+
 ## SQL Files
 
 | File | Purpose | When to run |

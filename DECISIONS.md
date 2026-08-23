@@ -2,6 +2,60 @@
 
 ---
 
+## 2026-08-23 — Wired up admin content-editing mode; applied the last pending migration (2026-06-29) and fixed a data bug found along the way
+
+**Decision:** Mounted `AdminModeProvider` in `layout.tsx`, added a toggle to `DemoBar`, and converted `Hero.tsx` + `WhyJoinSection.tsx` to use `EditableText` — admin mode is now actually reachable and functional (previously built but unmounted, per the earlier entry below). Also pushed the last remaining pending migration (2026-06-29: `donations.product_id`/`donation_type`/`quantity`, `campaign_updates` table) via the now-connected Supabase CLI.
+**Context:** User asked "how to operate admin role" — surfaced that the earlier admin-mode work was infrastructure-only and not actually usable. Separately asked to push the 2026-06-29 backlog.
+**Rationale:** Direct instructions; converting 2 landing components (not the full 356-call-site sweep) gives a working, testable feature now while keeping the change small — full rollout is tracked as a separate follow-up.
+**Consequences:** The 2026-06-29 push failed on first attempt — `campaign_updates` seed data had invalid UUID literals (`'u1111111-...'`, `u` is not a valid hex digit), a pre-existing bug that explains why this migration was never successfully applied in earlier sessions despite being written months ago. Fixed by changing the prefix to `'a'` in both `seed.sql` (source) and the migration file, then re-pushed successfully. All previously-pending SQL across this project (2026-06-29, 2026-08-18, 2026-08-23) is now live. Admin mode is functional but still only covers 2 of ~65 files with static text, and `site_content` still has no real write-auth (open items, see `TASKS.md`).
+
+---
+
+## 2026-08-23 — Connected Supabase CLI; applied all pending migrations directly
+
+**Decision:** Ran `supabase init` + `supabase link --project-ref yyfntsplkrmzkjzzikjq` + `supabase db push` against the live project, after the user completed `supabase login` in their own terminal (kept the access token out of this session entirely). Applied two migration files under the new `supabase/migrations/`: the previously-pending 2026-08-18 block (`profiles.id_number`, `payment_methods`, `system_updates`) and the 2026-08-23 block (`hero_cards`, `site_content`), plus their seed rows.
+**Context:** User asked what it would take to let the agent connect to Supabase and push changes directly instead of the manual copy-paste-into-SQL-Editor workflow that had accumulated a growing "pending SQL" backlog across three sessions (2026-06-29, 2026-08-18, 2026-08-23).
+**Rationale:** `supabase db push` only needs a linked CLI session, not Docker (Docker is only required for `db diff`/local dev, which failed here and was skipped) — so this was achievable without new local infrastructure beyond the CLI itself (fetched via `npx`, nothing installed globally).
+**Consequences:** All 4 previously-pending tables now exist live: `payment_methods` (2 rows), `system_updates` (3 rows), `hero_cards` (3 rows), `site_content` (0 rows). The "Pending SQL to run" backlog is now clear — see updated `TASKS.md`. Going forward, new schema changes should be added as new files under `supabase/migrations/` and pushed via the CLI rather than appended to `schema.sql`/`seed.sql`; **`schema.sql`/`seed.sql` were left as-is** (not deleted or restructured into migrations) since they still serve as the single-file human-readable reference and the manual-paste fallback documented in `README.md` — open question whether to retire them, not decided this session.
+
+---
+
+## 2026-08-23 — Admin content-editing mode: inline edit, Supabase-backed overrides, no real auth yet (in progress)
+
+**Decision:** Started building site-wide inline editing of static He/En text. Architecture, confirmed with the user via 3 questions before building: (1) inline click-to-edit UI on the live page, not a separate admin dashboard page; (2) a new `site_content` Supabase table storing per-key overrides merged at runtime over the existing `translations.ts`, not a full migration off `translations.ts`; (3) gated by a `AdminModeContext` toggle in the style of the existing `DemoBar` role switcher, since this app has no real production auth deployed yet — not gated by `profiles.app_role`.
+**Context:** User asked to make "all static text fields in the website, Heb and Eng" admin-editable directly from the site. `translations.ts` has ~600 keys referenced from ~356 call sites across ~65 files.
+**Rationale:** A per-key override table lets every existing `t(key)` call site opt in individually (via a new `<EditableText tKey>` wrapper) without a disruptive one-shot migration of the whole translation file. Reusing the DemoBar-style toggle (not `app_role`) matches this repo's existing precedent of visual/role-based demo gating rather than real authorization, since no admin role or login flow protects the other admin sections either.
+**Consequences:** Given the scope (356 call sites), this session only built the foundation — `site_content` table, `queries-content.ts`, `AdminModeContext`, and the `EditableText` component — and did **not** wire it into `layout.tsx`/`DemoBar` or convert any call sites yet. `site_content` RLS currently allows public write (no auth exists to gate it on) — must be locked down before production. Rolling `<EditableText>` out across all 356 call sites is a large mechanical follow-up, tracked in `TASKS.md`, not attempted in one pass.
+
+---
+
+## 2026-08-23 — Replaced remaining "נתינה בקליק" / "יב קליק" brand references with "Impactify"
+
+**Decision:** Replaced every remaining occurrence of the old brand strings ("נתינה בקליק", "יב קליק", and the English "Netina BeClick") in `src/lib/translations.ts` with "Impactify" (6 Hebrew keys, 7 English keys — impact section, why-join section, signup heading, footer "about" link).
+**Context:** User-requested follow-up to the 2026-08-11 rebrand, which had renamed the brand key itself but left these landing-page copy strings on the old name (flagged as a known inconsistency in that rename's decision entry).
+**Rationale:** Direct instruction — closes the gap noted in the 2026-08-11 entry below.
+**Consequences:** None — literal string replacement, no key renames, no structural change.
+
+---
+
+## 2026-08-23 — Hero image+bubble placeholders backed by a new `hero_cards` table
+
+**Decision:** Added a `hero_cards` Supabase table (`image_url`, `bubble_text`, `bubble_text_en`, `display_order`) storing each landing-hero image and its caption bubble as one row/unit, plus `getHeroCards()` in a new `queries-landing.ts` (mock-fallback pattern) and a matching `heroCards` mock array. `Hero.tsx` now renders 3 distinct image+caption pairs instead of one repeated badge string across 3 identical gray blocks.
+**Context:** User flagged that the landing hero showed 3 generic gray placeholders with the exact same caption text repeated, and asked for real per-image captions (e.g. a soldier photo paired with "20 people donated for lone soldiers"), with images+captions stored in Supabase, and placeholders created now since real images aren't available yet.
+**Rationale:** Storing image+text as one row (not two parallel lists) keeps a pair atomic for a future admin edit screen. `image_url` nullable means dropping in real photos later needs a data update only, no code change — matches the user's "I will provide images later" framing.
+**Consequences:** New pending SQL migration (`hero_cards` table + RLS + index) not yet applied to live Supabase — same "apply manually in SQL editor" requirement as prior migrations. All 3 rows currently have `image_url = null`, rendering as color blocks. No admin UI exists yet to edit these rows — currently editable only via direct SQL/Supabase dashboard or the mock-data fallback in code.
+
+---
+
+## 2026-08-23 — Root route `/` now serves the marketing landing page, not donor-home
+
+**Decision:** Swapped `app/page.tsx` content: it now renders the same content as `app/landing/page.tsx` (marketing landing page). The previous donor-home screen was moved as-is to `app/_archive/old-home/page.tsx`, a Next.js private folder excluded from routing, rather than deleted.
+**Context:** User's explicit instruction: "landing should be the opening of the server... page at localhost:3000 is stale." No redesign requested — a routing swap only.
+**Rationale:** Direct instruction; archiving instead of deleting preserves the donor-home implementation for a later decision on whether/where to re-expose it (e.g. `/home` or `/dashboard`).
+**Consequences:** `/landing` is now a duplicate route of `/` (not deduplicated). Several pages still link/redirect to `/` expecting the old donor-home behavior and were **not** updated — they now land on the marketing page instead. Both left as open follow-ups; see `TASKS.md`.
+
+---
+
 ## 2026-08-18 — Unblock Vercel production build: fix Supabase `Relationships` typing, ignore remaining pre-existing TS errors
 
 **Decision:** Added the missing `Relationships: []` field to every table in `src/lib/supabase/types.ts` (required by `@supabase/postgrest-js`'s `GenericTable`, its absence was silently collapsing all `.insert()`/`.update()` typing to `never[]`), and set `typescript.ignoreBuildErrors: true` in `next.config.ts`.

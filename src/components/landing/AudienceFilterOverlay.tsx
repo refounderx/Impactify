@@ -6,6 +6,7 @@ import { audienceProducts, type AudienceKind } from "@/lib/landing-data";
 import AudienceIconRow from "./AudienceIconRow";
 import ProductCard from "./ProductCard";
 import CheckoutModal from "./checkout/CheckoutModal";
+import EditableText from "@/components/admin/EditableText";
 
 export default function AudienceFilterOverlay({
   kind,
@@ -26,7 +27,7 @@ export default function AudienceFilterOverlay({
       <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="flex justify-end mb-4">
           <button onClick={onClose} className="flex items-center gap-1 text-sm text-white" aria-label={t("landing.filter.close")}>
-            <X size={20} /> {t("landing.filter.close")}
+            <X size={20} /> <EditableText tKey="landing.filter.close" />
           </button>
         </div>
 
@@ -34,7 +35,7 @@ export default function AudienceFilterOverlay({
 
         <div className="bg-white rounded-2xl mt-8 p-8">
           <h2 className="text-2xl font-bold text-raz-teal text-center mb-8">
-            {t("landing.filter.heading")} {t(`landing.aud.${kind}.plural`)}
+            <EditableText tKey="landing.filter.heading" /> <EditableText tKey={`landing.aud.${kind}.plural`} />
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {products.map((p) => (

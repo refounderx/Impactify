@@ -9,6 +9,40 @@ export const ORG_NAME_EN = "Food For All";
 export const COMMUNITY_NAME = "קהילת רמת אביב";
 export const COMMUNITY_NAME_EN = "Ramat Aviv Community";
 
+// Landing hero: 3 image+bubble pairs, mirrors the `hero_cards` Supabase table
+// (see supabase/schema.sql migration 2026-08-23). `imageUrl: null` renders the
+// `placeholderClass` color block instead — swap in a real image URL later and
+// it takes over automatically (see HeroImageCard in Hero.tsx).
+export const heroCards: {
+  id: string;
+  imageUrl: string | null;
+  placeholderClass: string;
+  bubbleText: string;
+  bubbleTextEn: string;
+}[] = [
+  {
+    id: "hero-soldier",
+    imageUrl: null,
+    placeholderClass: "bg-gray-500",
+    bubbleText: "20 אנשים העניקו כבר היום לחיילים בודדים",
+    bubbleTextEn: "20 people already donated today to lone soldiers",
+  },
+  {
+    id: "hero-elderly",
+    imageUrl: null,
+    placeholderClass: "bg-gray-200",
+    bubbleText: "12 אנשים העניקו כבר היום לקשישים",
+    bubbleTextEn: "12 people already donated today to the elderly",
+  },
+  {
+    id: "hero-child",
+    imageUrl: null,
+    placeholderClass: "bg-gray-100",
+    bubbleText: "35 אנשים העניקו כבר היום לילדים",
+    bubbleTextEn: "35 people already donated today to children",
+  },
+];
+
 export const categories = [
   { id: "all", label: "הכל", emoji: "✨" },
   { id: "food", label: "מזון", emoji: "🍽️" },

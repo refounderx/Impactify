@@ -4,13 +4,14 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import { getOrg, formatNIS, percent } from "@/lib/mock-data";
 import { useLang } from "@/contexts/LanguageContext";
 import type { campaigns } from "@/lib/mock-data";
+import EditableText from "@/components/admin/EditableText";
 
 type Campaign = (typeof campaigns)[number];
 
 export default function CampaignCard({ campaign }: { campaign: Campaign }) {
   const org = getOrg(campaign.orgId);
   const pct = percent(campaign.raised, campaign.goal);
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const title = lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title;
   const orgName = lang === "en" ? (org?.nameEn ?? org?.name) : org?.name;
 
@@ -35,13 +36,13 @@ export default function CampaignCard({ campaign }: { campaign: Campaign }) {
         <h3 className="font-bold text-sm text-gray-800 leading-snug mb-2 line-clamp-2">{title}</h3>
         <ProgressBar raised={campaign.raised} goal={campaign.goal} size="sm" />
         <div className="flex justify-between mt-2 text-xs">
-          <span className="text-gray-500">{campaign.donors} {t("donors")}</span>
+          <span className="text-gray-500">{campaign.donors} <EditableText tKey="donors" /></span>
           <span className="font-bold text-raz-teal">{formatNIS(campaign.raised)}</span>
         </div>
         {campaign.daysLeft > 0 ? (
-          <span className="text-[11px] text-gray-400">{campaign.daysLeft} {t("daysLeft")}</span>
+          <span className="text-[11px] text-gray-400">{campaign.daysLeft} <EditableText tKey="daysLeft" /></span>
         ) : (
-          <span className="text-[11px] text-raz-success font-medium">{t("goalReached")}</span>
+          <span className="text-[11px] text-raz-success font-medium"><EditableText tKey="goalReached" /></span>
         )}
       </div>
     </Link>

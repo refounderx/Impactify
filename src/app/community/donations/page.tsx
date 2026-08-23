@@ -5,13 +5,14 @@ import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import { communityDonationRows, communityDonationsTotal, communityDonationsCount, AS_OF } from "@/lib/community-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 export default function CommunityDonationsPage() {
   const { lang, t } = useLang();
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">{t("adm.donationsTitle")}</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6"><EditableText tKey="adm.donationsTitle" /></h1>
 
       <div className="bg-white rounded-2xl p-5">
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">

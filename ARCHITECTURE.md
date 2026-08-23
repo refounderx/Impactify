@@ -110,6 +110,8 @@ src/
 
 **`nonprofit/(admin)/` route group:** all pages inside share `AdminShell` (teal sidebar + top bar) via `nonprofit/(admin)/layout.tsx` — campaigns dashboard at `/nonprofit` (table) + grid at `/nonprofit/campaigns`, products dashboard at `/nonprofit/products/dashboard` (table) + grid at `/nonprofit/products`, plus `/nonprofit/donations`, `/nonprofit/updates`, `/nonprofit/communities` (stub). The sibling `nonprofit/[id]/page.tsx` (public org profile) and `nonprofit/create-campaign/page.tsx` (wizard) live outside the group so they render without the admin sidebar. Next.js resolves static segments (`campaigns`, `products`, …) before the `[id]` dynamic segment, so there's no routing collision.
 
+**Root route `/` (changed 2026-08-23):** `app/page.tsx` now renders the marketing landing page (same content as `app/landing/page.tsx` — duplicated for now, not deduplicated). The previous donor-home screen (teal header, featured campaign, active-campaigns grid) was moved to `app/_archive/old-home/page.tsx`, a Next.js private folder (`_` prefix excludes it from routing) — code preserved, not deleted, pending a decision on where donor-home should live going forward. Several other pages still link/redirect to `/` expecting the old donor-home behavior (`my-donations`, `auth`, `nonprofit/[id]`, `campaign/[id]`, `TopNav.tsx`, `recurring`, `donate/[id]/thanks`) — not yet updated; see `TASKS.md`.
+
 **`community/` admin tree (added 2026-08-11):** mirrors the `nonprofit/(admin)/` pattern one level down — `AdminShell variant="community"` (no Products nav group) via `community/layout.tsx`. Campaigns dashboard at `/community` (table) + grid at `/community/campaigns`, `/community/campaigns/search` (browse other orgs' campaigns + "request to join"; opened via the sidebar's bottom CTA), plus `/community/donations`, `/community/nonprofits` (community's affiliated nonprofits — the reverse listing of `/nonprofit/communities`), `/community/updates` (trigger/schedule tabs, each with its own column set — same pattern as `/nonprofit/updates` but community-scoped data). All data is mock-only via `community-admin-data.ts`; there is no Supabase-backed community query path anymore. This replaced the previous single-page `/community` leaderboard/progress dashboard entirely. The sidebar's bottom CTA (`cm.newOrJoinCampaign`, "הקמה/הצטרפות לקמפיין" — distinct from the nonprofit variant's `adm.newCampaign` CTA, which still links straight to the create-campaign wizard) links to `/community/campaigns/search`.
 
 ## Database Schema
@@ -124,6 +126,10 @@ src/
 | `donations` | Immutable financial ledger | Own donations; org reads received |
 | `recurring_donations` | Standing orders (הוראות קבע) | Own only |
 | `communities` | Community groups | Public read |
+| `payment_methods` | Saved brand + last-4 (no raw card data) | Own only |
+| `system_updates` | Broadcast/per-donor update feed | Own or broadcast (`donor_id is null`) |
+| `hero_cards` | Landing hero image+caption pairs | Public read |
+| `site_content` | Admin text-override table (key → he/en) | Public read **and public write** — no real admin auth yet, see `TASKS.md` |
 
 **Key constraints:**
 - `donations` is **append-only** — DB rules prevent UPDATE and DELETE

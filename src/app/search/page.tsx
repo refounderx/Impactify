@@ -6,6 +6,7 @@ import { campaigns as mockCampaigns, categories } from "@/lib/mock-data";
 import { searchCampaigns } from "@/lib/supabase/queries";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
+import EditableText from "@/components/admin/EditableText";
 
 export default function SearchPage() {
   const { t } = useLang();
@@ -34,7 +35,7 @@ export default function SearchPage() {
       {/* Header */}
       <div className="bg-raz-teal px-6 pt-6 pb-10">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-white font-bold text-2xl mb-4">{t("search.title")}</h1>
+          <h1 className="text-white font-bold text-2xl mb-4"><EditableText tKey="search.title" /></h1>
           <div className="flex gap-3">
             <div className="flex-1 bg-white rounded-xl flex items-center px-4 gap-2">
               <Search size={18} className="text-gray-400 flex-shrink-0" />
@@ -48,7 +49,7 @@ export default function SearchPage() {
               {query && <button onClick={() => setQuery("")}><X size={16} className="text-gray-400" /></button>}
             </div>
             <button className="bg-white/20 text-white px-4 rounded-xl flex items-center gap-2 text-sm font-medium">
-              <SlidersHorizontal size={18} /> {t("search.filter")}
+              <SlidersHorizontal size={18} /> <EditableText tKey="search.filter" />
             </button>
           </div>
         </div>
@@ -65,7 +66,7 @@ export default function SearchPage() {
                 activeCategory === cat.id ? "bg-raz-teal text-white" : "bg-white text-gray-600 border border-gray-200"
               }`}
             >
-              {cat.emoji} {t(`cat.${cat.id}`)}
+              {cat.emoji} <EditableText tKey={`cat.${cat.id}`} />
             </button>
           ))}
         </div>
@@ -97,8 +98,8 @@ export default function SearchPage() {
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <span className="text-6xl mb-4">🔍</span>
-            <p className="text-gray-600 font-medium text-lg">{t("search.empty")}</p>
-            <p className="text-gray-400 mt-1">{t("search.emptySub")}</p>
+            <p className="text-gray-600 font-medium text-lg"><EditableText tKey="search.empty" /></p>
+            <p className="text-gray-400 mt-1"><EditableText tKey="search.emptySub" /></p>
           </div>
         )}
       </div>

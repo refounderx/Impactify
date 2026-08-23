@@ -5,6 +5,7 @@ import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import { adminCommunityRows, adminCommunitiesTotalRaised, adminCommunitiesCount } from "@/lib/nonprofit-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 const AS_OF = "12/08/23";
 
@@ -14,9 +15,9 @@ export default function CommunitiesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">{t("adm.communitiesTitle")}</h1>
+        <h1 className="text-3xl font-bold text-gray-800"><EditableText tKey="adm.communitiesTitle" /></h1>
         <button className="bg-raz-teal text-white rounded-xl px-5 py-2.5 font-bold text-sm hover:bg-raz-teal-dark transition-colors">
-          {t("adm.sendUpdateToManagers")}
+          <EditableText tKey="adm.sendUpdateToManagers" />
         </button>
       </div>
 

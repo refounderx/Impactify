@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLang } from "@/contexts/LanguageContext";
+import { useAdminMode } from "@/contexts/AdminModeContext";
+import { Pencil } from "lucide-react";
 
 const roles = [
   { labelHe: "תורם", labelEn: "Donor", href: "/my-donations" },
@@ -12,6 +14,7 @@ const roles = [
 export default function DemoBar() {
   const pathname = usePathname();
   const { lang, setLang } = useLang();
+  const { adminMode, toggleAdminMode } = useAdminMode();
   const active = pathname.startsWith("/nonprofit")
     ? "/nonprofit"
     : pathname.startsWith("/community")
@@ -35,6 +38,19 @@ export default function DemoBar() {
           {lang === "en" ? r.labelEn : r.labelHe}
         </Link>
       ))}
+
+      <button
+        onClick={toggleAdminMode}
+        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+          adminMode
+            ? "bg-amber-500 text-white"
+            : "text-gray-300 hover:text-white border border-gray-600"
+        }`}
+        title={lang === "en" ? "Toggle admin text editing" : "מצב עריכת טקסטים"}
+      >
+        <Pencil size={11} />
+        {lang === "en" ? "Admin" : "עריכה"}
+      </button>
 
       {/* Language toggle — always visible, on the opposite end */}
       <div className="flex items-center bg-gray-800 rounded-full p-0.5 text-xs font-bold ms-auto">

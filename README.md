@@ -30,7 +30,17 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...   # server-only, never commit
 ```
 
 ### 3. Run the database schema
-In Supabase Dashboard → SQL Editor → paste and run:
+Two ways to apply schema/seed changes:
+
+**Via Supabase CLI (connected 2026-08-23):**
+```bash
+npx supabase login          # one-time, opens a browser
+npx supabase link --project-ref <your-project-ref>
+npx supabase db push        # applies supabase/migrations/*.sql to the linked project
+```
+New schema/seed changes should be added as a new timestamped file under `supabase/migrations/` going forward (not appended to `schema.sql`/`seed.sql` — see `PROJECT_CONTEXT.md`/`DECISIONS.md` for the still-open question of whether the historical `schema.sql`/`seed.sql` files get retired in favor of `migrations/`).
+
+**Manual fallback (Dashboard → SQL Editor → paste and run):**
 1. `supabase/schema.sql` — creates all tables, RLS policies, triggers
 2. `supabase/seed.sql` — populates with demo data (6 campaigns, 5 orgs, etc.)
 
@@ -45,7 +55,8 @@ Pages fall back to mock data if Supabase is unreachable or tables are empty.
 
 | Route | Screen |
 |---|---|
-| `/` | Donor home feed |
+| `/` | Marketing landing page (changed 2026-08-23, was donor home) |
+| `/landing` | Same content as `/` (duplicate route) |
 | `/search` | Campaign search & filters |
 | `/campaign/[id]` | Campaign detail |
 | `/donate/[id]/amount` | Donation amount selection |

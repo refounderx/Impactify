@@ -7,6 +7,7 @@ import { getMyDonations, getMyRecurring } from "@/lib/supabase/queries-donations
 import { Download, ChevronLeft, Settings, Bell, HelpCircle, Shield, RotateCcw, LogIn } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import EditableText from "@/components/admin/EditableText";
 
 export default function ProfilePage() {
   const { lang, t } = useLang();
@@ -79,8 +80,8 @@ export default function ProfilePage() {
             {/* Donation history */}
             <div className="bg-white rounded-2xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-gray-700 text-lg">{t("profile.history")}</h2>
-                <button className="text-raz-teal text-sm font-medium">{t("all")}</button>
+                <h2 className="font-bold text-gray-700 text-lg"><EditableText tKey="profile.history" /></h2>
+                <button className="text-raz-teal text-sm font-medium"><EditableText tKey="all" /></button>
               </div>
               <div className="flex flex-col gap-3">
                 {donations.map((d) => (
@@ -110,9 +111,9 @@ export default function ProfilePage() {
                   <RotateCcw size={20} className="text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800">{t("profile.recurringLink")}</p>
+                  <p className="font-bold text-gray-800"><EditableText tKey="profile.recurringLink" /></p>
                   <p className="text-sm text-gray-500">
-                    {recurring.filter(r => r.status === "active").length} {t("rec.activeCount")} · {formatNIS(totalMonthly)}/{t("perMonth")}
+                    {recurring.filter(r => r.status === "active").length} <EditableText tKey="rec.activeCount" /> · {formatNIS(totalMonthly)}/<EditableText tKey="perMonth" />
                   </p>
                 </div>
               </div>
@@ -135,7 +136,7 @@ export default function ProfilePage() {
                   <div className="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center">
                     <LogIn size={18} className="text-red-400 rotate-180" />
                   </div>
-                  <p className="font-medium text-red-500">{t("profile.logout")}</p>
+                  <p className="font-medium text-red-500"><EditableText tKey="profile.logout" /></p>
                 </button>
               )}
             </div>
@@ -144,35 +145,35 @@ export default function ProfilePage() {
           {/* Right: impact */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-5 sticky top-24">
-              <h3 className="font-bold text-gray-700 mb-4">{t("profile.impact")}</h3>
+              <h3 className="font-bold text-gray-700 mb-4"><EditableText tKey="profile.impact" /></h3>
               <div className="flex flex-col gap-4">
                 <div className="text-center p-4 bg-raz-teal/10 rounded-xl">
                   <p className="text-3xl font-bold text-raz-teal font-numeric">{formatNIS(totalDonated)}</p>
-                  <p className="text-gray-600 text-sm mt-1">{t("profile.totalDonated")}</p>
+                  <p className="text-gray-600 text-sm mt-1"><EditableText tKey="profile.totalDonated" /></p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="text-center p-3 bg-gray-50 rounded-xl">
                     <p className="text-2xl font-bold text-gray-800 font-numeric">{donations.length}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{t("profile.donations")}</p>
+                    <p className="text-xs text-gray-500 mt-0.5"><EditableText tKey="profile.donations" /></p>
                   </div>
                   <div className="text-center p-3 bg-gray-50 rounded-xl">
                     <p className="text-2xl font-bold text-gray-800 font-numeric">
                       {[...new Set(donations.map((d) => (d as {campaignId?:string}).campaignId))].length || 3}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">{t("profile.orgs")}</p>
+                    <p className="text-xs text-gray-500 mt-0.5"><EditableText tKey="profile.orgs" /></p>
                   </div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-xl">
                   <p className="text-2xl">🏆</p>
-                  <p className="font-bold text-gray-700 mt-1">{t("profile.loyal")}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{t("profile.loyalSub")}</p>
+                  <p className="font-bold text-gray-700 mt-1"><EditableText tKey="profile.loyal" /></p>
+                  <p className="text-xs text-gray-500 mt-0.5"><EditableText tKey="profile.loyalSub" /></p>
                 </div>
                 <Link href="/recurring" className="flex items-center justify-between p-4 bg-raz-teal/10 rounded-xl border border-raz-teal/20">
                   <div className="flex items-center gap-2">
                     <RotateCcw size={16} className="text-raz-teal" />
-                    <p className="font-medium text-gray-700 text-sm">{t("profile.recurringLink")}</p>
+                    <p className="font-medium text-gray-700 text-sm"><EditableText tKey="profile.recurringLink" /></p>
                   </div>
-                  <p className="font-bold text-raz-teal font-numeric text-sm">{formatNIS(totalMonthly)}/{t("perMonth")}</p>
+                  <p className="font-bold text-raz-teal font-numeric text-sm">{formatNIS(totalMonthly)}/<EditableText tKey="perMonth" /></p>
                 </Link>
               </div>
             </div>

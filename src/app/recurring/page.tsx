@@ -7,9 +7,10 @@ import { getMyRecurring, updateRecurringStatus, cancelRecurring } from "@/lib/su
 import { RotateCcw, PauseCircle, XCircle, Plus, ArrowRight, Calendar, CreditCard } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import EditableText from "@/components/admin/EditableText";
 
 export default function RecurringPage() {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const { user } = useAuth();
   const [orders, setOrders] = useState(mockRecurring as typeof mockRecurring);
   const [canceling, setCanceling] = useState<string | null>(null);
@@ -48,9 +49,9 @@ export default function RecurringPage() {
             <Link href="/profile" className="text-white/70 hover:text-white">
               <ArrowRight size={22} />
             </Link>
-            <h1 className="text-white font-bold text-2xl">{t("rec.title")}</h1>
+            <h1 className="text-white font-bold text-2xl"><EditableText tKey="rec.title" /></h1>
           </div>
-          <p className="text-teal-100 text-sm">{t("rec.subtitle")}</p>
+          <p className="text-teal-100 text-sm"><EditableText tKey="rec.subtitle" /></p>
         </div>
       </div>
 
@@ -60,9 +61,9 @@ export default function RecurringPage() {
         <div className="bg-raz-dark text-white rounded-2xl p-5 mb-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm mb-1">{t("rec.total")}</p>
+              <p className="text-gray-400 text-sm mb-1"><EditableText tKey="rec.total" /></p>
               <p className="text-4xl font-bold font-numeric text-raz-teal">{formatNIS(totalMonthly)}</p>
-              <p className="text-gray-400 text-sm mt-1">{orders.filter(o => o.status === "active").length} {t("rec.activeCount")}</p>
+              <p className="text-gray-400 text-sm mt-1">{orders.filter(o => o.status === "active").length} <EditableText tKey="rec.activeCount" /></p>
             </div>
             <div className="w-16 h-16 bg-raz-teal/20 rounded-2xl flex items-center justify-center">
               <RotateCcw size={32} className="text-raz-teal" />
@@ -70,7 +71,7 @@ export default function RecurringPage() {
           </div>
           <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-sm text-gray-400">
             <Calendar size={15} />
-            <span>{t("rec.nextCharge")} 01.07.2026</span>
+            <span><EditableText tKey="rec.nextCharge" /> 01.07.2026</span>
             <span className="mx-2">·</span>
             <CreditCard size={15} />
             <span>Visa •••• 4242</span>
@@ -81,10 +82,10 @@ export default function RecurringPage() {
         {orders.length === 0 ? (
           <div className="bg-white rounded-2xl p-10 text-center">
             <p className="text-5xl mb-4">🔁</p>
-            <p className="font-bold text-gray-700 text-lg mb-1">{t("rec.empty")}</p>
-            <p className="text-gray-500 text-sm mb-5">{t("rec.emptySub")}</p>
+            <p className="font-bold text-gray-700 text-lg mb-1"><EditableText tKey="rec.empty" /></p>
+            <p className="text-gray-500 text-sm mb-5"><EditableText tKey="rec.emptySub" /></p>
             <Link href="/" className="bg-raz-teal text-white px-6 py-3 rounded-xl font-medium inline-block">
-              {t("donate")}
+              <EditableText tKey="donate" />
             </Link>
           </div>
         ) : (
@@ -115,18 +116,18 @@ export default function RecurringPage() {
                     </div>
                     <div className="text-end flex-shrink-0">
                       <p className="text-2xl font-bold text-raz-teal font-numeric">{formatNIS(o.amount)}</p>
-                      <p className="text-xs text-gray-400">{t("perMonth")}</p>
+                      <p className="text-xs text-gray-400"><EditableText tKey="perMonth" /></p>
                     </div>
                   </div>
 
                   {/* Dates */}
                   <div className="grid grid-cols-2 gap-3 mb-4 bg-gray-50 rounded-xl p-3 text-sm">
                     <div>
-                      <p className="text-gray-400 text-xs mb-0.5">{t("rec.started")}</p>
+                      <p className="text-gray-400 text-xs mb-0.5"><EditableText tKey="rec.started" /></p>
                       <p className="font-medium text-gray-700">{o.startDate}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-xs mb-0.5">{t("rec.next")}</p>
+                      <p className="text-gray-400 text-xs mb-0.5"><EditableText tKey="rec.next" /></p>
                       <p className={`font-medium ${o.status === "active" ? "text-gray-700" : "text-gray-400 line-through"}`}>
                         {o.nextCharge}
                       </p>
@@ -138,7 +139,7 @@ export default function RecurringPage() {
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                       o.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                     }`}>
-                      {o.status === "active" ? t("rec.statusActive") : t("rec.statusPaused")}
+                      {o.status === "active" ? <EditableText tKey="rec.statusActive" /> : <EditableText tKey="rec.statusPaused" />}
                     </span>
 
                     <div className="flex gap-2">
@@ -147,13 +148,13 @@ export default function RecurringPage() {
                         className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
                       >
                         <PauseCircle size={15} />
-                        {o.status === "active" ? t("rec.pause") : t("rec.resume")}
+                        {o.status === "active" ? <EditableText tKey="rec.pause" /> : <EditableText tKey="rec.resume" />}
                       </button>
                       <button
                         onClick={() => setCanceling(o.id)}
                         className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-red-100 text-red-500 hover:bg-red-50"
                       >
-                        <XCircle size={15} /> {t("rec.cancel")}
+                        <XCircle size={15} /> <EditableText tKey="rec.cancel" />
                       </button>
                     </div>
                   </div>
@@ -163,20 +164,20 @@ export default function RecurringPage() {
                 {canceling === o.id && (
                   <div className="border-t border-red-100 bg-red-50 px-5 py-4">
                     <p className="text-sm font-medium text-gray-700 mb-3">
-                      {t("rec.confirmMsg")} {formatNIS(o.amount)}/{t("perMonth")} {lang === "en" ? "for" : "ל"}{lang === "en" ? (o.campaignTitleEn ?? o.campaignTitle) : o.campaignTitle}?
+                      <EditableText tKey="rec.confirmMsg" /> {formatNIS(o.amount)}/<EditableText tKey="perMonth" /> {lang === "en" ? "for" : "ל"}{lang === "en" ? (o.campaignTitleEn ?? o.campaignTitle) : o.campaignTitle}?
                     </p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => cancelOrder(o.id)}
                         className="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm font-medium"
                       >
-                        {t("rec.confirmYes")}
+                        <EditableText tKey="rec.confirmYes" />
                       </button>
                       <button
                         onClick={() => setCanceling(null)}
                         className="flex-1 bg-white border border-gray-200 text-gray-600 py-2 rounded-lg text-sm"
                       >
-                        {t("rec.confirmNo")}
+                        <EditableText tKey="rec.confirmNo" />
                       </button>
                     </div>
                   </div>
@@ -191,7 +192,7 @@ export default function RecurringPage() {
           href="/"
           className="flex items-center justify-center gap-2 border-2 border-dashed border-raz-teal/30 text-raz-teal rounded-2xl py-4 font-medium mb-8 hover:bg-raz-teal/5 transition-colors"
         >
-          <Plus size={20} /> {t("rec.add")}
+          <Plus size={20} /> <EditableText tKey="rec.add" />
         </Link>
       </div>
 

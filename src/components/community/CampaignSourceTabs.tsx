@@ -1,6 +1,6 @@
 "use client";
-import { useLang } from "@/contexts/LanguageContext";
 import type { CommunityCampaignSource } from "@/lib/community-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 export default function CampaignSourceTabs({
   active,
@@ -9,15 +9,13 @@ export default function CampaignSourceTabs({
   active: CommunityCampaignSource;
   onChange: (source: CommunityCampaignSource) => void;
 }) {
-  const { t } = useLang();
-
   return (
     <div className="flex items-center justify-end gap-4 mb-5">
       <button
         onClick={() => onChange("linked")}
         className={`text-sm transition-colors ${active === "linked" ? "text-gray-800 font-bold" : "text-gray-400 hover:text-gray-600"}`}
       >
-        {t("cm.campaignsLinked")}
+        <EditableText tKey="cm.campaignsLinked" />
       </button>
       <button
         onClick={() => onChange("created")}
@@ -25,7 +23,7 @@ export default function CampaignSourceTabs({
           active === "created" ? "border-raz-teal text-raz-teal" : "border-transparent text-gray-400 hover:text-gray-600"
         }`}
       >
-        {t("cm.campaignsCreated")}
+        <EditableText tKey="cm.campaignsCreated" />
       </button>
     </div>
   );

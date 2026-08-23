@@ -2,6 +2,7 @@
 import { categories } from "@/lib/mock-data";
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
+import EditableText from "@/components/admin/EditableText";
 
 const catKeys: Record<string, string> = {
   all: "cat.all", food: "cat.food", education: "cat.education",
@@ -11,7 +12,7 @@ const catKeys: Record<string, string> = {
 
 export default function CategoryFilter({ onSelect }: { onSelect?: (id: string) => void }) {
   const [active, setActive] = useState("all");
-  const { t, dir } = useLang();
+  const { dir } = useLang();
 
   function select(id: string) {
     setActive(id);
@@ -29,7 +30,7 @@ export default function CategoryFilter({ onSelect }: { onSelect?: (id: string) =
           }`}
         >
           <span>{cat.emoji}</span>
-          <span>{t(catKeys[cat.id] ?? cat.id)}</span>
+          <span><EditableText tKey={catKeys[cat.id] ?? cat.id} /></span>
         </button>
       ))}
     </div>

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
+import EditableText from "@/components/admin/EditableText";
 
 export type PersonalDetails = { name: string; email: string; phone: string; declineUpdates: boolean };
 
@@ -29,8 +30,8 @@ export default function StepPersonalDetails({
         <p className="text-sm text-gray-500 mt-1">{itemCount} {productLabel}</p>
       </div>
 
-      <h3 className="font-bold text-gray-900 mb-1">{t("landing.checkout.personalTitle")}</h3>
-      <p className="text-xs text-gray-400 mb-4">{t("landing.checkout.personalSub")}</p>
+      <EditableText tKey="landing.checkout.personalTitle" as="h3" className="font-bold text-gray-900 mb-1 block" />
+      <EditableText tKey="landing.checkout.personalSub" as="p" className="text-xs text-gray-400 mb-4 block" />
 
       <div className="flex flex-col gap-3 mb-4">
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("landing.checkout.namePH")} className="border border-gray-200 rounded-xl px-4 py-3 text-sm" />
@@ -42,12 +43,12 @@ export default function StepPersonalDetails({
         onClick={() => onContinue({ name, email, phone, declineUpdates })}
         className="w-full bg-raz-teal text-white font-bold py-3 rounded-full mb-3"
       >
-        {t("landing.checkout.confirmContinue")}
+        <EditableText tKey="landing.checkout.confirmContinue" />
       </button>
 
       <label className="flex items-center justify-center gap-2 text-xs text-gray-500">
         <input type="checkbox" checked={declineUpdates} onChange={(e) => setDeclineUpdates(e.target.checked)} />
-        {t("landing.checkout.declineUpdates")}
+        <EditableText tKey="landing.checkout.declineUpdates" />
       </label>
     </div>
   );

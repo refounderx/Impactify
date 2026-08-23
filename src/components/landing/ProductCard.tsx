@@ -1,6 +1,6 @@
 "use client";
-import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
+import EditableText from "@/components/admin/EditableText";
 
 export default function ProductCard({
   title,
@@ -19,8 +19,6 @@ export default function ProductCard({
   isChosen?: boolean;
   onChoose?: () => void;
 }) {
-  const { t } = useLang();
-
   return (
     <div className={`bg-white rounded-2xl p-4 text-center border-2 ${isChosen ? "border-raz-teal" : "border-transparent"}`}>
       <div className="h-28 flex items-center justify-center text-5xl mb-3">{emoji}</div>
@@ -30,18 +28,18 @@ export default function ProductCard({
       </p>
       {campaignCta ? (
         <button className="w-full bg-raz-teal text-white font-bold py-2 rounded-full text-sm mb-2">
-          {t("landing.products.ctaCampaign")}
+          <EditableText tKey="landing.products.ctaCampaign" />
         </button>
       ) : isChosen ? (
         <button className="w-full border-2 border-raz-teal text-raz-teal font-bold py-2 rounded-full text-sm mb-2">
-          {t("landing.detail.chosenBtn")}
+          <EditableText tKey="landing.detail.chosenBtn" />
         </button>
       ) : (
         <button onClick={onChoose} className="w-full bg-raz-teal text-white font-bold py-2 rounded-full text-sm mb-2">
-          {t("landing.products.ctaBuy")}
+          <EditableText tKey="landing.products.ctaBuy" />
         </button>
       )}
-      {!campaignCta && <p className="text-xs text-gray-400">257 ❤ {t("landing.products.chosen")}</p>}
+      {!campaignCta && <p className="text-xs text-gray-400">257 ❤ <EditableText tKey="landing.products.chosen" /></p>}
     </div>
   );
 }

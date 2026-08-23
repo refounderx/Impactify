@@ -7,6 +7,7 @@ import ProductDetailPanel from "@/components/nonprofit-admin/ProductDetailPanel"
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import { adminProductRows, adminProductsTotalUnits, adminProductsActiveCount, getAdminProductDetail } from "@/lib/nonprofit-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 const AS_OF = "12/08/23";
 
@@ -16,7 +17,7 @@ export default function ProductsDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">{t("adm.productsDashboardTitle")}</h1>
+      <EditableText tKey="adm.productsDashboardTitle" as="h1" className="text-3xl font-bold text-gray-800 mb-4 block" />
       <div className="flex items-center gap-3 mb-5 text-gray-400">
         <button className="hover:text-raz-teal"><Printer size={18} /></button>
         <button className="hover:text-raz-teal"><FileText size={18} /></button>

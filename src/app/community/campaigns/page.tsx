@@ -7,9 +7,10 @@ import CampaignSourceTabs from "@/components/community/CampaignSourceTabs";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import { communityCampaignCards, type CommunityCampaignSource } from "@/lib/community-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 export default function CommunityCampaignsGridPage() {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const [source, setSource] = useState<CommunityCampaignSource>("created");
 
   return (
@@ -21,7 +22,7 @@ export default function CommunityCampaignsGridPage() {
           href="/community"
           className="bg-raz-dark rounded-2xl p-5 flex flex-col items-center justify-center text-center text-white min-h-[19rem] hover:bg-gray-800 transition-colors"
         >
-          <p className="font-bold text-lg leading-snug mb-2">{t("adm.backToDashboard")}</p>
+          <p className="font-bold text-lg leading-snug mb-2"><EditableText tKey="adm.backToDashboard" /></p>
         </Link>
         {communityCampaignCards.map((c) => (
           <div key={c.id} className="bg-white rounded-2xl p-4 relative">

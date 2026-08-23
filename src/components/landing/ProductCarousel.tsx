@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { landingProducts } from "@/lib/landing-data";
 import ProductCard from "./ProductCard";
+import EditableText from "@/components/admin/EditableText";
 
 export default function ProductCarousel() {
   const { t } = useLang();
@@ -20,7 +21,7 @@ export default function ProductCarousel() {
   return (
     <section className="bg-raz-surface py-14">
       <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">{t("landing.products.heading")}</h2>
+        <h2 className="text-2xl font-bold text-gray-900 text-center mb-8"><EditableText tKey="landing.products.heading" /></h2>
 
         <div className="flex items-center gap-4">
           <button onClick={prev} className="text-gray-400 hover:text-gray-700 flex-shrink-0" aria-label="prev">

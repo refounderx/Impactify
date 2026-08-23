@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { products, ORG_NAME, ORG_NAME_EN } from "@/lib/mock-data";
 import { Check, ChevronLeft, Image as ImageIcon, Video, Users } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
+import EditableText from "@/components/admin/EditableText";
 
 export default function CreateCampaignPage() {
   const router = useRouter();
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const orgDisplayName = lang === "en" ? ORG_NAME_EN : ORG_NAME;
   const STEPS = lang === "en"
     ? ["Basics", "Story", "Media", "Products", "Communities", "Publish"]
@@ -48,8 +49,8 @@ export default function CreateCampaignPage() {
           <ChevronLeft size={24} />
         </button>
         <div className="flex-1">
-          <h1 className="font-bold text-gray-800 text-sm">{t("wizard.title")}</h1>
-          <p className="text-xs text-gray-400">{orgDisplayName} · {t("wizard.step")} {step + 1} {t("wizard.of")} {STEPS.length}</p>
+          <EditableText tKey="wizard.title" as="h1" className="font-bold text-gray-800 text-sm" />
+          <p className="text-xs text-gray-400">{orgDisplayName} · <EditableText tKey="wizard.step" /> {step + 1} <EditableText tKey="wizard.of" /> {STEPS.length}</p>
         </div>
       </div>
 
@@ -221,7 +222,7 @@ export default function CreateCampaignPage() {
             </div>
             <button onClick={() => router.push("/nonprofit")}
               className="w-full bg-raz-teal text-white py-4 rounded-xl font-bold text-base">
-              {t("wizard.publish")}
+              <EditableText tKey="wizard.publish" />
             </button>
           </div>
         )}
@@ -231,7 +232,7 @@ export default function CreateCampaignPage() {
       {step < STEPS.length - 1 && (
         <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4">
           <button onClick={next} className="w-full bg-raz-teal text-white py-3.5 rounded-xl font-bold">
-            {t("wizard.next")} — {STEPS[step + 1]}
+            <EditableText tKey="wizard.next" /> — {STEPS[step + 1]}
           </button>
         </div>
       )}

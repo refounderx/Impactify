@@ -5,6 +5,7 @@ import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
 import { adminUpdateRows, adminProductRows, adminCampaignRows, type AdminUpdateRow } from "@/lib/nonprofit-admin-data";
 import CreateUpdateWizard, { type NewUpdateDraft } from "@/components/nonprofit-admin/CreateUpdateWizard";
+import EditableText from "@/components/admin/EditableText";
 
 type Tab = "trigger" | "schedule";
 
@@ -49,12 +50,12 @@ export default function UpdatesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">{t("adm.updatesTitle")}</h1>
+        <EditableText tKey="adm.updatesTitle" as="h1" className="text-3xl font-bold text-gray-800" />
         <button
           onClick={() => setCreating(true)}
           className="bg-raz-teal text-white rounded-xl px-5 py-2.5 font-bold text-sm hover:bg-raz-teal-dark transition-colors"
         >
-          {t("adm.createUpdate")}
+          <EditableText tKey="adm.createUpdate" />
         </button>
       </div>
 
@@ -70,7 +71,7 @@ export default function UpdatesPage() {
               tab === "trigger" ? "bg-raz-teal/10 text-raz-teal" : "text-gray-400 hover:bg-gray-50"
             }`}
           >
-            {t("adm.tabTrigger")}
+            <EditableText tKey="adm.tabTrigger" />
           </button>
           <button
             onClick={() => setTab("schedule")}
@@ -78,7 +79,7 @@ export default function UpdatesPage() {
               tab === "schedule" ? "bg-raz-teal/10 text-raz-teal" : "text-gray-400 hover:bg-gray-50"
             }`}
           >
-            {t("adm.tabSchedule")}
+            <EditableText tKey="adm.tabSchedule" />
           </button>
         </div>
 

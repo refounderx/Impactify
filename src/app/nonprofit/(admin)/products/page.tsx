@@ -4,19 +4,20 @@ import { Pencil, Eye } from "lucide-react";
 import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
 import { adminProductCards } from "@/lib/nonprofit-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 export default function ProductsGridPage() {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">{t("adm.productsGridTitle")}</h1>
+      <EditableText tKey="adm.productsGridTitle" as="h1" className="text-3xl font-bold text-gray-800 mb-6 block" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <Link
           href="/nonprofit/products/dashboard"
           className="bg-raz-dark rounded-2xl p-5 flex flex-col items-center justify-center text-center text-white min-h-[19rem] hover:bg-gray-800 transition-colors"
         >
-          <p className="font-bold text-lg leading-snug mb-2">{t("adm.backToDashboard")}</p>
+          <EditableText tKey="adm.backToDashboard" as="p" className="font-bold text-lg leading-snug mb-2 block" />
         </Link>
         {adminProductCards.map((c) => (
           <div key={c.id} className="bg-white rounded-2xl p-4 relative">

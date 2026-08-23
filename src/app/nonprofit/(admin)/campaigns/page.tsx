@@ -4,13 +4,14 @@ import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import { adminCampaignCards } from "@/lib/nonprofit-admin-data";
+import EditableText from "@/components/admin/EditableText";
 
 export default function CampaignsGridPage() {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">{t("adm.campaignsGridTitle")}</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6"><EditableText tKey="adm.campaignsGridTitle" /></h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {adminCampaignCards.map((c) => (
           <div key={c.id} className="bg-white rounded-2xl p-4 relative">

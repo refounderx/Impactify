@@ -3,6 +3,7 @@ import { Play } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { checkoutProgress, type AudienceProduct } from "@/lib/landing-data";
 import { formatNIS } from "@/lib/mock-data";
+import EditableText from "@/components/admin/EditableText";
 
 export default function StepProduct({
   product,
@@ -23,7 +24,7 @@ export default function StepProduct({
   total: number;
   onContinue: () => void;
 }) {
-  const { t, lang } = useLang();
+  const { lang } = useLang();
 
   return (
     <div>
@@ -42,23 +43,23 @@ export default function StepProduct({
             <span className="font-numeric">{qty}</span>
             <button onClick={() => onQtyChange(Math.max(0, qty - 1))} className="text-raz-teal font-bold">-</button>
           </div>
-          <p className="text-xs text-gray-400 mt-2">257 ❤ {t("landing.products.chosen")}</p>
+          <p className="text-xs text-gray-400 mt-2">257 ❤ <EditableText tKey="landing.products.chosen" /></p>
         </div>
         <div className="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center text-4xl flex-shrink-0">{product.emoji}</div>
       </div>
 
       <div className="bg-gray-50 rounded-xl p-4 mb-6">
-        <p className="text-sm font-bold text-gray-700 mb-1">{t("landing.checkout.progressIncludes")}</p>
+        <EditableText tKey="landing.checkout.progressIncludes" as="p" className="text-sm font-bold text-gray-700 mb-1 block" />
         <p className="text-xs text-gray-500 mb-2">
-          {t("landing.checkout.progressPrefix")} {checkoutProgress.goal.toLocaleString()} {t("landing.checkout.progressMid")}{" "}
-          <span className="font-bold text-raz-teal">{checkoutProgress.raised.toLocaleString()}</span> {t("landing.checkout.progressUnit")}
+          <EditableText tKey="landing.checkout.progressPrefix" /> {checkoutProgress.goal.toLocaleString()} <EditableText tKey="landing.checkout.progressMid" />{" "}
+          <span className="font-bold text-raz-teal">{checkoutProgress.raised.toLocaleString()}</span> <EditableText tKey="landing.checkout.progressUnit" />
         </p>
         <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
           <div className="h-full bg-raz-teal rounded-full" style={{ width: `${Math.round((checkoutProgress.raised / checkoutProgress.goal) * 100)}%` }} />
         </div>
       </div>
 
-      <p className="text-sm font-bold text-gray-700 text-center mb-4">{t("landing.checkout.crossSellHeading")}</p>
+      <EditableText tKey="landing.checkout.crossSellHeading" as="p" className="text-sm font-bold text-gray-700 text-center mb-4 block" />
       <div className="grid grid-cols-3 gap-3 mb-6">
         {otherProducts.map((p) => (
           <div key={p.id} className="bg-white border border-gray-100 rounded-xl p-3 text-center">
@@ -75,11 +76,11 @@ export default function StepProduct({
       </div>
 
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-gray-500">{t("landing.checkout.totalLabel")}</span>
+        <span className="text-sm text-gray-500"><EditableText tKey="landing.checkout.totalLabel" /></span>
         <span className="text-3xl font-bold font-numeric text-gray-900">{formatNIS(total)}</span>
       </div>
       <button onClick={onContinue} className="w-full bg-raz-teal text-white font-bold py-3 rounded-full">
-        {t("landing.products.ctaBuy")}
+        <EditableText tKey="landing.products.ctaBuy" />
       </button>
     </div>
   );

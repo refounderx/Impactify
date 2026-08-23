@@ -10,10 +10,11 @@ import { formatNIS, percent, getOrg } from "@/lib/mock-data";
 import { Play, Share2, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useParams } from "next/navigation";
+import EditableText from "@/components/admin/EditableText";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const [campaign, setCampaign] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +83,7 @@ export default function CampaignDetail() {
         <div className="flex items-center gap-2 mb-3">
           <span className="text-gray-600 font-medium">{orgName}</span>
           {org?.verified && (
-            <span className="bg-raz-teal/10 text-raz-teal text-xs px-2 py-0.5 rounded-full ms-1">{t("campaign.orgVerified")}</span>
+            <span className="bg-raz-teal/10 text-raz-teal text-xs px-2 py-0.5 rounded-full ms-1"><EditableText tKey="campaign.orgVerified" /></span>
           )}
         </div>
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 leading-snug mb-6">{title}</h1>
@@ -96,7 +97,7 @@ export default function CampaignDetail() {
           <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
             <div className="bg-raz-teal rounded-full h-full transition-all duration-500" style={{ width: `${pct}%` }} />
           </div>
-          <p className="text-sm text-gray-400 mt-1.5">{t("campaign.goalLabel")} {formatNIS(campaign.goal)}</p>
+          <p className="text-sm text-gray-400 mt-1.5"><EditableText tKey="campaign.goalLabel" /> {formatNIS(campaign.goal)}</p>
         </div>
 
         {/* Opens the donation-amount popup */}
@@ -105,7 +106,7 @@ export default function CampaignDetail() {
             onClick={() => setShowModal(true)}
             className="bg-raz-teal text-white rounded-full px-8 py-3.5 font-bold text-lg hover:bg-raz-teal-dark transition-colors shadow-sm"
           >
-            {t("campaign.chooseAmount")}
+            <EditableText tKey="campaign.chooseAmount" />
           </button>
         </div>
 

@@ -5,10 +5,11 @@ import { Bell, Search, LogIn } from "lucide-react";
 import { DONOR_NAME, DONOR_NAME_EN, ORG_NAME, ORG_NAME_EN, COMMUNITY_NAME, COMMUNITY_NAME_EN } from "@/lib/mock-data";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import EditableText from "@/components/admin/EditableText";
 
 export default function TopNav() {
   const pathname = usePathname();
-  const { lang, setLang, t } = useLang();
+  const { lang, setLang } = useLang();
   const { user } = useAuth();
 
   const active = pathname.startsWith("/nonprofit")
@@ -45,7 +46,7 @@ export default function TopNav() {
     <nav className="hidden md:flex bg-white border-b border-gray-100 px-6 py-3 items-center justify-between sticky top-[33px] z-40">
       {/* Logo */}
       <Link href="/" className="text-xl font-bold text-raz-teal font-hebrew whitespace-nowrap">
-        {t("brand")}
+        <EditableText tKey="brand" />
       </Link>
 
       {/* Links */}
@@ -58,7 +59,7 @@ export default function TopNav() {
               pathname === l.href ? "bg-raz-teal/10 text-raz-teal" : "text-gray-600 hover:bg-gray-50"
             }`}
           >
-            {t(l.key)}
+            <EditableText tKey={l.key} />
           </Link>
         ))}
       </div>

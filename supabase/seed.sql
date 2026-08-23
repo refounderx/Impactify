@@ -129,28 +129,28 @@ insert into public.communities (id, name, name_en, org_id, total_raised, donors_
 
 -- ── Campaign updates (non-user-specific — visible to all) ─────
 insert into public.campaign_updates (id, campaign_id, org_id, description, description_en, has_video, gradient) values
-  ('u1111111-1111-1111-1111-111111111111',
+  ('a1111111-1111-1111-1111-111111111111',
    'c4444444-4444-4444-4444-444444444444',
    '44444444-4444-4444-4444-444444444444',
    'מעניקים לגדוד לביא את הפינוקים שתרמתם',
    'Delivering your treats to the Lavi Brigade soldiers',
    true, 'from-gray-700 to-gray-900'),
 
-  ('u2222222-2222-2222-2222-222222222222',
+  ('a2222222-2222-2222-2222-222222222222',
    'c4444444-4444-4444-4444-444444444444',
    '44444444-4444-4444-4444-444444444444',
    'מעניקים לגדוד לביא את הפינוקים שתרמתם',
    'Delivering your treats to the Lavi Brigade soldiers',
    false, 'from-gray-300 to-gray-400'),
 
-  ('u3333333-3333-3333-3333-333333333333',
+  ('a3333333-3333-3333-3333-333333333333',
    'c1111111-1111-1111-1111-111111111111',
    '11111111-1111-1111-1111-111111111111',
    'הוגשו ארוחות חמות לקשישים בשכונת שפירא',
    'Hot meals served to elderly in Shapira neighborhood',
    false, 'from-orange-400 to-red-400'),
 
-  ('u4444444-4444-4444-4444-444444444444',
+  ('a4444444-4444-4444-4444-444444444444',
    'c4444444-4444-4444-4444-444444444444',
    '44444444-4444-4444-4444-444444444444',
    'מעניקים לגדוד לביא את הפינוקים שתרמתם',
@@ -218,3 +218,10 @@ values
   (null, '11111111-1111-1111-1111-111111111111',
    'חיוב הוראת קבע בוצע בהצלחה', 'Standing order charge completed successfully',
    null, null, 'info', null, null);
+
+
+-- ── Hero cards (image_url = null — swap in real uploaded image URLs later)
+insert into public.hero_cards (image_url, bubble_text, bubble_text_en, display_order) values
+  (null, '20 אנשים העניקו כבר היום לחיילים בודדים', '20 people already donated today to lone soldiers', 1),
+  (null, '12 אנשים העניקו כבר היום לקשישים', '12 people already donated today to the elderly', 2),
+  (null, '35 אנשים העניקו כבר היום לילדים', '35 people already donated today to children', 3);

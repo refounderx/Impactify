@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
 import { getCampaignDonors, getCampaignCommunities, formatNIS } from "@/lib/mock-data";
+import EditableText from "@/components/admin/EditableText";
 
 type Tab = "donors" | "communities" | "story" | "org";
 
@@ -77,7 +78,7 @@ export default function CampaignTabs({ campaignId, donorsCount, story, orgBio }:
             ))}
           </div>
         ) : (
-          <p className="text-gray-400 text-sm text-center py-6">{t("campaign.communitiesEmpty")}</p>
+          <p className="text-gray-400 text-sm text-center py-6"><EditableText tKey="campaign.communitiesEmpty" /></p>
         )
       )}
 
