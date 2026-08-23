@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useLang } from "@/contexts/LanguageContext";
 import type { AudienceKind } from "@/lib/landing-data";
 import { getHeroCards } from "@/lib/supabase/queries-landing";
@@ -60,9 +61,9 @@ export default function Hero() {
         <div>
           <EditableText tKey="landing.hero.title" as="h1" className="text-5xl font-bold text-gray-900 leading-tight mb-6 block" />
           <EditableText tKey="landing.hero.body" as="p" className="text-gray-500 leading-relaxed mb-6 block" />
-          <button className="border-2 border-raz-teal text-raz-teal font-bold px-8 py-3 rounded-full">
+          <Link href="/auth" className="inline-block border-2 border-raz-teal text-raz-teal font-bold px-8 py-3 rounded-full">
             <EditableText tKey="landing.hero.cta" />
-          </button>
+          </Link>
         </div>
       </div>
 
