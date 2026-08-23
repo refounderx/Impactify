@@ -47,7 +47,7 @@ Server-side donation write. Validates inputs at trust boundary.
 | `/auth/setup` | One-time donor/NGO-owner/community-owner onboarding; admin is never self-selectable |
 | `/admin/users` | Admin-only user role and tenant-assignment management |
 
-**Auth mechanism:** Supabase email magic link. The callback routes incomplete profiles to setup and returning users to the dashboard for their persisted role. `proxy.ts` refreshes sessions and performs coarse route protection; server layouts enforce the exact role.
+**Auth mechanism:** Supabase email magic link. `/auth` sends `emailRedirectTo` as the current origin plus `/auth/callback`, so local and production sign-ins return to the site that initiated them. Supabase's redirect allowlist must contain `http://localhost:3000/auth/callback` and `https://impactify-sable.vercel.app/auth/callback`; its production Site URL is `https://impactify-sable.vercel.app`. The callback routes incomplete profiles to setup and returning users to the dashboard for their persisted role. `proxy.ts` refreshes sessions and performs coarse route protection; server layouts enforce the exact role.
 
 ### Auth and campaign RPCs
 

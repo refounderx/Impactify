@@ -49,7 +49,12 @@ New schema/seed changes should be added as a new timestamped file under `supabas
 npm run dev   # http://localhost:3000
 ```
 
-Pages fall back to mock data if Supabase is unreachable or tables are empty.
+In Supabase Authentication → URL Configuration, set the production Site URL and allow both callback URLs:
+
+- `https://impactify-sable.vercel.app/auth/callback`
+- `http://localhost:3000/auth/callback`
+
+Runtime data queries Supabase directly; missing data or query failures surface explicit states rather than local mock fallbacks.
 
 ## Route Map
 

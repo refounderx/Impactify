@@ -14,13 +14,15 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  // Exact same call that was working before — no emailRedirectTo
   async function sendOtp() {
     if (!email.trim()) return;
     setLoading(true);
     setError("");
     const sb = createClient();
-    const { error } = await sb.auth.signInWithOtp({ email: email.trim() });
+    const { error } = await sb.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
     if (error) {
       console.error("Supabase auth error:", error);
       setError(error.message); // show real error

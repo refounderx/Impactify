@@ -66,7 +66,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - [x] `AuthContext.tsx` — `useAuth()` hook exposes user, profile, refresh, loading, and sign-out
 - [x] `/auth` — email entry → magic link (Supabase free tier; custom SMTP needed for 6-digit code)
 - [x] `/auth/callback` — exchanges `?code=`, then redirects by persisted role or incomplete onboarding
-- [x] Supabase URL Config: `http://localhost:3000/auth/callback` must be in Redirect URLs
+- [x] Supabase URL Config: production Site URL plus local and production `/auth/callback` URLs are allowlisted
 - [x] `/auth/setup` — one-time donor/NGO-owner/community-owner onboarding through atomic RPCs
 - [x] Four exact roles: `donor`, `ngo_owner`, `community_owner`, `admin`
 - [x] `/admin/users` — admin-only promotion, demotion, role, and tenant assignment with audit log
