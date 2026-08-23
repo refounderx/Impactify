@@ -1,4 +1,4 @@
-export type AppRole = "donor" | "org_admin" | "org_member" | "community_manager";
+export type AppRole = "donor" | "ngo_owner" | "community_owner" | "admin";
 export type CampaignStatus = "draft" | "active" | "paused" | "completed" | "archived" | "blocked";
 export type DonationStatus = "pending" | "completed" | "failed" | "refunded";
 export type RecurringStatus = "active" | "paused" | "cancelled";
@@ -18,6 +18,7 @@ export interface Database {
           org_id: string | null;
           community_id: string | null;
           id_number: string | null;
+          onboarding_completed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -180,7 +181,10 @@ export interface Database {
         Row: { id: string; donor_id: string | null; brand: string; last_four: string; psp_token: string | null; created_at: string };
         Insert: { id?: string; donor_id?: string | null; brand: string; last_four: string; psp_token?: string | null; created_at?: string };
         Update: Partial<Database["public"]["Tables"]["payment_methods"]["Row"]>;
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "profiles_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
+          { foreignKeyName: "profiles_community_id_fkey"; columns: ["community_id"]; isOneToOne: false; referencedRelation: "communities"; referencedColumns: ["id"] },
+        ];
       };
       system_updates: {
         Row: { id: string; donor_id: string | null; org_id: string | null; title: string; title_en: string | null; detail: string | null; detail_en: string | null; status: string; action_label: string | null; action_label_en: string | null; created_at: string };
@@ -211,9 +215,55 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["site_datasets"]["Insert"]>;
         Relationships: [];
       };
+      admin_role_audit: {
+        Row: {
+          id: number;
+          actor_id: string;
+          profile_id: string;
+          old_role: AppRole;
+          new_role: AppRole;
+          old_org_id: string | null;
+          new_org_id: string | null;
+          old_community_id: string | null;
+          new_community_id: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      complete_donor_signup: {
+        Args: { p_full_name: string };
+        Returns: string;
+      };
+      complete_ngo_signup: {
+        Args: { p_full_name: string; p_org_name: string; p_org_name_en?: string | null };
+        Returns: string;
+      };
+      complete_community_signup: {
+        Args: { p_full_name: string; p_community_name: string; p_community_name_en?: string | null };
+        Returns: string;
+      };
+      admin_update_profile_role: {
+        Args: { p_profile_id: string; p_role: AppRole; p_org_id?: string | null; p_community_id?: string | null };
+        Returns: undefined;
+      };
+      publish_campaign: {
+        Args: {
+          p_title: string;
+          p_short_desc: string;
+          p_story: string;
+          p_category: string;
+          p_goal: number;
+          p_end_date: string | null;
+          p_product_ids?: string[];
+        };
+        Returns: string;
+      };
+    };
     Enums: {
       app_role: AppRole;
       campaign_status: CampaignStatus;

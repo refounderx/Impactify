@@ -9,14 +9,17 @@
 | Role | Hebrew | Core capability |
 |---|---|---|
 | **Donor** (תורם) | Individual | Browses campaigns, donates, creates personal fundraisers |
-| **Non-Profit** (עמותה) | Organization | Creates campaigns, manages products, issues tax receipts |
-| **Community Manager** (מנהל קהילה) | Influencer | Runs sub-campaigns, shares referral links, exports social cards |
+| **NGO Owner** (בעל עמותה) | Organization owner | Creates campaigns and manages the assigned NGO's data |
+| **Community Owner** (בעל קהילה) | Community owner | Runs community campaigns and sees attributed activity |
+| **Admin** (מנהל מערכת) | Platform operator | Promotes/demotes users and assigns their NGO/community tenant |
 
 ## Current Build Status
 
-**Supabase-backed demo application** — public, donor, nonprofit-admin, community-admin, and landing-page data now flow through Supabase. Normalized entities live in their own tables; remaining presentation fixtures are stored in the public-read-only `site_datasets` table and loaded through `SiteDataProvider`. Query errors and empty results are surfaced instead of silently falling back to bundled mock values. Authentication and donation persistence exist; a real payment-service-provider integration does not.
+**Supabase-backed demo application** — public, donor, NGO-owner, community-owner, admin, and landing-page data flow through Supabase. The two admin dashboards now derive their tenant from the authenticated profile and query normalized tables; only shared/landing presentation fixtures remain in public-read-only `site_datasets` rows. Query errors and empty results are surfaced instead of silently falling back to bundled mock values. Authentication and donation persistence exist; a real payment-service-provider integration does not.
 
-The `site_datasets` and organization-profile migrations were applied to the live project through the Dashboard SQL Editor on 2026-08-23. REST verification confirms all four dataset rows and all five extended organization profiles are present.
+The `site_datasets` and organization-profile migrations were applied to the live project through the Dashboard SQL Editor on 2026-08-23. The later auth migration removed obsolete admin snapshots; REST verification confirms the two required shared/landing dataset rows and all five extended organization profiles.
+
+Four-role auth, one-time onboarding RPCs, admin role management, tenant RLS, and atomic campaign publishing from migrations `20260823160000`–`20260823162000` are live. The sole existing profile was bootstrapped as the initial admin after an exact one-profile/zero-admin precondition check. REST and SQL probes verified tenant consistency, blocked bank fields, blocked anonymous RPC execution, and rejected a simulated non-admin role change.
 
 ### Screens Built
 - Donor home feed (featured campaign hero + category chips + grid)

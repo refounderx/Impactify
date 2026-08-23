@@ -1,0 +1,46 @@
+"use client";
+
+import { useMemo } from "react";
+import { useCommunityAdminData } from "@/contexts/CommunityAdminDataContext";
+
+const date = (value: string | null) => value ? new Date(value).toLocaleDateString("he-IL") : "—";
+
+export function useCommunityAdminView() {
+  const state = useCommunityAdminData();
+  const data = useMemo(() => {
+    if (!state.data) return null;
+    const { community, organization, campaigns, donations } = state.data;
+    const orgName = organization?.name ?? "";
+    const orgNameEn = organization?.name_en ?? orgName;
+    const campaignRows = campaigns.map((campaign) => ({
+      id: campaign.id, name: campaign.title, nameEn: campaign.title_en ?? campaign.title,
+      created: date(campaign.created_at), ended: date(campaign.end_date), productsCount: 0,
+      productsRaisedCount: donations.filter((item) => item.campaign_id === campaign.id).reduce((sum, item) => sum + item.quantity, 0),
+      amountRaised: donations.filter((item) => item.campaign_id === campaign.id).reduce((sum, item) => sum + Number(item.amount), 0),
+      joinedCount: 1, donorCount: donations.filter((item) => item.campaign_id === campaign.id).length,
+      orgName, orgNameEn, source: "linked" as const, paused: campaign.status === "paused",
+    }));
+    return {
+      AS_OF: new Date().toLocaleDateString("he-IL"),
+      communityCampaignRows: campaignRows,
+      communityCampaignCards: campaigns.map((campaign) => ({ id: campaign.id, title: campaign.title,
+        titleEn: campaign.title_en ?? campaign.title, emoji: campaign.emoji,
+        raised: Number(campaign.raised), goal: Number(campaign.goal), activityArea: "—", activityAreaEn: "—" })),
+      communityCampaignsTotalRaised: donations.reduce((sum, item) => sum + Number(item.amount), 0),
+      communityCampaignsActiveCount: campaigns.length,
+      communityDonationRows: donations.map((item) => ({ id: item.id, date: date(item.created_at),
+        donorName: item.dedication_name || "Anonymous donor", campaign: item.campaigns?.title ?? "",
+        product: item.products?.name ?? "—", quantity: item.quantity, amount: Number(item.amount),
+        frequency: item.is_recurring ? "חודשי" : "חד פעמי", frequencyEn: item.is_recurring ? "Monthly" : "One-time" })),
+      communityDonationsTotal: donations.reduce((sum, item) => sum + Number(item.amount), 0),
+      communityDonationsCount: donations.length,
+      communityNonprofitRows: organization ? [{ id: organization.id, name: organization.name,
+        nameEn: organization.name_en ?? organization.name, activityArea: "—", activityAreaEn: "—",
+        joinedDate: date(community.created_at), activeCampaigns: campaigns.length, productsSold: 0,
+        totalRaised: Number(community.total_raised), contactName: organization.ceo ?? "—", contactPhone: organization.phone ?? "—" }] : [],
+      communityNonprofitsTotalRaised: Number(community.total_raised),
+      communityNonprofitsCount: organization ? 1 : 0,
+    };
+  }, [state.data]);
+  return { ...state, data };
+}

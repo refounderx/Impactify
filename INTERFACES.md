@@ -35,7 +35,7 @@ Server-side donation write. Validates inputs at trust boundary.
 
 **Security:**
 - Reads session from cookies via Supabase SSR — never trusts client-sent `donor_id`
-- Validates: `amount > 0`, `amount < 1,000,000`, `campaign_id` and `org_id` present
+- Validates: `amount > 0`, `amount < 1,000,000`, UUIDs, active campaign, and campaign→organization ownership
 - `donor_id` is `null` for anonymous donations (allowed by schema)
 - Creates `recurring_donations` row only when `is_recurring=true` AND user is authenticated
 
@@ -44,9 +44,20 @@ Server-side donation write. Validates inputs at trust boundary.
 | Route | Purpose |
 |---|---|
 | `/auth` | Email entry (step 1) + OTP verification (step 2) — single page |
-| `/auth/setup` | Name + role selection after first successful login |
+| `/auth/setup` | One-time donor/NGO-owner/community-owner onboarding; admin is never self-selectable |
+| `/admin/users` | Admin-only user role and tenant-assignment management |
 
-**Auth mechanism:** Supabase email OTP (`signInWithOtp` + `verifyOtp`). JWT stored in HttpOnly cookies. SMS not required — Supabase sends code via its built-in email service.
+**Auth mechanism:** Supabase email magic link. The callback routes incomplete profiles to setup and returning users to the dashboard for their persisted role. `proxy.ts` refreshes sessions and performs coarse route protection; server layouts enforce the exact role.
+
+### Auth and campaign RPCs
+
+| Function | Caller | Contract |
+|---|---|---|
+| `complete_donor_signup(full_name)` | Authenticated, incomplete user | Completes onboarding as donor |
+| `complete_ngo_signup(full_name, org_name, org_name_en?)` | Authenticated, incomplete user | Atomically creates an NGO and assigns its owner |
+| `complete_community_signup(full_name, community_name, community_name_en?)` | Authenticated, incomplete user | Atomically creates a community and assigns its owner |
+| `admin_update_profile_role(profile_id, role, org_id?, community_id?)` | Admin only | Changes role/tenant, blocks self-change and last-admin demotion, writes an audit row |
+| `publish_campaign(...)` | NGO owner only | Validates tenant products and atomically publishes a campaign |
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
 
@@ -59,17 +70,17 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `searchCampaigns(q, category?)` | No | `Campaign[]` | same |
 | `getOrganizations()` | No | `Organization[]` | `organizations` |
 | `getProductsByIds(ids[])` | No | `Product[]` | `products` |
-| `getNpDashboardData()` | No (demo: first org) | `{ org, campaigns }` | `organizations`, `campaigns` |
-| `getCommunityDashboardData()` | No (demo: top community) | community stats + leaderboard | `communities` |
+| `getNgoAdminData()` | NGO owner | Own tenant's campaigns, products, donations, communities | normalized tenant tables |
+| `getCommunityAdminData()` | Community owner | Own community and attributed campaigns/donations | normalized tenant tables |
 | `getMyDonations(userId)` | Yes | donation rows | `donations`, `campaigns`, `organizations` |
 | `getMyRecurring(userId)` | Yes | recurring rows | `recurring_donations`, `campaigns`, `organizations` |
 | `updateRecurringStatus(id, status)` | Yes (RLS) | `boolean` | `recurring_donations` |
 | `cancelRecurring(id)` | Yes (RLS) | `boolean` | `recurring_donations` |
-| `getSiteDatasets()` | No | typed landing/admin/demo dataset bundle | `site_datasets` |
+| `getSiteDatasets()` | No | typed shared/landing presentation bundle | `site_datasets` |
 
 ### `site_datasets`
 
-Four public-read-only rows keyed by `shared`, `landing`, `nonprofit_admin`, and `community_admin`. Each row stores a JSON `value` and `updated_at`. The client loads all four as a single typed bundle through `SiteDataProvider`; a missing row is an error, not a local fallback.
+Two runtime public-read-only rows keyed by `shared` and `landing`. The historical admin snapshot rows are deleted by the auth migration because admin screens now query tenant tables directly. A missing required row is an error, not a local fallback.
 
 ## Database Table Contracts
 
@@ -99,12 +110,13 @@ Key columns only — see `supabase/schema.sql` for full definitions.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid | PK = auth.users.id |
-| `app_role` | enum | `donor\|org_admin\|org_member\|community_manager` |
-| `org_id` | uuid | Nullable — set for org members |
-| `community_id` | uuid | Nullable — set for community managers |
+| `app_role` | enum | `donor\|ngo_owner\|community_owner\|admin` |
+| `org_id` | uuid | Required only for `ngo_owner`; FK → organizations |
+| `community_id` | uuid | Required only for `community_owner`; FK → communities |
+| `onboarding_completed_at` | timestamptz | Null until a one-time onboarding RPC succeeds |
 | `id_number` | text | Nullable — donor ID number, editable via `/my-donations` profile view |
 
-Auto-created by trigger on `auth.users` insert. `full_name`, `phone`, `id_number` are donor-editable (`profiles_own_update` RLS policy); `email` is not (tied to auth).
+Auto-created by trigger on `auth.users` insert. Ordinary users may update personal fields only; role and tenant columns are not granted to them. Admin changes go through the audited security-definer RPC.
 
 ### `payment_methods`
 | Column | Type | Notes |
@@ -149,7 +161,7 @@ RLS: public read. Consumed by `getHeroCards()` in `src/lib/supabase/queries-land
 | `text_he` / `text_en` | text | Nullable — a row overrides the static `translations.ts` value for that key at runtime |
 | `updated_at` | timestamptz | |
 
-RLS: public read **and public write** (no real admin auth exists in this app yet — see `TASKS.md` note to lock this down before production). Read via `getSiteContentOverrides()`, written via `upsertSiteContent(key, he, en)`, both in `src/lib/supabase/queries-content.ts`. `LanguageContext`'s `t()` checks this override map before falling back to `translations.ts`. `EditableText` (`src/components/admin/EditableText.tsx`) wraps a single `t(tKey)` call with a pencil-icon inline editor, gated by `AdminModeContext` (`src/contexts/AdminModeContext.tsx`, a localStorage-persisted boolean toggle in `DemoBar` — no route, no real permission check).
+RLS: public read; insert/update require an authenticated `admin` profile. Read via `getSiteContentOverrides()`, written via `upsertSiteContent(key, he, en)`. The edit toggle is rendered only for admins and only in development builds.
 
 **Operable, partial rollout:** `AdminModeProvider` is mounted in `layout.tsx`, the toggle is wired into `DemoBar`, and `Hero.tsx`/`WhyJoinSection.tsx` are converted to `EditableText` — edits there save live and are verified working. Most of the site's ~270 other `t()` call sites are not yet converted. See `TASKS.md`.
 

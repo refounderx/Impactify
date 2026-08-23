@@ -4,7 +4,9 @@
 
 Responsive bilingual application with Supabase-backed normalized entities, authentication, donation writes, and shared presentation datasets. Local fixture modules are migration inputs only; active pages do not use them as runtime fallbacks. Real PSP processing is still not implemented.
 
-**Supabase-only migration complete (2026-08-23):** `20260823150000_site_datasets.sql` and `20260823151000_organization_profiles.sql` were applied through the Dashboard SQL Editor. REST verification confirms four dataset rows (`shared`, `landing`, `nonprofit_admin`, `community_admin`) and complete extended profiles for all five organizations. The CLI Management API login-role error remains an operational issue for future `db push` commands.
+**Supabase-only migration complete (2026-08-23):** `20260823150000_site_datasets.sql` and `20260823151000_organization_profiles.sql` were applied through the Dashboard SQL Editor. The auth migration later removed the two obsolete admin snapshots; REST verification now confirms the required `shared` and `landing` rows and complete extended profiles for all five organizations. The CLI Management API login-role error remains an operational issue for future `db push` commands.
+
+**Four-role auth live (2026-08-23):** code and migrations define donor, NGO owner, community owner, and admin; add atomic onboarding, audited admin promotion/demotion, route guards, tenant-scoped dashboards, protected content editing, campaign publishing, and hardened donation validation. Migrations `20260823160000`–`20260823162000` are applied. REST/SQL verification passed, including anonymous bank/RPC denial and simulated non-admin role-change rejection. Dashboard-applied versions `20260823140000`–`20260823162000` are reconciled in `supabase_migrations.schema_migrations` for future CLI pushes.
 
 ### Screens complete
 - `/` — Marketing landing page (changed 2026-08-23, previously donor home; see Known Tech Debt)
@@ -58,18 +60,24 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 
 ---
 
-## Phase 3 — Authentication ✅ (email OTP complete)
+## Phase 3 — Authentication ✅ (email magic link + role authorization)
 
-- [x] `middleware.ts` — session refresh on every request
-- [x] `AuthContext.tsx` — `useAuth()` hook: `{ user, loading, signOut }`
+- [x] `proxy.ts` — session refresh plus coarse protection for setup/admin/owner routes
+- [x] `AuthContext.tsx` — `useAuth()` hook exposes user, profile, refresh, loading, and sign-out
 - [x] `/auth` — email entry → magic link (Supabase free tier; custom SMTP needed for 6-digit code)
-- [x] `/auth/callback` — exchanges `?code=` param for session, redirects to `/auth/setup`
+- [x] `/auth/callback` — exchanges `?code=`, then redirects by persisted role or incomplete onboarding
 - [x] Supabase URL Config: `http://localhost:3000/auth/callback` must be in Redirect URLs
-- [x] `/auth/setup` — name + role selection after first login
+- [x] `/auth/setup` — one-time donor/NGO-owner/community-owner onboarding through atomic RPCs
+- [x] Four exact roles: `donor`, `ngo_owner`, `community_owner`, `admin`
+- [x] `/admin/users` — admin-only promotion, demotion, role, and tenant assignment with audit log
+- [x] Server layout guards enforce NGO-owner, community-owner, and admin routes
+- [x] Ordinary profile updates cannot modify role or tenant columns
+- [x] NGO/community dashboards query the authenticated tenant instead of shared snapshots
+- [x] Apply and adversarially verify migrations `20260823160000`–`20260823162000` on live Supabase
 - [x] `TopNav` — shows real user email when signed in; Sign In button when not
 - [x] `layout.tsx` — wrapped with `AuthProvider`
 - [ ] Switch to phone OTP — add Supabase SMS hook → Inforu/Twilio when SMS provider is ready
-- [ ] Remove `DemoBar` or gate behind `NODE_ENV=development` before production
+- [x] `DemoBar` is development-only; its content-edit toggle also requires the admin role
 
 ---
 
@@ -276,8 +284,8 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 
 - **Admin content-editing mode (2026-08-23, operable — rollout complete for this pass):** `AdminModeProvider` mounted in `layout.tsx`, "עריכה / Admin" toggle added to `DemoBar` (localStorage-persisted, all pages). `EditableText` converted across ~55 files / ~270 real `t()` call sites (corrected count from an initial ~354 grep estimate that included false-positive matches on unrelated `.select("...(...)")`-style calls in Supabase query files) — hover a wrapped text in admin mode to see the pencil icon, click to edit He/En, saves to live `site_content` table. Done via 6 parallel background agents plus manual recovery of 11 files (`ImpactStatsGrid.tsx`, `ContactCTA.tsx`, `AdminShell.tsx`, `profile/page.tsx`, `recurring/page.tsx`, `search/page.tsx`, `CampaignCard.tsx`, and 4 `nonprofit/(admin)/*` dashboard pages) whose conversions were lost to a mid-session `git stash` collision between the parallel agents and manually redone. Verified end-to-end via direct DB upsert (RLS write path confirmed working) and `tsc`/live-server checks; not verified via full manual click-through of every converted screen. Remaining work:
   - Attribute-position text (`placeholder`, `aria-label`, `title`, table-header string arrays, `StatHeader` label props) was intentionally left as plain `t()` calls — `EditableText` only wraps rendered JSX text nodes, not string props. Not in scope for this pass.
-  - `site_content` RLS currently allows public write (no real admin auth exists in this app) — must be gated by a real role/auth check before production. Right now anyone with the site open (in admin mode) can edit any text.
-- **Supabase CLI linked, Management API currently blocked (2026-08-23):** the project is linked, but `db push` cannot initialize the database login role. Apply the two current migrations through the Dashboard SQL Editor, then return to migration-only CLI pushes after the endpoint is healthy.
+  - `site_content` writes are now restricted to authenticated admins; attribute-position strings remain outside the inline editor.
+- **Supabase CLI linked, Management API currently blocked (2026-08-23):** the project is linked, but `db push` cannot initialize the database login role. Current migrations were applied through the Dashboard SQL Editor; return to migration-only CLI pushes after the endpoint is healthy.
 - **Root route swap (2026-08-23):** `/` now serves the marketing landing page (same content as `/landing`, duplicated). The old donor-home screen was archived to `app/_archive/old-home/page.tsx` (Next.js private folder, excluded from routing) rather than deleted or re-routed. Two follow-ups from this, not yet decided:
   - Where should donor-home live now? (e.g. new route like `/home` or `/dashboard`) — currently unreachable via any link.
   - These pages still `Link`/`redirect` to `/` expecting donor-home and will now land on the marketing page instead: `my-donations`, `auth`, `nonprofit/[id]`, `campaign/[id]`, `TopNav.tsx`, `recurring`, `donate/[id]/thanks`.

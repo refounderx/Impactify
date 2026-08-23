@@ -7,13 +7,16 @@ import CampaignSourceTabs from "@/components/community/CampaignSourceTabs";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import type { CommunityCampaignSource } from "@/lib/community-admin-data";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
+import { useCommunityAdminView } from "@/hooks/useCommunityAdminView";
+import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
 import EditableText from "@/components/admin/EditableText";
 
 export default function CommunityCampaignsGridPage() {
   const { lang } = useLang();
-  const { data } = useSiteDataset("community_admin");
-  const [source, setSource] = useState<CommunityCampaignSource>("created");
+  const { data, loading, error, reload } = useCommunityAdminView();
+  const [source, setSource] = useState<CommunityCampaignSource>("linked");
+
+  if (loading || error) return <AdminDataStatus loading={loading} error={error} reload={reload} />;
 
   return (
     <div>

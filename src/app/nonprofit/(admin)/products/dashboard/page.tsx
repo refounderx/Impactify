@@ -1,103 +1,24 @@
 "use client";
-import { useState, Fragment } from "react";
-import { Printer, FileText, Eye, Pencil, ChevronDown, ChevronUp } from "lucide-react";
-import StatHeader from "@/components/nonprofit-admin/StatHeader";
-import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
-import ProductDetailPanel from "@/components/nonprofit-admin/ProductDetailPanel";
-import { useLang } from "@/contexts/LanguageContext";
-import { formatNIS } from "@/lib/mock-data";
-import { getAdminProductDetail } from "@/lib/nonprofit-admin-data";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
-import EditableText from "@/components/admin/EditableText";
 
-const AS_OF = "12/08/23";
+import { useLang } from "@/contexts/LanguageContext";
+import { useNgoAdminView } from "@/hooks/useNgoAdminView";
+import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
+import { formatNIS } from "@/lib/mock-data";
 
 export default function ProductsDashboardPage() {
-  const { lang, t } = useLang();
-  const { data } = useSiteDataset("nonprofit_admin");
-  const adminProductRows = data?.adminProductRows ?? [];
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  return (
-    <div>
-      <EditableText tKey="adm.productsDashboardTitle" as="h1" className="text-3xl font-bold text-gray-800 mb-4 block" />
-      <div className="flex items-center gap-3 mb-5 text-gray-400">
-        <button className="hover:text-raz-teal"><Printer size={18} /></button>
-        <button className="hover:text-raz-teal"><FileText size={18} /></button>
-      </div>
-
-      <div className="bg-white rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-          <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות העמותה"} />
-          <StatHeader
-            stats={[
-              { label: t("adm.activeProducts"), value: String(data?.adminProductsActiveCount ?? 0) },
-              { label: `${t("adm.unitsDonated")} ${AS_OF})`, value: (data?.adminProductsTotalUnits ?? 0).toLocaleString("he-IL") },
-            ]}
-          />
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" dir={lang === "en" ? "ltr" : "rtl"}>
-            <thead>
-              <tr className="border-b border-gray-100">
-                {["שם המוצר", "הקמה", "סיום", "קמפיינים", "קהילות", "יחידה", "סה\"כ נתרם", "נתרמו", "הוקם ע\"י", "צפייה", "עריכה", ""].map((h) => (
-                  <th key={h} className="pb-3 pt-1 text-raz-teal font-bold text-start px-2 whitespace-nowrap">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {adminProductRows.map((row, i) => {
-                const expanded = expandedId === row.id;
-                return (
-                  <Fragment key={row.id}>
-                    <tr className="border-b border-gray-50 hover:bg-gray-50/50">
-                      <td className="py-3 px-2 font-medium text-gray-800 whitespace-nowrap">{lang === "en" ? row.nameEn : row.name}</td>
-                      <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{row.created}</td>
-                      <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{row.ended}</td>
-                      <td className="py-3 px-2 text-gray-500 font-numeric">{row.campaignsCount}</td>
-                      <td className="py-3 px-2 text-gray-500 font-numeric">{row.communities}</td>
-                      <td className="py-3 px-2 text-gray-500 font-numeric">{formatNIS(row.unitPrice)}</td>
-                      <td className="py-3 px-2 font-bold text-gray-800 font-numeric">{formatNIS(row.totalRaised)}</td>
-                      <td className="py-3 px-2 text-gray-500 font-numeric">{row.unitsDonated}</td>
-                      <td className="py-3 px-2">
-                        <div className="w-7 h-7 rounded-full bg-raz-teal/15 flex items-center justify-center text-raz-teal font-bold text-xs">
-                          {row.ownerInitials}
-                        </div>
-                      </td>
-                      <td className="py-3 px-2">
-                        <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
-                          <Eye size={14} />
-                        </button>
-                      </td>
-                      <td className="py-3 px-2">
-                        <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
-                          <Pencil size={14} />
-                        </button>
-                      </td>
-                      <td className="py-3 px-2">
-                        <button
-                          onClick={() => setExpandedId(expanded ? null : row.id)}
-                          className="w-7 h-7 rounded-full text-gray-400 flex items-center justify-center hover:bg-gray-100"
-                        >
-                          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-                      </td>
-                    </tr>
-                    {expanded && (
-                      <tr>
-                        <td colSpan={12} className="p-2">
-                          <ProductDetailPanel detail={getAdminProductDetail(i)} />
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+  const { lang } = useLang();
+  const { data, loading, error, reload } = useNgoAdminView();
+  if (loading || error) return <AdminDataStatus loading={loading} error={error} reload={reload} />;
+  const products = data?.adminProductRows ?? [];
+  return <div>
+    <h1 className="text-3xl font-bold text-gray-800 mb-6">{lang === "en" ? "Products dashboard" : "לוח בקרת מוצרים"}</h1>
+    <div className="grid sm:grid-cols-2 gap-4 mb-6">
+      <div className="bg-white rounded-2xl p-5"><p className="text-gray-500 text-sm">{lang === "en" ? "Active products" : "מוצרים פעילים"}</p><p className="text-2xl font-bold">{data?.adminProductsActiveCount ?? 0}</p></div>
+      <div className="bg-white rounded-2xl p-5"><p className="text-gray-500 text-sm">{lang === "en" ? "Units donated" : "יחידות שנתרמו"}</p><p className="text-2xl font-bold">{data?.adminProductsTotalUnits ?? 0}</p></div>
     </div>
-  );
+    <div className="bg-white rounded-2xl overflow-x-auto"><table className="w-full text-sm">
+      <thead><tr className="border-b bg-gray-50"><th className="p-3 text-start">{lang === "en" ? "Product" : "מוצר"}</th><th className="p-3 text-start">{lang === "en" ? "Unit price" : "מחיר יחידה"}</th><th className="p-3 text-start">{lang === "en" ? "Campaigns" : "קמפיינים"}</th><th className="p-3 text-start">{lang === "en" ? "Raised" : "גויס"}</th></tr></thead>
+      <tbody>{products.map((product) => <tr key={product.id} className="border-b last:border-0"><td className="p-3 font-medium">{lang === "en" ? product.nameEn : product.name}</td><td className="p-3">{formatNIS(product.unitPrice)}</td><td className="p-3">{product.campaignsCount}</td><td className="p-3">{formatNIS(product.totalRaised)}</td></tr>)}</tbody>
+    </table>{products.length === 0 && <p className="p-8 text-center text-gray-500">{lang === "en" ? "No products yet." : "אין מוצרים עדיין."}</p>}</div>
+  </div>;
 }

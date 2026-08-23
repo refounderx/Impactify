@@ -8,7 +8,7 @@ create extension if not exists "uuid-ossp";
 create extension if not exists "pgcrypto";
 
 -- ── Enums ───────────────────────────────────────────────────
-create type app_role as enum ('donor', 'org_admin', 'org_member', 'community_manager');
+create type app_role as enum ('donor', 'ngo_owner', 'community_owner', 'admin');
 create type campaign_status as enum ('draft', 'active', 'paused', 'completed', 'archived', 'blocked');
 create type donation_status as enum ('pending', 'completed', 'failed', 'refunded');
 create type recurring_status as enum ('active', 'paused', 'cancelled');
@@ -24,6 +24,7 @@ create table public.profiles (
   app_role       app_role not null default 'donor',
   org_id         uuid,
   community_id   uuid,
+  onboarding_completed_at timestamptz,
   created_at     timestamptz default now() not null,
   updated_at     timestamptz default now() not null
 );
@@ -183,6 +184,31 @@ create table public.communities (
   created_at    timestamptz default now() not null
 );
 
+-- Immutable record of privileged role and tenant-assignment changes.
+create table public.admin_role_audit (
+  id bigint generated always as identity primary key,
+  actor_id uuid not null,
+  profile_id uuid not null,
+  old_role app_role not null,
+  new_role app_role not null,
+  old_org_id uuid,
+  new_org_id uuid,
+  old_community_id uuid,
+  new_community_id uuid,
+  created_at timestamptz not null default now()
+);
+
+alter table public.profiles
+  add constraint profiles_org_id_fkey foreign key (org_id) references public.organizations(id) on delete restrict,
+  add constraint profiles_community_id_fkey foreign key (community_id) references public.communities(id) on delete restrict,
+  add constraint profiles_role_tenant_consistency check (
+    (onboarding_completed_at is null and app_role = 'donor' and org_id is null and community_id is null) or
+    (onboarding_completed_at is not null and app_role = 'donor' and org_id is null and community_id is null) or
+    (onboarding_completed_at is not null and app_role = 'ngo_owner' and org_id is not null and community_id is null) or
+    (onboarding_completed_at is not null and app_role = 'community_owner' and org_id is null and community_id is not null) or
+    (onboarding_completed_at is not null and app_role = 'admin' and org_id is null and community_id is null)
+  );
+
 -- ── Indexes ──────────────────────────────────────────────────
 create index idx_campaigns_org_id   on public.campaigns(org_id);
 create index idx_campaigns_status   on public.campaigns(status);
@@ -195,6 +221,7 @@ create index idx_profiles_org       on public.profiles(org_id);
 
 -- ── Row Level Security ───────────────────────────────────────
 alter table public.profiles           enable row level security;
+alter table public.admin_role_audit   enable row level security;
 alter table public.organizations      enable row level security;
 alter table public.campaigns          enable row level security;
 alter table public.products           enable row level security;
@@ -202,6 +229,28 @@ alter table public.campaign_products  enable row level security;
 alter table public.donations          enable row level security;
 alter table public.recurring_donations enable row level security;
 alter table public.communities        enable row level security;
+
+create or replace function public.current_app_role()
+returns public.app_role language sql stable security definer set search_path = public
+as $$ select app_role from public.profiles where id = auth.uid() $$;
+create or replace function public.current_org_id()
+returns uuid language sql stable security definer set search_path = public
+as $$ select org_id from public.profiles where id = auth.uid() $$;
+create or replace function public.current_community_id()
+returns uuid language sql stable security definer set search_path = public
+as $$ select community_id from public.profiles where id = auth.uid() $$;
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path = public
+as $$ select coalesce(public.current_app_role() = 'admin', false) $$;
+
+revoke all on function public.current_app_role() from public, anon, authenticated;
+revoke all on function public.current_org_id() from public, anon, authenticated;
+revoke all on function public.current_community_id() from public, anon, authenticated;
+revoke all on function public.is_admin() from public, anon, authenticated;
+grant execute on function public.current_app_role() to authenticated;
+grant execute on function public.current_org_id() to authenticated;
+grant execute on function public.current_community_id() to authenticated;
+grant execute on function public.is_admin() to authenticated;
 
 -- Organizations: public read
 create policy "orgs_public_read" on public.organizations
@@ -225,7 +274,7 @@ create policy "campaigns_org_insert" on public.campaigns
   for insert with check (
     org_id in (
       select org_id from public.profiles
-      where id = auth.uid() and app_role in ('org_admin', 'org_member')
+      where id = auth.uid() and app_role = 'ngo_owner'
     )
   );
 
@@ -233,7 +282,7 @@ create policy "campaigns_org_update" on public.campaigns
   for update using (
     org_id in (
       select org_id from public.profiles
-      where id = auth.uid() and app_role in ('org_admin', 'org_member')
+      where id = auth.uid() and app_role = 'ngo_owner'
     )
   );
 
@@ -249,8 +298,14 @@ create policy "campaign_products_public_read" on public.campaign_products
 create policy "profiles_own_read" on public.profiles
   for select using (id = auth.uid());
 
-create policy "profiles_own_update" on public.profiles
-  for update using (id = auth.uid());
+create policy "profiles_own_details_update" on public.profiles
+  for update using (id = auth.uid()) with check (id = auth.uid());
+create policy "profiles_admin_read" on public.profiles
+  for select using (public.is_admin());
+create policy "admin_role_audit_admin_read" on public.admin_role_audit
+  for select to authenticated using (public.is_admin());
+revoke insert, update, delete on public.admin_role_audit from anon, authenticated;
+grant select on public.admin_role_audit to authenticated;
 
 -- Donations: donors read own donations
 create policy "donations_own_read" on public.donations
@@ -263,6 +318,10 @@ create policy "donations_org_read" on public.donations
       select org_id from public.profiles
       where id = auth.uid() and org_id is not null
     )
+  );
+create policy "donations_community_read" on public.donations
+  for select using (
+    community_id = public.current_community_id() and public.current_app_role() = 'community_owner'
   );
 
 -- Donations: authenticated users can insert
@@ -392,10 +451,7 @@ create index if not exists idx_hero_cards_order on public.hero_cards(display_ord
 -- Keyed by the same string keys used in src/lib/translations.ts (e.g.
 -- "landing.hero.title"). A row here overrides the static translations.ts
 -- value for that key at runtime; no row = falls back to translations.ts.
--- No real admin auth exists yet in this app (see DemoBar role switcher) —
--- write access is intentionally open for now, same trust level as the rest
--- of this demo's unauthenticated write paths. Must be locked down to a real
--- admin role before production (tracked in TASKS.md).
+-- Public reads support translated copy. Only authenticated app admins write.
 create table if not exists public.site_content (
   key        text primary key,
   text_he    text,
@@ -407,7 +463,22 @@ alter table public.site_content enable row level security;
 
 create policy "site_content_public_read" on public.site_content
   for select using (true);
-create policy "site_content_public_write" on public.site_content
-  for insert with check (true);
-create policy "site_content_public_update" on public.site_content
-  for update using (true);
+create policy "site_content_admin_insert" on public.site_content
+  for insert to authenticated with check (public.is_admin());
+create policy "site_content_admin_update" on public.site_content
+  for update to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- Ordinary users can edit personal fields, never their role or tenant IDs.
+revoke insert, delete, update on public.profiles from anon, authenticated;
+grant update (full_name, full_name_en, phone, avatar_url, id_number) on public.profiles to authenticated;
+
+-- Bank account columns are not part of the public organization contract.
+revoke select on public.organizations from anon, authenticated;
+grant select (id, name, name_en, initials, color, description, description_en,
+  logo_url, registration_number, verified, founded, founded_en, ceo, ceo_en,
+  volunteers, address, address_en, phone, video_gradient, created_at)
+on public.organizations to anon, authenticated;
+
+-- Onboarding, admin role management, and atomic campaign publishing RPCs are
+-- defined in migrations 20260823161000 and 20260823162000. Migrations are the
+-- executable source of truth; this file remains the readable base schema.

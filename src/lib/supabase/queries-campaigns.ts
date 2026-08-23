@@ -2,12 +2,14 @@ import { createClient } from "@/lib/supabase/client";
 import { toUICampaign, toUIProduct, attachProductIds } from "@/lib/supabase/query-helpers";
 import type { CampaignWithOrg } from "@/lib/supabase/types";
 
+const CAMPAIGN_WITH_ORG = "*, organizations(id,name,name_en,initials,color,description,description_en,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,phone,video_gradient,created_at)";
+
 export async function getCampaigns(category?: string) {
   try {
     const sb = createClient();
     let query = sb
       .from("campaigns")
-      .select("*, organizations(*)")
+      .select(CAMPAIGN_WITH_ORG)
       .eq("status", "active")
       .order("donors_count", { ascending: false });
 
@@ -33,7 +35,7 @@ export async function getCampaignById(id: string) {
     const sb = createClient();
     const { data, error } = await sb
       .from("campaigns")
-      .select("*, organizations(*)")
+      .select(CAMPAIGN_WITH_ORG)
       .eq("id", id)
       .single();
 
@@ -54,7 +56,7 @@ export async function searchCampaigns(query: string, category?: string) {
     const sb = createClient();
     let q = sb
       .from("campaigns")
-      .select("*, organizations(*)")
+      .select(CAMPAIGN_WITH_ORG)
       .eq("status", "active");
 
     if (query.trim()) {
@@ -95,7 +97,7 @@ export async function getCampaignsByOrg(orgId: string) {
     const sb = createClient();
     const { data, error } = await sb
       .from("campaigns")
-      .select("*, organizations(*)")
+      .select(CAMPAIGN_WITH_ORG)
       .eq("org_id", orgId)
       .order("created_at", { ascending: false });
     if (error) throw error;

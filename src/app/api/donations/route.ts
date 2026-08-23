@@ -33,17 +33,27 @@ export async function POST(request: NextRequest) {
   const { campaign_id, org_id, amount, is_recurring, dedication_name } = body;
 
   // Validate inputs at trust boundary
-  if (!campaign_id || !org_id) {
+  if (!UUID_RE.test(campaign_id ?? "") || !UUID_RE.test(org_id ?? "")) {
     return NextResponse.json({ error: "campaign_id and org_id required" }, { status: 400 });
   }
   const parsed = Number(amount);
   if (!parsed || parsed <= 0 || parsed > 1_000_000) {
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
   }
+  if (is_recurring && !user) {
+    return NextResponse.json({ error: "Sign in is required for recurring donations" }, { status: 401 });
+  }
+
+  const { data: campaign, error: campaignError } = await sb.from("campaigns")
+    .select("id, org_id, status").eq("id", campaign_id).eq("status", "active").single();
+  if (campaignError || !campaign || campaign.org_id !== org_id) {
+    return NextResponse.json({ error: "Campaign and organization do not match" }, { status: 400 });
+  }
 
   const receiptId = `R-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
-  const { data, error } = await sb
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("donations")
     .insert({
       donor_id: user?.id ?? null,
@@ -53,7 +63,7 @@ export async function POST(request: NextRequest) {
       currency: "ILS",
       status: "completed",
       is_recurring: Boolean(is_recurring),
-      dedication_name: dedication_name ?? null,
+      dedication_name: typeof dedication_name === "string" ? dedication_name.trim().slice(0, 120) || null : null,
       dedication_message: null,
       community_id: null,
       psp_token: null,
@@ -71,7 +81,7 @@ export async function POST(request: NextRequest) {
 
   // If recurring, also create a recurring_donations row (requires auth)
   if (is_recurring && user?.id) {
-    await sb.from("recurring_donations").insert({
+    const { error: recurringError } = await sb.from("recurring_donations").insert({
       donor_id: user.id,
       campaign_id,
       org_id,
@@ -81,6 +91,9 @@ export async function POST(request: NextRequest) {
       next_charge_date: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
       psp_token: null,
     });
+    if (recurringError) {
+      return NextResponse.json({ error: "Donation saved, but recurring setup failed" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ donation: data, receiptId });

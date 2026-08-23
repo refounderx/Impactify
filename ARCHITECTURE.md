@@ -5,12 +5,12 @@
 ```
 Browser
   └── Next.js 16 (App Router)  [local / Vercel]
-        ├── middleware.ts          → refreshes Supabase session on every request
+        ├── proxy.ts               → refreshes session + coarse protected-route redirects
         ├── Client components      → Supabase JS client (anon key, RLS-filtered)
-        ├── AuthContext            → tracks User object, exposes useAuth() hook
+        ├── AuthContext            → tracks authenticated user + persisted profile
         ├── /api/donations         → server route: validates + writes donations to DB
         └── Server components      → Supabase SSR client (cookie-based session)
-              └── Admin client     → service role (seeding only, never in browser)
+              └── Admin client     → service role for validated server donation writes, never in browser
                     └── PostgreSQL (Supabase) [Frankfurt eu-central-1]
                           ├── Row Level Security on every table
                           └── Triggers: auto-create profile, update campaign stats
@@ -20,16 +20,16 @@ Browser
 
 ```
 /auth page
-  Step 1: email entry → supabase.auth.signInWithOtp({ email })
-                       → Supabase sends 6-digit code to email (built-in, no SMS provider needed)
-  Step 2: OTP entry   → supabase.auth.verifyOtp({ email, token, type: "email" })
-                       → JWT + refresh token stored in HttpOnly cookies by Supabase SSR
-  Step 3: /auth/setup → upsert profiles row (name, app_role)
-  Step 4: redirect    → role-appropriate dashboard
+  Step 1: email entry → supabase.auth.signInWithOtp({ email }) → magic-link email
+  Step 2: callback    → exchanges code for a cookie-backed session
+  Step 3: incomplete  → /auth/setup calls one atomic donor/NGO/community onboarding RPC
+  Step 4: returning   → callback redirects directly to the persisted role's home
 ```
 
 **Session lifecycle:**
-- `middleware.ts` runs on every request, calls `supabase.auth.getUser()` to refresh expired tokens
+- `proxy.ts` refreshes sessions and redirects unauthenticated protected requests
+- Server layouts enforce exact `ngo_owner`, `community_owner`, and `admin` roles
+- Ordinary users cannot write `app_role`, `org_id`, or `community_id`; admins use an audited RPC
 - JWT stored in cookies (HttpOnly via Supabase SSR) — XSS safe
 - `AuthContext` subscribes to `onAuthStateChange` for real-time session sync in client components
 - Sign-out: `supabase.auth.signOut()` clears cookies
@@ -42,7 +42,7 @@ page/component → query module or SiteDataProvider → Supabase anon client
   → PostgreSQL (RLS: public read policy) → data or explicit error/empty state
 ```
 
-Normalized campaigns, organizations, products, communities, donations, and profile fields use dedicated tables. Demo/presentation records that do not yet warrant normalized tables are serialized into four named rows in `site_datasets`. Source fixture modules remain in the repository only to generate the migration and provide TypeScript shapes; runtime consumers do not import them as a fallback.
+Normalized campaigns, organizations, products, communities, donations, and profile fields use dedicated tables. Only shared and landing presentation records remain in `site_datasets`; authenticated admin dashboards query their normalized tenant data. Source fixture modules remain migration inputs/type sources and are not runtime fallbacks.
 
 **Authenticated reads (profile, recurring):**
 ```
@@ -54,9 +54,9 @@ page.tsx → useAuth() → user.id
 **Donation write (trust boundary):**
 ```
 payment/page.tsx → POST /api/donations (client fetch)
-  → api/donations/route.ts → Supabase SSR client
+  → api/donations/route.ts → session lookup + active campaign/org validation
   → supabase.auth.getUser() → validates session server-side
-  → donations.insert({ donor_id: user?.id, amount, campaign_id, org_id })
+  → server-only admin client inserts with donor_id derived from the session
   → trigger auto-increments campaigns.raised + donors_count
   → if is_recurring + user signed in: recurring_donations.insert()
 ```
@@ -77,13 +77,15 @@ src/
 │   └── ui/                 ProgressBar
 ├── contexts/
 │   ├── LanguageContext.tsx  HE/EN toggle, t() function, dir switching
-│   ├── AuthContext.tsx      Session state — useAuth() → { user, loading, signOut }
+│   ├── AuthContext.tsx      Session/profile state + refreshProfile
+│   ├── NgoAdminDataContext.tsx       Authenticated NGO tenant data
+│   ├── CommunityAdminDataContext.tsx Authenticated community tenant data
 │   └── SiteDataContext.tsx  Loads shared presentation datasets from Supabase
 ├── lib/
 │   ├── mock-data.ts              Fixture source + UI types; migration input, not runtime fallback
-│   ├── nonprofit-admin-data.ts   Nonprofit-admin fixture source serialized to `site_datasets`
-│   ├── community-admin-data.ts   Community-admin fixture source serialized to `site_datasets`
-│   ├── site-dataset-types.ts     Typed contract for the four shared dataset rows
+│   ├── nonprofit-admin-data.ts   Historical migration/type input; not a runtime data source
+│   ├── community-admin-data.ts   Historical migration/type input; not a runtime data source
+│   ├── site-dataset-types.ts     Typed contract for shared/landing dataset rows
 │   ├── translations.ts           All UI strings in he + en
 │   └── supabase/
 │       ├── client.ts             Browser client (createBrowserClient)
@@ -95,7 +97,10 @@ src/
 │       ├── queries-campaigns.ts  getCampaigns, getCampaignById, searchCampaigns, getProductsByIds
 │       ├── queries-orgs.ts       getOrganizations, getOrgById, getNpDashboardData
 │       ├── queries-community.ts  getCommunityDashboardData (+ real leaderboard)
-│       ├── queries-site-data.ts  Reads the four public `site_datasets` rows
+│       ├── queries-site-data.ts  Reads required shared/landing `site_datasets` rows
+│       ├── queries-ngo-admin.ts  Reads the authenticated NGO tenant
+│       ├── queries-community-admin.ts Reads the authenticated community tenant
+│       ├── queries-account-admin.ts Admin user/tenant directory
 │       └── queries-donations.ts  getMyDonations, getMyRecurring, updateRecurringStatus, cancelRecurring
 ├── app/
 │   ├── api/donations/route.ts    POST — server-side donation write (validates, inserts, creates recurring)
@@ -105,7 +110,7 @@ src/
 │   └── community/                Admin route tree (see note below) — layout.tsx wraps children in
 │                                  <AdminShell variant="community">, no route group needed (no
 │                                  sibling non-admin /community pages exist)
-├── middleware.ts                 Session refresh on every request
+├── proxy.ts                      Session refresh and coarse route protection
 └── supabase/
     ├── schema.sql           Full DB schema + RLS policies + triggers
     └── seed.sql             Demo data INSERT statements
@@ -115,13 +120,14 @@ src/
 
 **Root route `/` (changed 2026-08-23):** `app/page.tsx` now renders the marketing landing page (same content as `app/landing/page.tsx` — duplicated for now, not deduplicated). The previous donor-home screen (teal header, featured campaign, active-campaigns grid) was moved to `app/_archive/old-home/page.tsx`, a Next.js private folder (`_` prefix excludes it from routing) — code preserved, not deleted, pending a decision on where donor-home should live going forward. Several other pages still link/redirect to `/` expecting the old donor-home behavior (`my-donations`, `auth`, `nonprofit/[id]`, `campaign/[id]`, `TopNav.tsx`, `recurring`, `donate/[id]/thanks`) — not yet updated; see `TASKS.md`.
 
-**`community/` admin tree (added 2026-08-11):** mirrors the `nonprofit/(admin)/` pattern one level down — `AdminShell variant="community"` (no Products nav group) via `community/layout.tsx`. Campaigns dashboard at `/community` (table) + grid at `/community/campaigns`, `/community/campaigns/search` (browse other orgs' campaigns + "request to join"), plus `/community/donations`, `/community/nonprofits`, and `/community/updates`. The admin presentation dataset is read from the `community_admin` row in `site_datasets`; normalized campaign, organization, product, and community choices use their dedicated tables.
+**`community/` admin tree (added 2026-08-11):** mirrors the `nonprofit/(admin)/` pattern one level down. Its layout requires `community_owner`, and its data provider derives `community_id` from the signed-in profile before making RLS-filtered normalized queries. Request-to-join and updates remain UI-only where no normalized persistence contract exists.
 
 ## Database Schema
 
 | Table | Purpose | RLS |
 |---|---|---|
-| `profiles` | Extends `auth.users` — role, org, community | Own row only |
+| `profiles` | Extends `auth.users` — role, tenant, onboarding | Own row; admins read directory; personal-column updates only |
+| `admin_role_audit` | Immutable role/tenant-change record | Admin read; only privileged RPC inserts |
 | `organizations` | Non-profit orgs | Public read |
 | `campaigns` | Fundraising campaigns | Public read (active); org members read all |
 | `products` | Charitable items (ארוחה חמה etc.) | Public read |
@@ -132,8 +138,8 @@ src/
 | `payment_methods` | Saved brand + last-4 (no raw card data) | Own only |
 | `system_updates` | Broadcast/per-donor update feed | Own or broadcast (`donor_id is null`) |
 | `hero_cards` | Landing hero image+caption pairs | Public read |
-| `site_content` | Admin text-override table (key → he/en) | Public read **and public write** — no real admin auth yet, see `TASKS.md` |
-| `site_datasets` | Named JSON snapshots for landing/admin/demo presentation records | Public read; no public writes |
+| `site_content` | Admin text-override table (key → he/en) | Public read; authenticated admin writes |
+| `site_datasets` | Shared/landing JSON presentation records | Public read; no public writes |
 
 **Key constraints:**
 - `donations` is **append-only** — DB rules prevent UPDATE and DELETE
@@ -143,11 +149,11 @@ src/
 ## RLS Security Model
 
 ```
-Public (anon)  → can read: active campaigns, orgs, products, communities, public site datasets
-Donor          → can read/write: own donations, own profile, own recurring
-Org member     → can read: all own org's campaigns + received donations
-Org admin      → can insert/update: own org's campaigns
-Community mgr  → can read: own community stats
+Public (anon)   → active campaigns/products, communities, public org fields, shared datasets
+Donor           → own profile/donations/recurring; cannot change role or tenant
+NGO owner       → own NGO campaigns/products/received donations; atomic campaign publish
+Community owner → own community and community-attributed donations
+Admin           → profile directory, audited role/tenant changes, site-content writes
 ```
 
 ## Language Architecture
@@ -166,9 +172,10 @@ Community mgr  → can read: own community stats
 | `/search` | Supabase — real-time search with 300ms debounce |
 | `/campaign/[id]` | Supabase normalized tables plus shared donor/community presentation records from `site_datasets` |
 | `/donate/[id]/amount` | Supabase campaign lookup |
-| `/nonprofit` and `/nonprofit/*` admin pages | Supabase `site_datasets.nonprofit_admin`, with normalized entity choices queried from dedicated tables |
+| `/nonprofit` and `/nonprofit/*` admin pages | Authenticated NGO tenant queries over normalized Supabase tables |
 | `/nonprofit/[id]` | Supabase organizations and campaigns; extended profile fields are normalized organization columns |
-| `/community` and `/community/*` admin pages | Supabase `site_datasets.community_admin`, plus normalized entity queries |
+| `/community` and `/community/*` admin pages | Authenticated community tenant queries over normalized Supabase tables |
+| `/admin/users` | Admin-only Supabase profile/tenant directory and role-change RPC |
 | `/profile` | Auth-scoped Supabase reads; logged-out demo presentation data comes from `site_datasets` |
 | `/recurring` | Auth-scoped Supabase reads; no local fallback |
 

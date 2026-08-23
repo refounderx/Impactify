@@ -4,15 +4,18 @@ import StatHeader from "@/components/nonprofit-admin/StatHeader";
 import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
+import { useNgoAdminView } from "@/hooks/useNgoAdminView";
+import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
 import EditableText from "@/components/admin/EditableText";
 
 const AS_OF = "12/08/23";
 
 export default function CommunitiesPage() {
   const { lang, t } = useLang();
-  const { data } = useSiteDataset("nonprofit_admin");
+  const { data, loading, error, reload } = useNgoAdminView();
   const adminCommunityRows = data?.adminCommunityRows ?? [];
+
+  if (loading || error) return <AdminDataStatus loading={loading} error={error} reload={reload} />;
 
   return (
     <div>

@@ -1,28 +1,16 @@
 import { createClient } from "@/lib/supabase/client";
-
-type OrgRef = { name: string; name_en: string | null } | null;
+import { getCommunityAdminData } from "@/lib/supabase/queries-community-admin";
 
 export async function getCommunityDashboardData() {
   try {
+    const { community: data, organization: org } = await getCommunityAdminData();
     const sb = createClient();
-
-    // Get top community (demo — no auth yet)
-    const { data, error } = await sb
-      .from("communities")
-      .select("*, organizations(name, name_en)")
-      .order("total_raised", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error || !data) return null;
 
     // All communities for leaderboard
     const { data: all } = await sb
       .from("communities")
       .select("id, name, name_en, total_raised, donors_count")
       .order("total_raised", { ascending: false });
-
-    const org = data.organizations as OrgRef;
 
     return {
       communityId: data.id,

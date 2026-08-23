@@ -39,14 +39,14 @@ async function main() {
 
   const tables = [
     "organizations", "campaigns", "products", "communities", "donations",
-    "hero_cards", "site_content", "site_datasets",
+    "hero_cards", "site_content", "site_datasets", "admin_role_audit",
   ];
   const results = await Promise.all(tables.map((table) => inspectTable(baseUrl, key, table)));
   for (const result of results) console.log(`${result.table}: HTTP ${result.status}, rows ${result.count}`);
 
   const datasets = await fetchRows(baseUrl, key, "site_datasets?select=key&order=key");
   const datasetKeys = datasets.map(({ key: datasetKey }) => datasetKey);
-  const expectedKeys = ["community_admin", "landing", "nonprofit_admin", "shared"];
+  const expectedKeys = ["landing", "shared"];
   console.log(`site_datasets keys: ${datasetKeys.join(", ")}`);
 
   const organizations = await fetchRows(
@@ -59,6 +59,44 @@ async function main() {
       .every((field) => organization[field] !== null)
   );
   console.log(`organization profiles complete: ${profileFieldsComplete} (${organizations.length} checked)`);
+
+  const profiles = await fetchRows(
+    baseUrl,
+    key,
+    "profiles?select=app_role,org_id,community_id,onboarding_completed_at"
+  );
+  const allowedRoles = new Set(["donor", "ngo_owner", "community_owner", "admin"]);
+  const profilesConsistent = profiles.every((profile) => {
+    if (!allowedRoles.has(profile.app_role)) return false;
+    if (!profile.onboarding_completed_at) return profile.app_role === "donor" && !profile.org_id && !profile.community_id;
+    if (profile.app_role === "ngo_owner") return Boolean(profile.org_id) && !profile.community_id;
+    if (profile.app_role === "community_owner") return !profile.org_id && Boolean(profile.community_id);
+    return !profile.org_id && !profile.community_id;
+  });
+  console.log(`profile role/tenant consistency: ${profilesConsistent} (${profiles.length} checked)`);
+
+  const anonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const bankProbe = await fetch(`${baseUrl}/rest/v1/organizations?select=bank_account&limit=1`, {
+    headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+  });
+  const bankFieldsProtected = !bankProbe.ok;
+  console.log(`organization bank fields blocked for anon: ${bankFieldsProtected} (HTTP ${bankProbe.status})`);
+  const adminRpcProbe = await fetch(`${baseUrl}/rest/v1/rpc/admin_update_profile_role`, {
+    method: "POST",
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${anonKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      p_profile_id: "00000000-0000-0000-0000-000000000000",
+      p_role: "admin",
+      p_org_id: null,
+      p_community_id: null,
+    }),
+  });
+  const anonAdminRpcBlocked = !adminRpcProbe.ok;
+  console.log(`admin role RPC blocked for anon: ${anonAdminRpcBlocked} (HTTP ${adminRpcProbe.status})`);
   const schemaResponse = await fetch(`${baseUrl}/rest/v1/`, {
     headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/openapi+json" },
   });
@@ -70,7 +108,10 @@ async function main() {
   if (
     results.some((result) => ![200, 206].includes(result.status)) ||
     JSON.stringify(datasetKeys) !== JSON.stringify(expectedKeys) ||
-    !profileFieldsComplete
+    !profileFieldsComplete ||
+    !profilesConsistent ||
+    !bankFieldsProtected ||
+    !anonAdminRpcBlocked
   ) process.exitCode = 1;
 }
 

@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Search, LogIn } from "lucide-react";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import EditableText from "@/components/admin/EditableText";
@@ -10,27 +9,19 @@ import EditableText from "@/components/admin/EditableText";
 export default function TopNav() {
   const pathname = usePathname();
   const { lang, setLang } = useLang();
-  const { user } = useAuth();
-  const { data } = useSiteDataset("shared");
-  const DONOR_NAME = data?.DONOR_NAME ?? "";
-  const DONOR_NAME_EN = data?.DONOR_NAME_EN ?? "";
-  const ORG_NAME = data?.ORG_NAME ?? "";
-  const ORG_NAME_EN = data?.ORG_NAME_EN ?? "";
-  const COMMUNITY_NAME = data?.COMMUNITY_NAME ?? "";
-  const COMMUNITY_NAME_EN = data?.COMMUNITY_NAME_EN ?? "";
+  const { user, profile } = useAuth();
 
-  const active = pathname.startsWith("/nonprofit")
+  const active = pathname.startsWith("/admin")
+    ? "/admin"
+    : pathname.startsWith("/nonprofit")
     ? "/nonprofit"
     : pathname.startsWith("/community")
     ? "/community"
     : "/";
 
-  const shortName =
-    active === "/nonprofit"
-      ? lang === "en" ? ORG_NAME_EN : ORG_NAME
-      : active === "/community"
-      ? lang === "en" ? COMMUNITY_NAME_EN : COMMUNITY_NAME
-      : lang === "en" ? DONOR_NAME_EN.split(" ")[0] : DONOR_NAME.split(" ")[0];
+  const shortName = lang === "en"
+    ? (profile?.full_name_en ?? profile?.full_name ?? "")
+    : (profile?.full_name ?? "");
 
   const donorLinks = [
     { key: "nav.home", href: "/" },
@@ -44,8 +35,10 @@ export default function TopNav() {
   const communityLinks = [
     { key: "nav.dashboard", href: "/community" },
   ];
+  const adminLinks = [{ key: "nav.profile", href: "/admin/users" }];
   const links =
-    active === "/nonprofit" ? nonprofitLinks
+    active === "/admin" ? adminLinks
+    : active === "/nonprofit" ? nonprofitLinks
     : active === "/community" ? communityLinks
     : donorLinks;
 
@@ -99,7 +92,7 @@ export default function TopNav() {
           <span className="absolute -top-0.5 -start-0.5 w-2 h-2 bg-red-400 rounded-full" />
         </button>
         {user ? (
-          <Link href="/profile" className="flex items-center gap-2 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-50">
+          <Link href={profile?.app_role === "admin" ? "/admin/users" : "/profile"} className="flex items-center gap-2 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-50">
             <div className="w-7 h-7 rounded-full bg-raz-teal flex items-center justify-center text-white text-xs font-bold">
               {(user.email ?? shortName).slice(0, 2).toUpperCase()}
             </div>

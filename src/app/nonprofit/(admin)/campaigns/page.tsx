@@ -3,12 +3,15 @@ import { Pencil, Eye } from "lucide-react";
 import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
+import { useNgoAdminView } from "@/hooks/useNgoAdminView";
+import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
 import EditableText from "@/components/admin/EditableText";
 
 export default function CampaignsGridPage() {
   const { lang } = useLang();
-  const { data } = useSiteDataset("nonprofit_admin");
+  const { data, loading, error, reload } = useNgoAdminView();
+
+  if (loading || error) return <AdminDataStatus loading={loading} error={error} reload={reload} />;
 
   return (
     <div>

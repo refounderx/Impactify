@@ -12,7 +12,7 @@ export async function getSiteDatasets(): Promise<SiteDatasetMap> {
   const datasets = Object.fromEntries(
     (data ?? []).map((row) => [row.key, row.value])
   ) as Partial<SiteDatasetMap>;
-  const required: SiteDatasetKey[] = ["shared", "landing", "nonprofit_admin", "community_admin"];
+  const required: SiteDatasetKey[] = ["shared", "landing"];
   const missing = required.filter((key) => !datasets[key]);
   if (missing.length > 0) throw new Error(`Missing site datasets: ${missing.join(", ")}`);
 

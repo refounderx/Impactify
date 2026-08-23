@@ -1,5 +1,15 @@
 # Technical Decisions — Impactify
 
+## 2026-08-23 — Four persisted roles with audited, tenant-safe administration
+
+**Decision:** Use exactly `donor`, `ngo_owner`, `community_owner`, and `admin`. New users complete a one-time security-definer onboarding RPC; users cannot self-select admin or directly update role/tenant columns. Admins change other users through an atomic audited RPC that validates tenant assignment, blocks self-demotion, serializes changes, and preserves at least one admin.
+
+**Context:** The prior profile update policy allowed any signed-in user to change `app_role`, `org_id`, and `community_id`. Admin dashboards also read shared JSON snapshots instead of data belonging to the authenticated tenant.
+
+**Consequences:** Server layouts and database RLS both enforce roles. NGO/community dashboards derive tenant IDs from `auth.uid()`, campaign publication validates product ownership atomically, public organization reads exclude bank columns, and site-copy writes require admin. The migrations are live; the sole existing profile was bootstrapped only after verifying the database contained exactly one profile and no admin. REST/catalog/adversarial probes passed, and all Dashboard-applied migration versions were added to Supabase's migration ledger.
+
+---
+
 ## 2026-08-23 — Supabase-only runtime reads; fixture snapshots stored in `site_datasets`
 
 **Decision:** Remove every active mock fallback. Normalized organizations, campaigns, products, communities, donations, and organization-profile fields are queried from dedicated Supabase tables. Remaining landing/admin/demo presentation records are stored as four typed JSON rows in the public-read-only `site_datasets` table and loaded once through `SiteDataProvider`.

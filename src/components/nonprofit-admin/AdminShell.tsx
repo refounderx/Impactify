@@ -5,7 +5,6 @@ import { Heart, Flag, Package, LineChart, Bell, Users, ChevronUp, ChevronDown, L
 import BottomNav from "@/components/layout/BottomNav";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 const NONPROFIT_ROUTES = {
@@ -32,8 +31,7 @@ const PRODUCTS_DASHBOARD = "/nonprofit/products/dashboard";
 export default function AdminShell({ children, variant = "nonprofit" }: { children: React.ReactNode; variant?: "nonprofit" | "community" }) {
   const pathname = usePathname();
   const { lang } = useLang();
-  const { signOut } = useAuth();
-  const { data } = useSiteDataset("nonprofit_admin");
+  const { signOut, profile } = useAuth();
 
   const routes = variant === "community" ? COMMUNITY_ROUTES : NONPROFIT_ROUTES;
   const CAMPAIGNS_GRID = routes.campaignsGrid;
@@ -45,7 +43,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
   const campaignsGroupActive = pathname === CAMPAIGNS_GRID || pathname === CAMPAIGNS_DASHBOARD;
   const productsGroupActive = variant === "nonprofit" && pathname.startsWith(PRODUCTS_GRID);
 
-  const greeting = lang === "en" ? data?.adminGreetingNameEn : data?.adminGreetingName;
+  const greeting = lang === "en" ? (profile?.full_name_en ?? profile?.full_name) : profile?.full_name;
 
   return (
     <div className="flex min-h-screen">
@@ -158,9 +156,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
               <span className="text-gray-500"><EditableText tKey="adm.greetingMorning" /> </span>
               <span className="font-bold text-raz-teal">{greeting}</span>
             </p>
-            <p className="text-gray-400 text-xs">
-              <EditableText tKey="adm.lastLogin" /> {data?.adminLastLogin ?? ""} <EditableText tKey="adm.at" /> {data?.adminLastLoginTime ?? ""}
-            </p>
+            <p className="text-gray-400 text-xs">{profile?.email ?? ""}</p>
           </div>
         </div>
 

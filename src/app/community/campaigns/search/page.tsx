@@ -1,11 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, SlidersHorizontal, ArrowUpDown, Check, Eye } from "lucide-react";
 import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
+import { getCampaigns } from "@/lib/supabase/queries";
 import EditableText from "@/components/admin/EditableText";
 
 const SORT_OPTIONS_HE = [
@@ -17,10 +17,16 @@ const FILTER_OPTIONS_HE = ["תחומי פעילות", "אזור פעילות"];
 
 export default function CommunitySearchCampaignsPage() {
   const { lang } = useLang();
-  const { data } = useSiteDataset("community_admin");
-  const communityCampaignCards = data?.communityCampaignCards ?? [];
+  const [communityCampaignCards, setCommunityCampaignCards] = useState<Awaited<ReturnType<typeof getCampaigns>>>([]);
+  const [loadError, setLoadError] = useState("");
   const [openDropdown, setOpenDropdown] = useState<"sort" | "filter" | null>(null);
   const [requested, setRequested] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    getCampaigns().then(setCommunityCampaignCards).catch((error: unknown) => {
+      setLoadError(error instanceof Error ? error.message : "Unable to load campaigns");
+    });
+  }, []);
 
   const toggleRequest = (id: string) => {
     setRequested((prev) => {
@@ -100,13 +106,14 @@ export default function CommunitySearchCampaignsPage() {
         </div>
       </div>
 
+      {loadError && <p className="bg-red-50 text-red-700 rounded-xl p-3 mb-4">{loadError}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {communityCampaignCards.map((c) => {
           const isRequested = requested.has(c.id);
           return (
             <div key={c.id} className="bg-white rounded-2xl p-4 relative">
               <span className="absolute top-4 start-4 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full px-2.5 py-1">
-                {lang === "en" ? c.activityAreaEn : c.activityArea}
+                {c.category}
               </span>
               <div className="absolute top-4 end-4 flex items-center gap-2">
                 <button

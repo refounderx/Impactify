@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { X } from "lucide-react";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
+import { useNgoAdminView } from "@/hooks/useNgoAdminView";
 import {
   Step0, Step1, Step2, PreviewPanel,
   type Audience, type Timing, type Trigger, type Cta,
@@ -30,7 +30,7 @@ interface Props {
 const STEP_COUNT = 3;
 
 export default function CreateUpdateWizard({ lang, t, onClose, onCreate }: Props) {
-  const { data } = useSiteDataset("nonprofit_admin");
+  const { data } = useNgoAdminView();
   const [step, setStep] = useState(0);
   const [audience, setAudience] = useState<Audience>("campaigns");
   const [targetIds, setTargetIds] = useState<string[]>([]);

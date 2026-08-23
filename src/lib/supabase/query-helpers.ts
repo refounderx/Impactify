@@ -1,6 +1,8 @@
 import type { Organization, Product, CampaignWithOrg } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/client";
 
+type PublicOrganization = Omit<Organization, "bank_name" | "bank_branch" | "bank_account">;
+
 export function toUICampaign(row: CampaignWithOrg) {
   return {
     id: row.id,
@@ -25,7 +27,7 @@ export function toUICampaign(row: CampaignWithOrg) {
   };
 }
 
-export function toUIOrg(row: Organization) {
+export function toUIOrg(row: PublicOrganization) {
   return {
     id: row.id,
     name: row.name,

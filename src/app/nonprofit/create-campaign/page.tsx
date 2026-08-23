@@ -1,8 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCommunities, getProducts } from "@/lib/supabase/queries";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
+import { getCommunities } from "@/lib/supabase/queries";
+import { getNgoAdminData } from "@/lib/supabase/queries-ngo-admin";
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Product } from "@/lib/supabase/types";
 import { Check, ChevronLeft, Image as ImageIcon, Video, Users } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
@@ -10,10 +13,12 @@ import EditableText from "@/components/admin/EditableText";
 export default function CreateCampaignPage() {
   const router = useRouter();
   const { lang } = useLang();
-  const { data } = useSiteDataset("shared");
-  const orgDisplayName = lang === "en" ? (data?.ORG_NAME_EN ?? "") : (data?.ORG_NAME ?? "");
-  const [products, setProducts] = useState<Awaited<ReturnType<typeof getProducts>>>([]);
+  const { profile } = useAuth();
+  const orgDisplayName = lang === "en" ? (profile?.full_name_en ?? profile?.full_name ?? "") : (profile?.full_name ?? "");
+  const [products, setProducts] = useState<Product[]>([]);
   const [communities, setCommunities] = useState<Awaited<ReturnType<typeof getCommunities>>>([]);
+  const [publishError, setPublishError] = useState("");
+  const [publishing, setPublishing] = useState(false);
   const STEPS = lang === "en"
     ? ["Basics", "Story", "Media", "Products", "Communities", "Publish"]
     : ["בסיסי", "סיפור", "מדיה", "מוצרים", "קהילות", "פרסום"];
@@ -32,9 +37,33 @@ export default function CreateCampaignPage() {
   });
 
   useEffect(() => {
-    getProducts().then(setProducts);
+    getNgoAdminData().then((result) => setProducts(result.products)).catch((error: unknown) => {
+      setPublishError(error instanceof Error ? error.message : "Unable to load NGO products");
+    });
     getCommunities().then(setCommunities);
   }, []);
+
+  async function publishCampaign() {
+    setPublishError("");
+    const goal = Number(form.goal);
+    if (!form.title.trim() || !form.category || !goal || goal <= 0) {
+      setPublishError(lang === "en" ? "Title, category and a positive goal are required." : "נדרשים שם, קטגוריה ויעד חיובי.");
+      return;
+    }
+    setPublishing(true);
+    const sb = createClient();
+    const { data: campaignId, error } = await sb.rpc("publish_campaign", {
+      p_title: form.title.trim(), p_short_desc: form.shortDesc.trim(), p_story: form.story.trim(),
+      p_category: form.category, p_goal: goal, p_end_date: form.endDate || null,
+      p_product_ids: form.selectedProducts,
+    });
+    if (error) {
+      setPublishError(error.message);
+      setPublishing(false);
+      return;
+    }
+    router.push(campaignId ? `/campaign/${campaignId}` : "/nonprofit");
+  }
 
   function next() { setStep((s) => Math.min(s + 1, STEPS.length - 1)); }
   function back() { setStep((s) => Math.max(s - 1, 0)); }
@@ -177,8 +206,8 @@ export default function CreateCampaignPage() {
               >
                 <span className="text-3xl">{p.emoji}</span>
                 <div className="flex-1">
-                  <p className="font-bold text-sm text-gray-800">{lang === "en" ? (p.nameEn ?? p.name) : p.name}</p>
-                  <p className="text-xs text-gray-500">{lang === "en" ? (p.descriptionEn ?? p.description) : p.description}</p>
+                  <p className="font-bold text-sm text-gray-800">{lang === "en" ? (p.name_en ?? p.name) : p.name}</p>
+                  <p className="text-xs text-gray-500">{lang === "en" ? (p.description_en ?? p.description) : p.description}</p>
                 </div>
                 <div className="text-end">
                   <p className="font-bold text-raz-teal text-sm font-numeric">₪{p.price}</p>
@@ -225,9 +254,10 @@ export default function CreateCampaignPage() {
               <div className="flex justify-between mb-2"><span className="text-gray-500">יעד:</span><span className="font-medium font-numeric">₪{form.goal || "25,000"}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">מוצרים:</span><span className="font-medium">{form.selectedProducts.length}</span></div>
             </div>
-            <button onClick={() => router.push("/nonprofit")}
-              className="w-full bg-raz-teal text-white py-4 rounded-xl font-bold text-base">
-              <EditableText tKey="wizard.publish" />
+            {publishError && <p className="w-full text-sm text-red-600" role="alert">{publishError}</p>}
+            <button onClick={publishCampaign} disabled={publishing}
+              className="w-full bg-raz-teal text-white py-4 rounded-xl font-bold text-base disabled:opacity-50">
+              {publishing ? (lang === "en" ? "Publishing…" : "מפרסם…") : <EditableText tKey="wizard.publish" />}
             </button>
           </div>
         )}

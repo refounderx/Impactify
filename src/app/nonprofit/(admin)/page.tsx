@@ -1,106 +1,42 @@
 "use client";
-import { useState, Fragment } from "react";
-import { Printer, FileText, Eye, Pencil, ChevronDown, ChevronUp } from "lucide-react";
-import StatHeader from "@/components/nonprofit-admin/StatHeader";
-import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
-import CampaignDetailPanel from "@/components/nonprofit-admin/CampaignDetailPanel";
+
+import Link from "next/link";
 import { useLang } from "@/contexts/LanguageContext";
+import { useNgoAdminView } from "@/hooks/useNgoAdminView";
+import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
 import { formatNIS } from "@/lib/mock-data";
-import { getAdminCampaignDetail } from "@/lib/nonprofit-admin-data";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
-import EditableText from "@/components/admin/EditableText";
 
-const AS_OF = "12/08/23";
-
-export default function CampaignsDashboardPage() {
-  const { lang, t } = useLang();
-  const { data } = useSiteDataset("nonprofit_admin");
-  const adminCampaignRows = data?.adminCampaignRows ?? [];
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-4"><EditableText tKey="adm.campaignsDashboardTitle" /></h1>
-      <div className="flex items-center gap-3 mb-5 text-gray-400">
-        <button className="hover:text-raz-teal"><Printer size={18} /></button>
-        <button className="hover:text-raz-teal"><FileText size={18} /></button>
-      </div>
-
-      <div className="bg-white rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-          <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות העמותה"} />
-          <StatHeader
-            stats={[
-              { label: t("adm.activeCampaigns"), value: String(data?.adminCampaignsActiveCount ?? 0) },
-              { label: `${t("adm.totalRaisedToDate")} ${AS_OF})`, value: formatNIS(data?.adminCampaignsTotalRaised ?? 0) },
-            ]}
-          />
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" dir={lang === "en" ? "ltr" : "rtl"}>
-            <thead>
-              <tr className="border-b border-gray-100">
-                {["שם הקמפיין", "הקמה", "סיום", "מוצרים", "מוצרים שגויסו", "סכום שגויס", "קהילות", "אחראי", "צפייה", "עריכה", ""].map((h) => (
-                  <th key={h} className="pb-3 pt-1 text-raz-teal font-bold text-start px-2 whitespace-nowrap">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {adminCampaignRows.map((row, i) => {
-                const expanded = expandedId === row.id;
-                return (
-                  <Fragment key={row.id}>
-                    <tr className="border-b border-gray-50 hover:bg-gray-50/50">
-                      <td className="py-3 px-2 font-medium text-gray-800 whitespace-nowrap">{lang === "en" ? row.nameEn : row.name}</td>
-                      <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{row.created}</td>
-                      <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{row.ended}</td>
-                      <td className="py-3 px-2 text-gray-500 font-numeric">{row.productsCount}</td>
-                      <td className="py-3 px-2 text-gray-500 font-numeric">{row.productsRaisedCount}</td>
-                      <td className="py-3 px-2 font-bold text-gray-800 font-numeric">{formatNIS(row.amountRaised)}</td>
-                      <td className="py-3 px-2 text-gray-500 font-numeric">{row.communities}</td>
-                      <td className="py-3 px-2">
-                        {row.paused ? (
-                          <span className="text-gray-400 text-xs">{lang === "en" ? "Campaign paused" : "קמפיין מושהה"}</span>
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-raz-teal/15 flex items-center justify-center text-raz-teal font-bold text-xs">
-                            {row.ownerInitials}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3 px-2">
-                        <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
-                          <Eye size={14} />
-                        </button>
-                      </td>
-                      <td className="py-3 px-2">
-                        <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
-                          <Pencil size={14} />
-                        </button>
-                      </td>
-                      <td className="py-3 px-2">
-                        <button
-                          onClick={() => setExpandedId(expanded ? null : row.id)}
-                          className="w-7 h-7 rounded-full text-gray-400 flex items-center justify-center hover:bg-gray-100"
-                        >
-                          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-                      </td>
-                    </tr>
-                    {expanded && (
-                      <tr>
-                        <td colSpan={11} className="p-2">
-                          <CampaignDetailPanel detail={getAdminCampaignDetail(i)} />
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+export default function NgoDashboardPage() {
+  const { lang } = useLang();
+  const { data, loading, error, reload } = useNgoAdminView();
+  if (loading || error) return <AdminDataStatus loading={loading} error={error} reload={reload} />;
+  const campaigns = data?.adminCampaignRows ?? [];
+  return <div>
+    <div className="flex items-center justify-between gap-4 mb-6">
+      <div><h1 className="text-3xl font-bold text-gray-800">{lang === "en" ? "NGO dashboard" : "לוח בקרת עמותה"}</h1>
+        <p className="text-sm text-gray-500">{lang === "en" ? "Live data from your Supabase tenant" : "נתונים חיים מהעמותה שלך"}</p></div>
+      <Link href="/nonprofit/create-campaign" className="bg-raz-teal text-white px-4 py-2.5 rounded-xl font-bold text-sm">
+        {lang === "en" ? "New campaign" : "קמפיין חדש"}
+      </Link>
     </div>
-  );
+    <div className="grid sm:grid-cols-3 gap-4 mb-6">
+      <Metric label={lang === "en" ? "Active campaigns" : "קמפיינים פעילים"} value={String(data?.adminCampaignsActiveCount ?? 0)} />
+      <Metric label={lang === "en" ? "Total raised" : "סך הכול גויס"} value={formatNIS(data?.adminCampaignsTotalRaised ?? 0)} />
+      <Metric label={lang === "en" ? "Donations" : "תרומות"} value={String(data?.adminDonationsCount ?? 0)} />
+    </div>
+    <div className="bg-white rounded-2xl overflow-x-auto">
+      <table className="w-full text-sm"><thead><tr className="border-b bg-gray-50 text-start">
+        <th className="p-3">{lang === "en" ? "Campaign" : "קמפיין"}</th><th className="p-3">{lang === "en" ? "Raised" : "גויס"}</th>
+        <th className="p-3">{lang === "en" ? "Products" : "מוצרים"}</th><th className="p-3">{lang === "en" ? "End date" : "תאריך סיום"}</th>
+      </tr></thead><tbody>{campaigns.map((campaign) => <tr key={campaign.id} className="border-b last:border-0">
+        <td className="p-3 font-medium">{lang === "en" ? campaign.nameEn : campaign.name}</td>
+        <td className="p-3">{formatNIS(campaign.amountRaised)}</td><td className="p-3">{campaign.productsCount}</td><td className="p-3">{campaign.ended}</td>
+      </tr>)}</tbody></table>
+      {campaigns.length === 0 && <p className="p-8 text-center text-gray-500">{lang === "en" ? "No campaigns yet." : "אין קמפיינים עדיין."}</p>}
+    </div>
+  </div>;
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return <div className="bg-white rounded-2xl p-5"><p className="text-sm text-gray-500">{label}</p><p className="text-2xl font-bold text-gray-900 mt-1">{value}</p></div>;
 }
