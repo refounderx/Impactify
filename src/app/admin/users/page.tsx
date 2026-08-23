@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminDirectory, updateProfileRole, type AdminDirectory } from "@/lib/supabase/queries-account-admin";
 import type { AppRole } from "@/lib/supabase/types";
@@ -15,6 +17,7 @@ const ROLE_LABELS: Record<AppRole, string> = {
 type Draft = { role: AppRole; orgId: string; communityId: string };
 
 export default function AdminUsersPage() {
+  const router = useRouter();
   const { profile, signOut } = useAuth();
   const [directory, setDirectory] = useState<AdminDirectory | null>(null);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
@@ -67,6 +70,12 @@ export default function AdminUsersPage() {
     }
   }
 
+  async function handleSignOut() {
+    await signOut();
+    router.replace("/");
+    router.refresh();
+  }
+
   return (
     <main className="min-h-screen bg-raz-surface p-4 md:p-8" dir="ltr">
       <div className="max-w-6xl mx-auto">
@@ -74,8 +83,15 @@ export default function AdminUsersPage() {
           <div><p className="text-sm text-raz-teal font-bold">Impactify administration</p>
             <h1 className="text-3xl font-bold text-gray-900">Users and roles</h1>
             <p className="text-sm text-gray-500">Signed in as {profile?.email ?? "admin"}</p></div>
-          <button onClick={signOut} className="bg-raz-dark text-white px-4 py-2 rounded-xl text-sm">Sign out</button>
+          <div className="flex gap-2">
+            <Link href="/" className="border border-raz-dark text-raz-dark px-4 py-2 rounded-xl text-sm">Back to website</Link>
+            <button onClick={handleSignOut} className="bg-raz-dark text-white px-4 py-2 rounded-xl text-sm">Sign out</button>
+          </div>
         </header>
+        <div className="mb-5 rounded-2xl border border-raz-teal/20 bg-raz-teal/5 p-4 text-sm text-gray-700">
+          <p className="font-bold text-gray-900 mb-1">You are signed in as the platform administrator.</p>
+          <p>Your own role is locked for safety. To test a new signup or manage another user, sign out and register with a different email. That account will then appear here.</p>
+        </div>
         {error && <div className="mb-4 rounded-xl bg-red-50 text-red-700 p-3 text-sm" role="alert">{error}</div>}
         {!directory ? <p className="text-gray-500">Loading users…</p> : (
           <div className="bg-white rounded-2xl overflow-x-auto border border-gray-100">
@@ -103,9 +119,9 @@ export default function AdminUsersPage() {
                       {directory.communities.map((community) => <option key={community.id} value={community.id}>{community.name_en || community.name}</option>)}</select>}
                     {(draft?.role === "donor" || draft?.role === "admin") && <span className="text-gray-400">No tenant</span>}
                   </td>
-                  <td className="p-3 text-gray-500">{item.onboarding_completed_at ? "Active" : "Setup pending"}</td>
+                  <td className="p-3 text-gray-500">{isSelf ? "Your account — locked" : item.onboarding_completed_at ? "Active" : "Setup pending"}</td>
                   <td className="p-3"><button onClick={() => save(item.id)} disabled={isSelf || savingId === item.id}
-                    className="bg-raz-teal text-white px-3 py-2 rounded-lg disabled:opacity-40">{savingId === item.id ? "Saving…" : "Save"}</button></td>
+                    className="bg-raz-teal text-white px-3 py-2 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed">{savingId === item.id ? "Saving…" : isSelf ? "Locked" : "Save"}</button></td>
                 </tr>;
               })}</tbody>
             </table>
