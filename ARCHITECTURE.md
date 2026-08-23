@@ -36,12 +36,13 @@ Browser
 
 ## Data Flow
 
-**Public pages (campaigns, orgs):**
+**Public pages and shared presentation data:**
 ```
-page.tsx → queries.ts → Supabase anon client
-  → PostgreSQL (RLS: public read policy) → data
-  → if error/empty: fallback to mock-data.ts
+page/component → query module or SiteDataProvider → Supabase anon client
+  → PostgreSQL (RLS: public read policy) → data or explicit error/empty state
 ```
+
+Normalized campaigns, organizations, products, communities, donations, and profile fields use dedicated tables. Demo/presentation records that do not yet warrant normalized tables are serialized into four named rows in `site_datasets`. Source fixture modules remain in the repository only to generate the migration and provide TypeScript shapes; runtime consumers do not import them as a fallback.
 
 **Authenticated reads (profile, recurring):**
 ```
@@ -76,12 +77,13 @@ src/
 │   └── ui/                 ProgressBar
 ├── contexts/
 │   ├── LanguageContext.tsx  HE/EN toggle, t() function, dir switching
-│   └── AuthContext.tsx      Session state — useAuth() → { user, loading, signOut }
+│   ├── AuthContext.tsx      Session state — useAuth() → { user, loading, signOut }
+│   └── SiteDataContext.tsx  Loads shared presentation datasets from Supabase
 ├── lib/
-│   ├── mock-data.ts              Demo data + type shapes (fallback when Supabase empty)
-│   ├── nonprofit-admin-data.ts   Mock-only data for /nonprofit/(admin)/* pages (no Supabase)
-│   ├── community-admin-data.ts   Mock-only data for /community/* admin pages (no Supabase);
-│   │                             campaign rows carry `source: "created" | "linked"` for the tab filter
+│   ├── mock-data.ts              Fixture source + UI types; migration input, not runtime fallback
+│   ├── nonprofit-admin-data.ts   Nonprofit-admin fixture source serialized to `site_datasets`
+│   ├── community-admin-data.ts   Community-admin fixture source serialized to `site_datasets`
+│   ├── site-dataset-types.ts     Typed contract for the four shared dataset rows
 │   ├── translations.ts           All UI strings in he + en
 │   └── supabase/
 │       ├── client.ts             Browser client (createBrowserClient)
@@ -93,6 +95,7 @@ src/
 │       ├── queries-campaigns.ts  getCampaigns, getCampaignById, searchCampaigns, getProductsByIds
 │       ├── queries-orgs.ts       getOrganizations, getOrgById, getNpDashboardData
 │       ├── queries-community.ts  getCommunityDashboardData (+ real leaderboard)
+│       ├── queries-site-data.ts  Reads the four public `site_datasets` rows
 │       └── queries-donations.ts  getMyDonations, getMyRecurring, updateRecurringStatus, cancelRecurring
 ├── app/
 │   ├── api/donations/route.ts    POST — server-side donation write (validates, inserts, creates recurring)
@@ -112,7 +115,7 @@ src/
 
 **Root route `/` (changed 2026-08-23):** `app/page.tsx` now renders the marketing landing page (same content as `app/landing/page.tsx` — duplicated for now, not deduplicated). The previous donor-home screen (teal header, featured campaign, active-campaigns grid) was moved to `app/_archive/old-home/page.tsx`, a Next.js private folder (`_` prefix excludes it from routing) — code preserved, not deleted, pending a decision on where donor-home should live going forward. Several other pages still link/redirect to `/` expecting the old donor-home behavior (`my-donations`, `auth`, `nonprofit/[id]`, `campaign/[id]`, `TopNav.tsx`, `recurring`, `donate/[id]/thanks`) — not yet updated; see `TASKS.md`.
 
-**`community/` admin tree (added 2026-08-11):** mirrors the `nonprofit/(admin)/` pattern one level down — `AdminShell variant="community"` (no Products nav group) via `community/layout.tsx`. Campaigns dashboard at `/community` (table) + grid at `/community/campaigns`, `/community/campaigns/search` (browse other orgs' campaigns + "request to join"; opened via the sidebar's bottom CTA), plus `/community/donations`, `/community/nonprofits` (community's affiliated nonprofits — the reverse listing of `/nonprofit/communities`), `/community/updates` (trigger/schedule tabs, each with its own column set — same pattern as `/nonprofit/updates` but community-scoped data). All data is mock-only via `community-admin-data.ts`; there is no Supabase-backed community query path anymore. This replaced the previous single-page `/community` leaderboard/progress dashboard entirely. The sidebar's bottom CTA (`cm.newOrJoinCampaign`, "הקמה/הצטרפות לקמפיין" — distinct from the nonprofit variant's `adm.newCampaign` CTA, which still links straight to the create-campaign wizard) links to `/community/campaigns/search`.
+**`community/` admin tree (added 2026-08-11):** mirrors the `nonprofit/(admin)/` pattern one level down — `AdminShell variant="community"` (no Products nav group) via `community/layout.tsx`. Campaigns dashboard at `/community` (table) + grid at `/community/campaigns`, `/community/campaigns/search` (browse other orgs' campaigns + "request to join"), plus `/community/donations`, `/community/nonprofits`, and `/community/updates`. The admin presentation dataset is read from the `community_admin` row in `site_datasets`; normalized campaign, organization, product, and community choices use their dedicated tables.
 
 ## Database Schema
 
@@ -130,6 +133,7 @@ src/
 | `system_updates` | Broadcast/per-donor update feed | Own or broadcast (`donor_id is null`) |
 | `hero_cards` | Landing hero image+caption pairs | Public read |
 | `site_content` | Admin text-override table (key → he/en) | Public read **and public write** — no real admin auth yet, see `TASKS.md` |
+| `site_datasets` | Named JSON snapshots for landing/admin/demo presentation records | Public read; no public writes |
 
 **Key constraints:**
 - `donations` is **append-only** — DB rules prevent UPDATE and DELETE
@@ -139,7 +143,7 @@ src/
 ## RLS Security Model
 
 ```
-Public (anon)  → can read: active campaigns, orgs, products
+Public (anon)  → can read: active campaigns, orgs, products, communities, public site datasets
 Donor          → can read/write: own donations, own profile, own recurring
 Org member     → can read: all own org's campaigns + received donations
 Org admin      → can insert/update: own org's campaigns
@@ -151,7 +155,7 @@ Community mgr  → can read: own community stats
 - `LanguageContext.tsx` stores `lang: "he" | "en"` in React context + localStorage
 - On switch: `document.documentElement.dir` flips (`rtl` ↔ `ltr`), `lang` attribute updates
 - `t(key)` function resolves from `translations.ts`
-- Mock data has parallel `*En` fields; queries layer returns both
+- Supabase entities and site datasets have parallel `*En` fields; queries return both
 - Card numbers, bank details, emails: always `dir="ltr"` regardless of page direction
 
 ## Current State
@@ -160,12 +164,12 @@ Community mgr  → can read: own community stats
 |---|---|
 | `/` Home | Supabase (`campaigns` + `organizations`) |
 | `/search` | Supabase — real-time search with 300ms debounce |
-| `/campaign/[id]` | Supabase (`campaigns` + `organizations` + `products`); donors/communities tabs are `mock-data.ts` only (no DB table yet) |
+| `/campaign/[id]` | Supabase normalized tables plus shared donor/community presentation records from `site_datasets` |
 | `/donate/[id]/amount` | Supabase campaign lookup |
-| `/nonprofit` and `/nonprofit/*` admin pages | `mock-data.ts` / `nonprofit-admin-data.ts` only — no auth-scoped org query yet (was Supabase-backed before the admin-panel redesign; `getNpDashboardData` in `queries-orgs.ts` is now unused) |
-| `/nonprofit/[id]` | Supabase org lookup (`getOrgById`) + `mock-data.ts` for bio/founded/CEO/volunteers/address/phone (not in DB schema) |
-| `/community` and `/community/*` admin pages | `community-admin-data.ts` only — mock, no Supabase (redesigned 2026-08-11 from a Supabase-backed leaderboard page; `getCommunityDashboardData` in `queries-community.ts` is now unused) |
-| `/profile` | Mock (needs auth for `donor_id` filter) |
-| `/recurring` | Mock (needs auth) |
+| `/nonprofit` and `/nonprofit/*` admin pages | Supabase `site_datasets.nonprofit_admin`, with normalized entity choices queried from dedicated tables |
+| `/nonprofit/[id]` | Supabase organizations and campaigns; extended profile fields are normalized organization columns |
+| `/community` and `/community/*` admin pages | Supabase `site_datasets.community_admin`, plus normalized entity queries |
+| `/profile` | Auth-scoped Supabase reads; logged-out demo presentation data comes from `site_datasets` |
+| `/recurring` | Auth-scoped Supabase reads; no local fallback |
 
-All pages fall back to `mock-data.ts` if Supabase returns empty or errors.
+No active page silently falls back to local fixture arrays. The fixture files are migration inputs and shared type sources only.

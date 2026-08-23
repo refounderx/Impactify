@@ -6,13 +6,16 @@ import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import CampaignDetailPanel from "@/components/nonprofit-admin/CampaignDetailPanel";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { adminCampaignRows, adminCampaignsTotalRaised, adminCampaignsActiveCount, getAdminCampaignDetail } from "@/lib/nonprofit-admin-data";
+import { getAdminCampaignDetail } from "@/lib/nonprofit-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 const AS_OF = "12/08/23";
 
 export default function CampaignsDashboardPage() {
   const { lang, t } = useLang();
+  const { data } = useSiteDataset("nonprofit_admin");
+  const adminCampaignRows = data?.adminCampaignRows ?? [];
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
@@ -28,8 +31,8 @@ export default function CampaignsDashboardPage() {
           <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות העמותה"} />
           <StatHeader
             stats={[
-              { label: t("adm.activeCampaigns"), value: String(adminCampaignsActiveCount) },
-              { label: `${t("adm.totalRaisedToDate")} ${AS_OF})`, value: formatNIS(adminCampaignsTotalRaised) },
+              { label: t("adm.activeCampaigns"), value: String(data?.adminCampaignsActiveCount ?? 0) },
+              { label: `${t("adm.totalRaisedToDate")} ${AS_OF})`, value: formatNIS(data?.adminCampaignsTotalRaised ?? 0) },
             ]}
           />
         </div>

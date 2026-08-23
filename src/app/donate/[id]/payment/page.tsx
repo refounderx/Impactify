@@ -2,7 +2,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCampaignById } from "@/lib/supabase/queries";
-import { getCampaign, getOrg, formatNIS } from "@/lib/mock-data";
+import { formatNIS } from "@/lib/mock-data";
 import { CreditCard, Building2, Shield, Lock, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
@@ -18,27 +18,28 @@ export default function PaymentPage({
   const { amount: amountParam } = use(searchParams);
   const router = useRouter();
   const { lang, t } = useLang();
-  const [campaignData, setCampaignData] = useState<Awaited<ReturnType<typeof getCampaignById>>>(
-    getCampaign(id) as never
-  );
-
-  useEffect(() => {
-    getCampaignById(id).then((c) => { if (c) setCampaignData(c); });
-  }, [id]);
-
-  const campaign = campaignData ?? getCampaign(id) ?? getCampaign("1")!;
-  const org = campaign._org ?? getOrg((campaign as {orgId?: string}).orgId ?? "");
-  const amount = parseInt(amountParam ?? "100") || 100;
-  const orgName = lang === "en"
-    ? ((org as {name_en?: string})?.name_en ?? (org as {nameEn?: string})?.nameEn ?? org?.name)
-    : org?.name;
-  const campaignTitle = lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title;
+  const [campaignData, setCampaignData] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
   const [method, setMethod] = useState<"card" | "bank">("card");
   const [cardNum, setCardNum] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [cardName, setCardName] = useState("");
   const [saveCard, setSaveCard] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+
+  useEffect(() => {
+    getCampaignById(id).then((c) => { if (c) setCampaignData(c); });
+  }, [id]);
+
+  if (!campaignData) return <div className="min-h-screen bg-raz-surface animate-pulse" />;
+  const campaign = campaignData;
+  const org = campaign._org;
+  const amount = parseInt(amountParam ?? "100") || 100;
+  const orgName = lang === "en"
+    ? (org?.name_en ?? org?.name)
+    : org?.name;
+  const campaignTitle = lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title;
 
   function formatCard(v: string) { return v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim(); }
   function formatExpiry(v: string) { return v.replace(/\D/g, "").slice(0, 4).replace(/^(.{2})/, "$1/"); }
@@ -139,21 +140,31 @@ export default function PaymentPage({
               </div>
               <button
                 onClick={async () => {
-                  // Write donation to DB (best-effort — demo still works if this fails)
+                  setSubmitting(true);
+                  setPaymentError("");
                   const orgId = (campaign as {org_id?:string})?.org_id
                     ?? (campaign as {orgId?:string})?.orgId
                     ?? org?.id ?? "";
-                  await fetch("/api/donations", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ campaign_id: campaign.id, org_id: orgId, amount }),
-                  }).catch(() => {});
-                  router.push(`/donate/${campaign.id}/thanks?amount=${amount}`);
+                  try {
+                    const response = await fetch("/api/donations", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ campaign_id: campaign.id, org_id: orgId, amount }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error ?? "Donation could not be saved");
+                    router.push(`/donate/${campaign.id}/thanks?id=${result.donation.id}&receipt=${encodeURIComponent(result.receiptId)}`);
+                  } catch (error) {
+                    setPaymentError(error instanceof Error ? error.message : "Donation could not be saved");
+                    setSubmitting(false);
+                  }
                 }}
+                disabled={submitting}
                 className="w-full bg-raz-teal text-white rounded-xl py-4 font-bold text-lg hover:bg-raz-teal-dark transition-colors"
               >
-                <EditableText tKey="payment.confirm" />
+                {submitting ? "..." : <EditableText tKey="payment.confirm" />}
               </button>
+              {paymentError && <p className="text-center text-sm text-red-500 mt-2">{paymentError}</p>}
               <p className="text-center text-xs text-gray-400 mt-3"><EditableText tKey="payment.terms" /></p>
             </div>
           </div>

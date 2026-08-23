@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { CreditCard, Plus, X, Pencil } from "lucide-react";
-import { savedPaymentMethods as mockPaymentMethods } from "@/lib/mock-data";
 import {
   getDonorProfile, updateDonorProfile,
   getPaymentMethods, addPaymentMethod, removePaymentMethod,
@@ -22,7 +21,7 @@ const CARD_BRANDS = ["Visa", "Mastercard", "Isracard", "Amex"];
 export default function ProfilePanel({ t }: Props) {
   const { user } = useAuth();
   const [profile, setProfile] = useState<DonorProfile>(MOCK_PROFILE);
-  const [paymentMethods, setPaymentMethods] = useState(mockPaymentMethods);
+  const [paymentMethods, setPaymentMethods] = useState<Awaited<ReturnType<typeof getPaymentMethods>>>([]);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(MOCK_PROFILE);
   const [addingCard, setAddingCard] = useState(false);

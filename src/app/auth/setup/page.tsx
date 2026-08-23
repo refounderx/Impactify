@@ -32,9 +32,8 @@ export default function SetupPage() {
     await sb.from("profiles").upsert({
       id: user.id,
       full_name: name.trim(),
-      email: user.email,
+      email: user.email ?? null,
       app_role: role,
-      updated_at: new Date().toISOString(),
     });
     router.push(role === "org_admin" ? "/nonprofit" : role === "community_manager" ? "/community" : "/");
   }

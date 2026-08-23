@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/client";
-import { campaigns as mockCampaigns, products as mockProducts } from "@/lib/mock-data";
 import { toUICampaign, toUIProduct, attachProductIds } from "@/lib/supabase/query-helpers";
 import type { CampaignWithOrg } from "@/lib/supabase/types";
 
@@ -15,7 +14,7 @@ export async function getCampaigns(category?: string) {
     if (category && category !== "all") query = query.eq("category", category);
 
     const { data, error } = await query;
-    if (error || !data || data.length === 0) return mockCampaigns;
+    if (error) throw error;
 
     const productMap = await attachProductIds(sb, data.map((c) => c.id));
     return data.map((row) => {
@@ -23,8 +22,9 @@ export async function getCampaigns(category?: string) {
       c.productIds = productMap[row.id] ?? [];
       return c;
     });
-  } catch {
-    return mockCampaigns;
+  } catch (error) {
+    console.error("Unable to load campaigns", error);
+    return [];
   }
 }
 
@@ -37,14 +37,15 @@ export async function getCampaignById(id: string) {
       .eq("id", id)
       .single();
 
-    if (error || !data) return mockCampaigns.find((c) => c.id === id) ?? null;
+    if (error || !data) return null;
 
     const productMap = await attachProductIds(sb, [id]);
     const c = toUICampaign(data as CampaignWithOrg);
     c.productIds = productMap[id] ?? [];
     return c;
-  } catch {
-    return mockCampaigns.find((c) => c.id === id) ?? null;
+  } catch (error) {
+    console.error("Unable to load campaign", error);
+    return null;
   }
 }
 
@@ -62,7 +63,7 @@ export async function searchCampaigns(query: string, category?: string) {
     if (category && category !== "all") q = q.eq("category", category);
 
     const { data, error } = await q.order("donors_count", { ascending: false });
-    if (error || !data) return mockCampaigns;
+    if (error) throw error;
 
     const productMap = await attachProductIds(sb, data.map((c) => c.id));
     return data.map((row) => {
@@ -70,8 +71,9 @@ export async function searchCampaigns(query: string, category?: string) {
       c.productIds = productMap[row.id] ?? [];
       return c;
     });
-  } catch {
-    return mockCampaigns;
+  } catch (error) {
+    console.error("Unable to search campaigns", error);
+    return [];
   }
 }
 
@@ -80,9 +82,45 @@ export async function getProductsByIds(ids: string[]) {
   try {
     const sb = createClient();
     const { data, error } = await sb.from("products").select("*").in("id", ids);
-    if (error || !data || data.length === 0) return mockProducts.filter((p) => ids.includes(p.id));
+    if (error) throw error;
     return data.map(toUIProduct);
-  } catch {
-    return mockProducts.filter((p) => ids.includes(p.id));
+  } catch (error) {
+    console.error("Unable to load products", error);
+    return [];
+  }
+}
+
+export async function getCampaignsByOrg(orgId: string) {
+  try {
+    const sb = createClient();
+    const { data, error } = await sb
+      .from("campaigns")
+      .select("*, organizations(*)")
+      .eq("org_id", orgId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    if (!data) return [];
+
+    const productMap = await attachProductIds(sb, data.map((campaign) => campaign.id));
+    return data.map((row) => {
+      const campaign = toUICampaign(row as CampaignWithOrg);
+      campaign.productIds = productMap[row.id] ?? [];
+      return campaign;
+    });
+  } catch (error) {
+    console.error("Unable to load organization campaigns", error);
+    return [];
+  }
+}
+
+export async function getProducts() {
+  try {
+    const sb = createClient();
+    const { data, error } = await sb.from("products").select("*").eq("active", true).order("created_at");
+    if (error) throw error;
+    return (data ?? []).map(toUIProduct);
+  } catch (error) {
+    console.error("Unable to load products", error);
+    return [];
   }
 }

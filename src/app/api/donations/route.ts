@@ -1,5 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function GET(request: NextRequest) {
+  const id = request.nextUrl.searchParams.get("id") ?? "";
+  const receiptId = request.nextUrl.searchParams.get("receipt") ?? "";
+  if (!UUID_RE.test(id) || !receiptId) {
+    return NextResponse.json({ error: "Invalid confirmation reference" }, { status: 400 });
+  }
+
+  const sb = createAdminClient();
+  const { data, error } = await sb
+    .from("donations")
+    .select("id, amount, receipt_id, created_at, campaign_id, campaigns(title, title_en, gradient, emoji), organizations(name, name_en)")
+    .eq("id", id)
+    .eq("receipt_id", receiptId)
+    .single();
+  if (error || !data) return NextResponse.json({ error: "Confirmation not found" }, { status: 404 });
+
+  return NextResponse.json({ donation: data });
+}
 
 export async function POST(request: NextRequest) {
   const sb = await createClient();
@@ -57,6 +79,7 @@ export async function POST(request: NextRequest) {
       status: "active",
       start_date: new Date().toISOString().split("T")[0],
       next_charge_date: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+      psp_token: null,
     });
   }
 

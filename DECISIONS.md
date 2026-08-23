@@ -1,5 +1,33 @@
 # Technical Decisions — Impactify
 
+## 2026-08-23 — Supabase-only runtime reads; fixture snapshots stored in `site_datasets`
+
+**Decision:** Remove every active mock fallback. Normalized organizations, campaigns, products, communities, donations, and organization-profile fields are queried from dedicated Supabase tables. Remaining landing/admin/demo presentation records are stored as four typed JSON rows in the public-read-only `site_datasets` table and loaded once through `SiteDataProvider`.
+
+**Context:** The user requested that all existing mock data be uploaded to Supabase and that every website data path query Supabase. Several newer admin and landing screens still imported fixture arrays directly, while older query modules silently replaced errors or empty results with mock data.
+
+**Rationale:** Silent fallbacks conceal schema, RLS, networking, and seeding failures. A transitional JSON dataset table moves all runtime data ownership to Supabase without prematurely inventing normalized schemas for UI-only records; dedicated domain entities remain normalized.
+
+**Consequences:** Missing data now produces an explicit loading/error/empty state. The fixture modules remain only as generator inputs and type sources. `site_datasets` allows public reads and no public writes. Both migrations were applied through the Dashboard SQL Editor after the CLI Management API login-role request failed; REST verification confirms the four dataset rows and all five extended organization profiles are live.
+
+---
+
+## 2026-08-23 — Fixed hero badge positioning: anchored to each photo, not floated over the whole grid
+
+**Decision:** Reworked `Hero.tsx`'s `HeroImageCard`/`Badge` so each caption bubble is now an absolutely-positioned child of its *own* photo's wrapper (`bottom-2 start-2 end-2` within a `relative overflow-hidden` container sized to that photo), instead of 3 badges absolutely positioned against the whole 2-column image grid with hand-picked offsets (`-top-4 start-16`, `top-1/2 end-0`, `bottom-4 start-0`). Also switched the badge from a fixed-height `rounded-full` pill with `truncate` to a `rounded-xl` pill that wraps text across lines (`leading-snug`, no truncate/no-wrap).
+**Context:** The original 3 offsets were tuned for abstract color-block placeholders in a specific grid arrangement; once real photos replaced the blocks, the badges no longer lined up with the photo they described — user reported "bubbles are mismatched and on top of other things," then separately "soldier text is truncated" once the position fix was in but text still got cut off by `truncate` on the (correctly positioned but longer) soldier caption.
+**Rationale:** Attaching each badge to its own image's relative container is robust to the grid's actual visual arrangement (including RTL mirroring) and to caption length — it can't drift onto a neighboring photo. Allowing wrap instead of truncating means longer captions (e.g. the soldier one) stay fully readable instead of silently losing information.
+**Consequences:** Verified visually via a one-off Playwright + Chromium screenshot script (no project screenshot/run skill existed yet for this repo — installed `playwright` ad hoc in the scratchpad, not added as a project dependency). Confirmed all 3 captions now render fully and match their photo, with zero console errors.
+
+---
+
+## 2026-08-23 — Real hero photos stored in Supabase Storage, not the Next.js public folder
+
+**Decision:** Created a public `hero-images` Storage bucket (via SQL insert into `storage.buckets` + a `storage.objects` public-read RLS policy, saved as `supabase/migrations/20260823140000_hero_images_storage.sql`), uploaded the user's 3 provided photos via `supabase storage cp --experimental --linked`, and updated `hero_cards.image_url` to the resulting public Storage URLs. Also rewrote each card's `bubble_text`/`bubble_text_en` to describe what's actually in its photo (lone-soldier birthday party, elderly home visit with a hot meal, family donation-box delivery) rather than the generic placeholder captions.
+**Context:** User provided 3 AI-generated branded photos in a local desktop folder and asked to upload them, insert them into the hero cards, and update the bubbles to match.
+**Rationale:** The original 2026-08-23 hero-cards decision explicitly called for images+bubbles to live in Supabase (not hardcoded), so real images belonged in Storage, not the Next.js `public/` folder — a `public/` copy would only serve from this one deployment and wouldn't match the "admin can swap the photo without a code change" intent already baked into the `image_url` column design. Local copies in `public/hero/` were made first as an intermediate step, then removed once the Storage upload succeeded, to avoid two sources of truth for the same images.
+**Consequences:** `supabase storage cp` required the `--experimental` flag and only worked with a relative source path (an absolute Windows `C:/...` path was rejected as an unsupported operation — a CLI quirk, not a project-specific issue). The Storage bucket/policy creation was done ad hoc via `supabase db query` rather than `db push`, then captured retroactively as a migration file for reproducibility.
+
 ---
 
 ## 2026-08-23 — Wired up admin content-editing mode; applied the last pending migration (2026-06-29) and fixed a data bug found along the way

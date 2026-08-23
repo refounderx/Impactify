@@ -10,7 +10,9 @@ import ProfilePanel from "./ProfilePanel";
 import { Popups, type PopupName } from "./Popups";
 import NewDonationPopup from "./NewDonationPopup";
 import Sidebar from "./Sidebar";
-import { myProductDonations, donorUpdates, quarterlyDonationData, DONOR_NAME, DONOR_NAME_EN } from "@/lib/mock-data";
+import type { ProductDonation } from "@/lib/mock-data";
+import type { SharedSiteData } from "@/lib/site-dataset-types";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import { getMyProductDonations, getDonorUpdates, getQuarterlyStats } from "@/lib/supabase/queries-my-donations";
 import { Plus, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
@@ -19,25 +21,30 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function MyDonationsPage() {
   const { lang, t } = useLang();
   const { user, signOut } = useAuth();
+  const { data } = useSiteDataset("shared");
   const [view, setView] = useState<"my-donations" | "manage" | "tax-refund" | "updates" | "profile">("my-donations");
   const [popup, setPopup] = useState<PopupName>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   // Supabase data — fall back to mock when user is not signed in or query returns empty
-  const [productDonations, setProductDonations] = useState(myProductDonations);
-  const [updates, setUpdates] = useState(donorUpdates);
-  const [quarterly, setQuarterly] = useState(quarterlyDonationData);
+  const [remoteProductDonations, setRemoteProductDonations] = useState<ProductDonation[]>([]);
+  const [remoteUpdates, setRemoteUpdates] = useState<SharedSiteData["donorUpdates"]>([]);
+  const [remoteQuarterly, setRemoteQuarterly] = useState<SharedSiteData["quarterlyDonationData"]>({ total: 0, period: "", months: [] });
 
   useEffect(() => {
-    getDonorUpdates(user?.id ?? null).then(setUpdates);
     if (user) {
-      getMyProductDonations(user.id).then(setProductDonations);
-      getQuarterlyStats(user.id).then(setQuarterly);
+      getDonorUpdates(user.id).then(setRemoteUpdates);
+      getMyProductDonations(user.id).then(setRemoteProductDonations);
+      getQuarterlyStats(user.id).then(setRemoteQuarterly);
     }
   }, [user]);
 
-  const donorName = lang === "en" ? DONOR_NAME_EN : DONOR_NAME;
+  const updates = user ? remoteUpdates : (data?.donorUpdates ?? []);
+  const productDonations = user ? remoteProductDonations : (data?.myProductDonations ?? []);
+  const quarterly = user ? remoteQuarterly : (data?.quarterlyDonationData ?? { total: 0, period: "", months: [] });
+
+  const donorName = lang === "en" ? (data?.DONOR_NAME_EN ?? "") : (data?.DONOR_NAME ?? "");
   const displayName = user?.email ?? donorName;
 
   function openPopup(type: NonNullable<PopupName>, productId?: string) {

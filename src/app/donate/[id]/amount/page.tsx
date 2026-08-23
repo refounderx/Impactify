@@ -2,7 +2,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCampaignById } from "@/lib/supabase/queries";
-import { getCampaign, formatNIS } from "@/lib/mock-data";
+import { formatNIS } from "@/lib/mock-data";
 import { RotateCcw, Heart, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
@@ -13,23 +13,22 @@ export default function AmountPage({ params }: { params: Promise<{ id: string }>
   const { id } = use(params);
   const router = useRouter();
   const { lang, t } = useLang();
-  const [campaignData, setCampaignData] = useState<Awaited<ReturnType<typeof getCampaignById>>>(
-    getCampaign(id) as never ?? getCampaign("1") as never
-  );
-
-  useEffect(() => {
-    getCampaignById(id).then((c) => { if (c) setCampaignData(c); });
-  }, [id]);
-
-  const campaign = campaignData ?? getCampaign("1")!;
-  const org = campaign._org ?? null;
-  const campaignTitle = lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title;
-  const orgName = lang === "en" ? ((org as {name_en?: string; nameEn?: string; name?: string})?.name_en ?? (org as {nameEn?: string})?.nameEn ?? org?.name) : org?.name;
+  const [campaignData, setCampaignData] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
   const [selected, setSelected] = useState<number | null>(100);
   const [custom, setCustom] = useState("");
   const [recurring, setRecurring] = useState(false);
   const [dedication, setDedication] = useState(false);
   const [dedicationName, setDedicationName] = useState("");
+
+  useEffect(() => {
+    getCampaignById(id).then((c) => { if (c) setCampaignData(c); });
+  }, [id]);
+
+  if (!campaignData) return <div className="min-h-screen bg-raz-surface animate-pulse" />;
+  const campaign = campaignData;
+  const org = campaign._org ?? null;
+  const campaignTitle = lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title;
+  const orgName = lang === "en" ? ((org as {name_en?: string; nameEn?: string; name?: string})?.name_en ?? (org as {nameEn?: string})?.nameEn ?? org?.name) : org?.name;
   const amount = custom ? parseInt(custom) : selected;
 
   return (

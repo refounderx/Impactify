@@ -6,11 +6,13 @@ import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import CampaignSourceTabs from "@/components/community/CampaignSourceTabs";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { communityCampaignCards, type CommunityCampaignSource } from "@/lib/community-admin-data";
+import type { CommunityCampaignSource } from "@/lib/community-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function CommunityCampaignsGridPage() {
   const { lang } = useLang();
+  const { data } = useSiteDataset("community_admin");
   const [source, setSource] = useState<CommunityCampaignSource>("created");
 
   return (
@@ -24,7 +26,7 @@ export default function CommunityCampaignsGridPage() {
         >
           <p className="font-bold text-lg leading-snug mb-2"><EditableText tKey="adm.backToDashboard" /></p>
         </Link>
-        {communityCampaignCards.map((c) => (
+        {(data?.communityCampaignCards ?? []).map((c) => (
           <div key={c.id} className="bg-white rounded-2xl p-4 relative">
             <div className="absolute top-4 end-4 flex flex-col gap-2">
               <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">

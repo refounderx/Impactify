@@ -2,25 +2,27 @@
 import { useState, useEffect, useCallback } from "react";
 import BottomNav from "@/components/layout/BottomNav";
 import CampaignCard from "@/components/campaign/CampaignCard";
-import { campaigns as mockCampaigns, categories } from "@/lib/mock-data";
 import { searchCampaigns } from "@/lib/supabase/queries";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function SearchPage() {
   const { t } = useLang();
+  const { data: sharedData } = useSiteDataset("shared");
+  const categories = sharedData?.categories ?? [];
   const sortOptions = [t("sort.relevance"), t("sort.newest"), t("sort.funded"), t("sort.ending")];
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSort, setActiveSort] = useState("");
-  const [results, setResults] = useState(mockCampaigns as typeof mockCampaigns);
+  const [results, setResults] = useState<Awaited<ReturnType<typeof searchCampaigns>>>([]);
   const [loading, setLoading] = useState(false);
 
   const runSearch = useCallback(async (q: string, cat: string) => {
     setLoading(true);
     const data = await searchCampaigns(q, cat);
-    setResults(data as typeof mockCampaigns);
+    setResults(data);
     setLoading(false);
   }, []);
 

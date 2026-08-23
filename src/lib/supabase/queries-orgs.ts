@@ -1,15 +1,15 @@
 import { createClient } from "@/lib/supabase/client";
-import { organizations as mockOrgs, npCampaigns as mockNpCampaigns } from "@/lib/mock-data";
 import { toUIOrg } from "@/lib/supabase/query-helpers";
 
 export async function getOrganizations() {
   try {
     const sb = createClient();
     const { data, error } = await sb.from("organizations").select("*");
-    if (error || !data || data.length === 0) return mockOrgs;
+    if (error) throw error;
     return data.map(toUIOrg);
-  } catch {
-    return mockOrgs;
+  } catch (error) {
+    console.error("Unable to load organizations", error);
+    return [];
   }
 }
 
@@ -17,10 +17,11 @@ export async function getOrgById(id: string) {
   try {
     const sb = createClient();
     const { data, error } = await sb.from("organizations").select("*").eq("id", id).single();
-    if (error || !data) return mockOrgs.find((o) => o.id === id) ?? null;
+    if (error || !data) return null;
     return toUIOrg(data);
-  } catch {
-    return mockOrgs.find((o) => o.id === id) ?? null;
+  } catch (error) {
+    console.error("Unable to load organization", error);
+    return null;
   }
 }
 
@@ -29,7 +30,7 @@ export async function getNpDashboardData() {
   try {
     const sb = createClient();
     const { data: org } = await sb.from("organizations").select("*").limit(1).single();
-    if (!org) return { org: null, campaigns: mockNpCampaigns };
+    if (!org) return { org: null, campaigns: [] };
 
     const { data: campaigns } = await sb
       .from("campaigns")
@@ -52,9 +53,10 @@ export async function getNpDashboardData() {
 
     return {
       org: toUIOrg(org),
-      campaigns: npCampaigns.length > 0 ? npCampaigns : mockNpCampaigns,
+      campaigns: npCampaigns,
     };
-  } catch {
-    return { org: null, campaigns: mockNpCampaigns };
+  } catch (error) {
+    console.error("Unable to load nonprofit dashboard", error);
+    return { org: null, campaigns: [] };
   }
 }

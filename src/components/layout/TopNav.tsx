@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Search, LogIn } from "lucide-react";
-import { DONOR_NAME, DONOR_NAME_EN, ORG_NAME, ORG_NAME_EN, COMMUNITY_NAME, COMMUNITY_NAME_EN } from "@/lib/mock-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import EditableText from "@/components/admin/EditableText";
@@ -11,6 +11,13 @@ export default function TopNav() {
   const pathname = usePathname();
   const { lang, setLang } = useLang();
   const { user } = useAuth();
+  const { data } = useSiteDataset("shared");
+  const DONOR_NAME = data?.DONOR_NAME ?? "";
+  const DONOR_NAME_EN = data?.DONOR_NAME_EN ?? "";
+  const ORG_NAME = data?.ORG_NAME ?? "";
+  const ORG_NAME_EN = data?.ORG_NAME_EN ?? "";
+  const COMMUNITY_NAME = data?.COMMUNITY_NAME ?? "";
+  const COMMUNITY_NAME_EN = data?.COMMUNITY_NAME_EN ?? "";
 
   const active = pathname.startsWith("/nonprofit")
     ? "/nonprofit"

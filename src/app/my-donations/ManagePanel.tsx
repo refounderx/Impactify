@@ -1,26 +1,27 @@
 "use client";
 import { useState } from "react";
 import { Search, Printer, Copy, ChevronDown, ArrowDown } from "lucide-react";
-import { myProductDonations, quarterlyDonationData, formatNIS } from "@/lib/mock-data";
+import { formatNIS, type ProductDonation } from "@/lib/mock-data";
+import type { SharedSiteData } from "@/lib/site-dataset-types";
 import QuarterlyView from "./QuarterlyView";
 
 interface Props {
   lang: string;
   t: (key: string) => string;
   onTaxRefund: () => void;
-  productDonations?: typeof myProductDonations;
-  quarterlyData?: typeof quarterlyDonationData;
+  productDonations?: ProductDonation[];
+  quarterlyData?: SharedSiteData["quarterlyDonationData"];
 }
 
 type SubTab = "all" | "quarterly";
 
 const TODAY = "07/02/23";
 
-export default function ManagePanel({ lang, t, onTaxRefund, productDonations, quarterlyData }: Props) {
+export default function ManagePanel({ lang, onTaxRefund, productDonations, quarterlyData }: Props) {
   const [subTab, setSubTab] = useState<SubTab>("all");
   const [search, setSearch] = useState("");
 
-  const donations = productDonations ?? myProductDonations;
+  const donations = productDonations ?? [];
   const allRows = donations.flatMap((pd) =>
     pd.receipts.map((r) => ({
       ...r,

@@ -1,15 +1,15 @@
 "use client";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
-import { quarterlyDonationData } from "@/lib/mock-data";
+import type { SharedSiteData } from "@/lib/site-dataset-types";
 
 const BAR_COLORS = ["bg-yellow-400", "bg-teal-200", "bg-raz-teal"];
 const BAR_H = 120;
 const YEARS = ["2023", "2022", "2021", "כל השנים"];
 
-export default function QuarterlyView({ lang, quarterlyData }: { lang: string; quarterlyData?: typeof quarterlyDonationData }) {
+export default function QuarterlyView({ lang, quarterlyData }: { lang: string; quarterlyData?: SharedSiteData["quarterlyDonationData"] }) {
   const [selectedYear, setSelectedYear] = useState("2023");
-  const { total, period, months } = quarterlyData ?? quarterlyDonationData;
+  const { total, period, months } = quarterlyData ?? { total: 0, period: "", months: [] };
   const MAX_BAR = Math.max(...months.flatMap(m => m.bars.map(b => b.amount)), 1);
 
   return (

@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import BottomNav from "@/components/layout/BottomNav";
 import { getOrgById } from "@/lib/supabase/queries";
 import { getProductsByIds } from "@/lib/supabase/queries";
-import { getCampaignsByOrg, formatNIS } from "@/lib/mock-data";
+import { getCampaignsByOrg } from "@/lib/supabase/queries";
+import { formatNIS } from "@/lib/mock-data";
 import { Share2, Mail, MessageCircle, BadgeCheck, Calendar, User, Users, MapPin, Phone, Minus, Plus } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
@@ -18,6 +19,7 @@ export default function NonprofitProfile() {
   const { lang, t } = useLang();
   const [org, setOrg] = useState<Awaited<ReturnType<typeof getOrgById>>>(null);
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
+  const [campaigns, setCampaigns] = useState<Awaited<ReturnType<typeof getCampaignsByOrg>>>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("products");
   const [qty, setQty] = useState<Record<string, number>>({});
@@ -28,7 +30,8 @@ export default function NonprofitProfile() {
     if (!id) return;
     getOrgById(id).then(async (o) => {
       setOrg(o);
-      const orgCampaigns = getCampaignsByOrg(id);
+      const orgCampaigns = await getCampaignsByOrg(id);
+      setCampaigns(orgCampaigns);
       const ids = Array.from(new Set(orgCampaigns.flatMap((c) => c.productIds))).slice(0, 3);
       if (ids.length) {
         const p = await getProductsByIds(ids);
@@ -39,7 +42,7 @@ export default function NonprofitProfile() {
     });
   }, [id]);
 
-  const targetCampaignId = useMemo(() => getCampaignsByOrg(id ?? "")[0]?.id, [id]);
+  const targetCampaignId = useMemo(() => campaigns[0]?.id, [campaigns]);
 
   const productsTotal = products.reduce((sum, p) => sum + p.price * (qty[p.id] ?? 0), 0);
   const total = useCustom ? (parseInt(custom) || 0) : productsTotal;

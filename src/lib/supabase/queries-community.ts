@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/client";
-import { communityStats as mockCommunityStats } from "@/lib/mock-data";
 
 type OrgRef = { name: string; name_en: string | null } | null;
 
@@ -15,7 +14,7 @@ export async function getCommunityDashboardData() {
       .limit(1)
       .single();
 
-    if (error || !data) return mockCommunityStats;
+    if (error || !data) return null;
 
     // All communities for leaderboard
     const { data: all } = await sb
@@ -33,8 +32,8 @@ export async function getCommunityDashboardData() {
       donorCount: data.donors_count,
       orgName: org?.name ?? "",
       orgNameEn: org?.name_en ?? org?.name ?? "",
-      goal: mockCommunityStats.goal,
-      campaignTitle: mockCommunityStats.campaignTitle,
+      goal: 0,
+      campaignTitle: "",
       leaderboard: (all ?? []).map((c, i) => ({
         rank: i + 1,
         name: c.name,
@@ -44,7 +43,23 @@ export async function getCommunityDashboardData() {
         isMe: c.id === data.id,
       })),
     };
-  } catch {
-    return mockCommunityStats;
+  } catch (error) {
+    console.error("Unable to load community dashboard", error);
+    return null;
+  }
+}
+
+export async function getCommunities() {
+  try {
+    const sb = createClient();
+    const { data, error } = await sb
+      .from("communities")
+      .select("id, name, name_en, description, donors_count, total_raised")
+      .order("created_at");
+    if (error) throw error;
+    return data ?? [];
+  } catch (error) {
+    console.error("Unable to load communities", error);
+    return [];
   }
 }

@@ -1,8 +1,11 @@
 "use client";
-import { socialLinks } from "@/lib/landing-data";
+import Link from "next/link";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function LandingFooter() {
+  const { data } = useSiteDataset("landing");
+  const socialLinks = data?.socialLinks ?? [];
   return (
     <footer className="bg-raz-dark text-white">
       <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8 text-sm">
@@ -26,7 +29,7 @@ export default function LandingFooter() {
 
         <div className="flex flex-col gap-2 text-gray-300">
           <a href="#why"><EditableText tKey="landing.footer.about" /></a>
-          <a href="/nonprofit"><EditableText tKey="landing.footer.haveOrg" /></a>
+          <Link href="/nonprofit"><EditableText tKey="landing.footer.haveOrg" /></Link>
           <a href="/recurring"><EditableText tKey="landing.footer.recurring" /></a>
           <a href="#"><EditableText tKey="landing.footer.doGood" /></a>
         </div>

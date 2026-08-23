@@ -1,4 +1,4 @@
-import type { Campaign, Organization, Product, CampaignWithOrg } from "@/lib/supabase/types";
+import type { Organization, Product, CampaignWithOrg } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/client";
 
 export function toUICampaign(row: CampaignWithOrg) {
@@ -33,6 +33,17 @@ export function toUIOrg(row: Organization) {
     initials: row.initials ?? row.name.slice(0, 2),
     color: row.color,
     verified: row.verified,
+    bio: row.description ?? undefined,
+    bioEn: row.description_en ?? undefined,
+    founded: row.founded ?? undefined,
+    foundedEn: row.founded_en ?? undefined,
+    ceo: row.ceo ?? undefined,
+    ceoEn: row.ceo_en ?? undefined,
+    volunteers: row.volunteers,
+    address: row.address ?? undefined,
+    addressEn: row.address_en ?? undefined,
+    phone: row.phone ?? undefined,
+    videoGradient: row.video_gradient,
   };
 }
 

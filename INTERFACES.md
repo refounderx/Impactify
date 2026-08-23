@@ -50,7 +50,7 @@ Server-side donation write. Validates inputs at trust boundary.
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
 
-All functions fall back to `mock-data.ts` on error or empty result.
+Query errors and empty results are returned to callers; active runtime paths do not fall back to local fixture arrays.
 
 | Function | Auth required | Returns | Tables |
 |---|---|---|---|
@@ -65,6 +65,11 @@ All functions fall back to `mock-data.ts` on error or empty result.
 | `getMyRecurring(userId)` | Yes | recurring rows | `recurring_donations`, `campaigns`, `organizations` |
 | `updateRecurringStatus(id, status)` | Yes (RLS) | `boolean` | `recurring_donations` |
 | `cancelRecurring(id)` | Yes (RLS) | `boolean` | `recurring_donations` |
+| `getSiteDatasets()` | No | typed landing/admin/demo dataset bundle | `site_datasets` |
+
+### `site_datasets`
+
+Four public-read-only rows keyed by `shared`, `landing`, `nonprofit_admin`, and `community_admin`. Each row stores a JSON `value` and `updated_at`. The client loads all four as a single typed bundle through `SiteDataProvider`; a missing row is an error, not a local fallback.
 
 ## Database Table Contracts
 
@@ -129,11 +134,13 @@ RLS: readable when `donor_id = auth.uid()` or `donor_id is null`. Surfaced in th
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid | PK |
-| `image_url` | text | Nullable — null shows the app's color-block placeholder instead |
+| `image_url` | text | Nullable — null shows the app's color-block placeholder instead. As of 2026-08-23 all 3 rows have real photos hosted in the `hero-images` Supabase Storage bucket (public), URL form `{SUPABASE_URL}/storage/v1/object/public/hero-images/<filename>` |
 | `bubble_text` / `bubble_text_en` | text | `bubble_text` required, `bubble_text_en` nullable |
 | `display_order` | int | Determines card position on landing hero |
 
 RLS: public read. Consumed by `getHeroCards()` in `src/lib/supabase/queries-landing.ts` for the 3 image+caption pairs in the landing page hero (`Hero.tsx`); falls back to `heroCards` mock data in `mock-data.ts` if the table doesn't exist yet or is empty. Image+bubble are stored as one row (a unit), not separate image/text lists, so a future admin screen can edit or reorder a pair together.
+
+**`hero-images` Storage bucket** (public, created via `supabase/migrations/20260823140000_hero_images_storage.sql`): holds the 3 real hero photos (`soldier.jpeg`, `elderly.jpeg`, `family.jpeg`), uploaded via `supabase storage cp --experimental --linked`. RLS policy `hero_images_public_read` on `storage.objects` allows public `select` for this bucket only.
 
 ### `site_content`
 | Column | Type | Notes |

@@ -6,13 +6,16 @@ import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import ProductDetailPanel from "@/components/nonprofit-admin/ProductDetailPanel";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { adminProductRows, adminProductsTotalUnits, adminProductsActiveCount, getAdminProductDetail } from "@/lib/nonprofit-admin-data";
+import { getAdminProductDetail } from "@/lib/nonprofit-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 const AS_OF = "12/08/23";
 
 export default function ProductsDashboardPage() {
   const { lang, t } = useLang();
+  const { data } = useSiteDataset("nonprofit_admin");
+  const adminProductRows = data?.adminProductRows ?? [];
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
@@ -28,8 +31,8 @@ export default function ProductsDashboardPage() {
           <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות העמותה"} />
           <StatHeader
             stats={[
-              { label: t("adm.activeProducts"), value: String(adminProductsActiveCount) },
-              { label: `${t("adm.unitsDonated")} ${AS_OF})`, value: adminProductsTotalUnits.toLocaleString("he-IL") },
+              { label: t("adm.activeProducts"), value: String(data?.adminProductsActiveCount ?? 0) },
+              { label: `${t("adm.unitsDonated")} ${AS_OF})`, value: (data?.adminProductsTotalUnits ?? 0).toLocaleString("he-IL") },
             ]}
           />
         </div>

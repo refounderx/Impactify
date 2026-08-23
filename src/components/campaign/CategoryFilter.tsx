@@ -1,7 +1,7 @@
 "use client";
-import { categories } from "@/lib/mock-data";
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 const catKeys: Record<string, string> = {
@@ -13,6 +13,8 @@ const catKeys: Record<string, string> = {
 export default function CategoryFilter({ onSelect }: { onSelect?: (id: string) => void }) {
   const [active, setActive] = useState("all");
   const { dir } = useLang();
+  const { data } = useSiteDataset("shared");
+  const categories = data?.categories ?? [];
 
   function select(id: string) {
     setActive(id);

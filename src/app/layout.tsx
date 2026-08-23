@@ -3,6 +3,7 @@ import { Heebo, Assistant, Roboto } from "next/font/google";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminModeProvider } from "@/contexts/AdminModeContext";
+import { SiteDataProvider } from "@/contexts/SiteDataContext";
 import DemoBar from "@/components/layout/DemoBar";
 import TopNav from "@/components/layout/TopNav";
 import "./globals.css";
@@ -21,13 +22,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="he" dir="rtl" className={`${heebo.variable} ${assistant.variable} ${roboto.variable}`}>
       <body className="min-h-screen bg-raz-surface">
         <LanguageProvider>
-          <AdminModeProvider>
-            <AuthProvider>
-              <DemoBar />
-              <TopNav />
-              {children}
-            </AuthProvider>
-          </AdminModeProvider>
+          <SiteDataProvider>
+            <AdminModeProvider>
+              <AuthProvider>
+                <DemoBar />
+                <TopNav />
+                {children}
+              </AuthProvider>
+            </AdminModeProvider>
+          </SiteDataProvider>
         </LanguageProvider>
       </body>
     </html>

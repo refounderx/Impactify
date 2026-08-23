@@ -3,17 +3,18 @@ import { Pencil, Eye } from "lucide-react";
 import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { adminCampaignCards } from "@/lib/nonprofit-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function CampaignsGridPage() {
   const { lang } = useLang();
+  const { data } = useSiteDataset("nonprofit_admin");
 
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-800 mb-6"><EditableText tKey="adm.campaignsGridTitle" /></h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {adminCampaignCards.map((c) => (
+        {(data?.adminCampaignCards ?? []).map((c) => (
           <div key={c.id} className="bg-white rounded-2xl p-4 relative">
             <div className="absolute top-4 end-4 flex flex-col gap-2">
               <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">

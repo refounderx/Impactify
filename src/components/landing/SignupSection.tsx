@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
-import { authProviders } from "@/lib/landing-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function SignupSection() {
   const [phone, setPhone] = useState("");
+  const { data } = useSiteDataset("landing");
+  const authProviders = data?.authProviders ?? [];
 
   return (
     <section className="max-w-md mx-auto px-6 py-16 text-center">

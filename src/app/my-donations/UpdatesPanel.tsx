@@ -1,20 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ChevronDown, Circle, CheckCircle2 } from "lucide-react";
-import { systemUpdates as mockSystemUpdates, donorUpdates as mockDonorUpdates } from "@/lib/mock-data";
 import { getSystemUpdates } from "@/lib/supabase/queries-profile";
+import type { SharedSiteData } from "@/lib/site-dataset-types";
 
 type Tab = "donations" | "system";
 
 interface Props {
   lang: string;
   t: (k: string) => string;
-  updates: typeof mockDonorUpdates;
+  updates: SharedSiteData["donorUpdates"];
 }
 
 export default function UpdatesPanel({ lang, t, updates }: Props) {
   const [tab, setTab] = useState<Tab>("donations");
-  const [systemUpdates, setSystemUpdates] = useState(mockSystemUpdates);
+  const [systemUpdates, setSystemUpdates] = useState<Awaited<ReturnType<typeof getSystemUpdates>>>([]);
   const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {

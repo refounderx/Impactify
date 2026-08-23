@@ -1,10 +1,12 @@
 "use client";
 import Link from "next/link";
 import { Mail, User } from "lucide-react";
-import { socialLinks } from "@/lib/landing-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function LandingHeader() {
+  const { data } = useSiteDataset("landing");
+  const socialLinks = data?.socialLinks ?? [];
   return (
     <header className="border-b border-gray-100 bg-white">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">

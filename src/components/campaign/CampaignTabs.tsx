@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
-import { getCampaignDonors, getCampaignCommunities, formatNIS } from "@/lib/mock-data";
+import { formatNIS } from "@/lib/mock-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 type Tab = "donors" | "communities" | "story" | "org";
@@ -15,9 +16,21 @@ interface CampaignTabsProps {
 
 export default function CampaignTabs({ campaignId, donorsCount, story, orgBio }: CampaignTabsProps) {
   const { lang, t } = useLang();
+  const { data } = useSiteDataset("shared");
   const [tab, setTab] = useState<Tab>("donors");
-  const donors = getCampaignDonors(campaignId, Math.min(donorsCount, 9) || 9);
-  const communities = getCampaignCommunities(campaignId);
+  const names = data?.campaignDonorNames ?? [];
+  const count = Math.min(donorsCount, 9) || 9;
+  const donors = names.length === 0 ? [] : Array.from({ length: count }).map((_, i) => ({
+    id: `${campaignId}-donor-${i}`,
+    name: names[i % names.length],
+    amount: [180, 100, 50, 250, 126][i % 5],
+    date: "לפני 2 שעות",
+    dateEn: "2 hours ago",
+    message: "זכות גדולה לתרום ולהיות שותפה עם הארגון",
+    messageEn: "It's a privilege to give and partner with this organization",
+    anonymous: i % 4 === 1,
+  }));
+  const communities = data?.campaignCommunitiesByCampaign[campaignId] ?? [];
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "donors", label: t("campaign.tabDonors") },

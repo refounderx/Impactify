@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Pencil, MoreVertical } from "lucide-react";
 import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
-import { adminUpdateRows, adminProductRows, adminCampaignRows, type AdminUpdateRow } from "@/lib/nonprofit-admin-data";
+import type { AdminCampaignRow, AdminProductRow, AdminUpdateRow } from "@/lib/nonprofit-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import CreateUpdateWizard, { type NewUpdateDraft } from "@/components/nonprofit-admin/CreateUpdateWizard";
 import EditableText from "@/components/admin/EditableText";
 
@@ -15,8 +16,12 @@ const TRIGGER_LABELS: Record<NewUpdateDraft["trigger"], [string, string]> = {
   days: ["מספר ימים מאז התרומה האחרונה", "Days since last donation"],
 };
 
-function draftToRow(draft: NewUpdateDraft): AdminUpdateRow {
-  const pool = draft.audience === "products" ? adminProductRows : adminCampaignRows;
+function draftToRow(
+  draft: NewUpdateDraft,
+  productRows: AdminProductRow[],
+  campaignRows: AdminCampaignRow[],
+): AdminUpdateRow {
+  const pool = draft.audience === "products" ? productRows : campaignRows;
   const names = draft.audience === "all"
     ? [["כל התורמים", "All donors"] as [string, string]]
     : pool.filter((o) => draft.targetIds.includes(o.id)).map((o) => [o.name, o.nameEn] as [string, string]);
@@ -37,13 +42,15 @@ function draftToRow(draft: NewUpdateDraft): AdminUpdateRow {
 
 export default function UpdatesPage() {
   const { lang, t } = useLang();
+  const { data } = useSiteDataset("nonprofit_admin");
   const [tab, setTab] = useState<Tab>("trigger");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [rows, setRows] = useState(adminUpdateRows);
+  const [createdRows, setCreatedRows] = useState<AdminUpdateRow[]>([]);
   const [creating, setCreating] = useState(false);
+  const rows = [...createdRows, ...(data?.adminUpdateRows ?? [])];
 
   function handleCreate(draft: NewUpdateDraft) {
-    setRows((rs) => [draftToRow(draft), ...rs]);
+    setCreatedRows((rs) => [draftToRow(draft, data?.adminProductRows ?? [], data?.adminCampaignRows ?? []), ...rs]);
     setCreating(false);
   }
 

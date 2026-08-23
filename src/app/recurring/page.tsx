@@ -2,25 +2,25 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import BottomNav from "@/components/layout/BottomNav";
-import { recurringDonations as mockRecurring, formatNIS } from "@/lib/mock-data";
+import { formatNIS } from "@/lib/mock-data";
 import { getMyRecurring, updateRecurringStatus, cancelRecurring } from "@/lib/supabase/queries-donations";
 import { RotateCcw, PauseCircle, XCircle, Plus, ArrowRight, Calendar, CreditCard } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import EditableText from "@/components/admin/EditableText";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 
 export default function RecurringPage() {
   const { lang } = useLang();
   const { user } = useAuth();
-  const [orders, setOrders] = useState(mockRecurring as typeof mockRecurring);
+  const { data } = useSiteDataset("shared");
+  const [remoteOrders, setRemoteOrders] = useState<Awaited<ReturnType<typeof getMyRecurring>>>([]);
   const [canceling, setCanceling] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
-    getMyRecurring(user.id).then((data) => {
-      if (data.length) setOrders(data as typeof mockRecurring);
-    });
+    if (user) getMyRecurring(user.id).then(setRemoteOrders);
   }, [user]);
+  const orders = user ? remoteOrders : (data?.recurringDonations ?? []);
 
   const totalMonthly = orders
     .filter((o) => o.status === "active")
@@ -30,12 +30,12 @@ export default function RecurringPage() {
     const order = orders.find((o) => o.id === id);
     if (!order) return;
     const newStatus = order.status === "active" ? "paused" as const : "active" as const;
-    setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status: newStatus } : o));
+    setRemoteOrders((prev) => prev.map((o) => o.id === id ? { ...o, status: newStatus } : o));
     if (user) await updateRecurringStatus(id, newStatus);
   }
 
   async function cancelOrder(id: string) {
-    setOrders((prev) => prev.filter((o) => o.id !== id));
+    setRemoteOrders((prev) => prev.filter((o) => o.id !== id));
     setCanceling(null);
     if (user) await cancelRecurring(id);
   }

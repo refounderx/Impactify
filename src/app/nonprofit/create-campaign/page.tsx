@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { products, ORG_NAME, ORG_NAME_EN } from "@/lib/mock-data";
+import { getCommunities, getProducts } from "@/lib/supabase/queries";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import { Check, ChevronLeft, Image as ImageIcon, Video, Users } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
@@ -9,7 +10,10 @@ import EditableText from "@/components/admin/EditableText";
 export default function CreateCampaignPage() {
   const router = useRouter();
   const { lang } = useLang();
-  const orgDisplayName = lang === "en" ? ORG_NAME_EN : ORG_NAME;
+  const { data } = useSiteDataset("shared");
+  const orgDisplayName = lang === "en" ? (data?.ORG_NAME_EN ?? "") : (data?.ORG_NAME ?? "");
+  const [products, setProducts] = useState<Awaited<ReturnType<typeof getProducts>>>([]);
+  const [communities, setCommunities] = useState<Awaited<ReturnType<typeof getCommunities>>>([]);
   const STEPS = lang === "en"
     ? ["Basics", "Story", "Media", "Products", "Communities", "Publish"]
     : ["בסיסי", "סיפור", "מדיה", "מוצרים", "קהילות", "פרסום"];
@@ -26,6 +30,11 @@ export default function CreateCampaignPage() {
     story: "",
     selectedProducts: [] as string[],
   });
+
+  useEffect(() => {
+    getProducts().then(setProducts);
+    getCommunities().then(setCommunities);
+  }, []);
 
   function next() { setStep((s) => Math.min(s + 1, STEPS.length - 1)); }
   function back() { setStep((s) => Math.max(s - 1, 0)); }
@@ -187,19 +196,15 @@ export default function CreateCampaignPage() {
           <div className="flex flex-col gap-4">
             <h2 className="font-bold text-gray-700">הזמן קהילות ומשפיענים</h2>
             <p className="text-xs text-gray-500">בחר קהילות שיקדמו את הקמפיין שלך</p>
-            {[
-              { name: "קהילת רמת אביב", size: 450, niche: "חינוך ורווחה", past: 3 },
-              { name: "קהילת גבעתיים", size: 310, niche: "חינוך", past: 1 },
-              { name: "קהילה צעירה ת״א", size: 890, niche: "כלכלה שיתופית", past: 5 },
-            ].map((c) => (
-              <div key={c.name} className="bg-white rounded-2xl p-3 flex items-center gap-3">
+            {communities.map((c) => (
+              <div key={c.id} className="bg-white rounded-2xl p-3 flex items-center gap-3">
                 <div className="w-10 h-10 bg-raz-teal/10 rounded-full flex items-center justify-center">
                   <Users size={18} className="text-raz-teal" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-sm text-gray-800">{c.name}</p>
-                  <p className="text-xs text-gray-500">{c.size} חברים · {c.niche}</p>
-                  <p className="text-xs text-gray-400">{c.past} קמפיינים קודמים</p>
+                  <p className="font-bold text-sm text-gray-800">{lang === "en" ? (c.name_en ?? c.name) : c.name}</p>
+                  <p className="text-xs text-gray-500">{c.donors_count} חברים</p>
+                  <p className="text-xs text-gray-400">{c.description ?? ""}</p>
                 </div>
                 <button className="bg-raz-teal/10 text-raz-teal text-xs px-3 py-1.5 rounded-lg font-medium">הזמן</button>
               </div>

@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/client";
-import {
-  myProductDonations, donorUpdates, quarterlyDonationData,
-  type ProductDonation,
-} from "@/lib/mock-data";
+import type { ProductDonation } from "@/lib/mock-data";
+import type { SharedSiteData } from "@/lib/site-dataset-types";
+
+type DonorUpdate = SharedSiteData["donorUpdates"][number];
+type QuarterlyDonationData = SharedSiteData["quarterlyDonationData"];
 
 // Explicit row types — campaign_updates and new donation columns aren't in
 // the generated types.ts yet (requires supabase gen types after migration runs).
@@ -38,7 +39,7 @@ type QuarterRow = {
 
 // ── Product-grouped donations ────────────────────────────────
 
-export async function getMyProductDonations(userId: string): Promise<typeof myProductDonations> {
+export async function getMyProductDonations(userId: string): Promise<ProductDonation[]> {
   const sb = createClient();
   const { data, error } = await sb
     .from("donations")
@@ -54,7 +55,8 @@ export async function getMyProductDonations(userId: string): Promise<typeof myPr
     .order("created_at", { ascending: false });
 
   const rows = (data ?? []) as unknown as DonRow[];
-  if (error || rows.length === 0) return myProductDonations;
+  if (error) throw new Error(`Unable to load product donations: ${error.message}`);
+  if (rows.length === 0) return [];
 
   // Group by product id
   const groups = new Map<string, DonRow[]>();
@@ -96,7 +98,7 @@ export async function getMyProductDonations(userId: string): Promise<typeof myPr
 
 // ── Campaign update posts ────────────────────────────────────
 
-export async function getDonorUpdates(userId: string | null): Promise<typeof donorUpdates> {
+export async function getDonorUpdates(userId: string | null): Promise<DonorUpdate[]> {
   const sb = createClient();
 
   // When logged in, prefer updates for campaigns the donor donated to
@@ -119,7 +121,8 @@ export async function getDonorUpdates(userId: string | null): Promise<typeof don
   if (campaignIds.length > 0) q = (q as typeof q).in("campaign_id", campaignIds);
 
   const { data, error } = await q;
-  if (error || !data || data.length === 0) return donorUpdates;
+  if (error) throw new Error(`Unable to load donor updates: ${error.message}`);
+  if (!data || data.length === 0) return [];
   const updates = data as unknown as UpdateRow[];
 
   return updates.map((u) => ({
@@ -136,7 +139,7 @@ export async function getDonorUpdates(userId: string | null): Promise<typeof don
 
 // ── Quarterly aggregation ────────────────────────────────────
 
-export async function getQuarterlyStats(userId: string): Promise<typeof quarterlyDonationData> {
+export async function getQuarterlyStats(userId: string): Promise<QuarterlyDonationData> {
   const sb = createClient();
   const now = new Date();
   const qStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
@@ -150,7 +153,7 @@ export async function getQuarterlyStats(userId: string): Promise<typeof quarterl
     .gte("created_at", qStart.toISOString())
     .lte("created_at", qEnd.toISOString());
 
-  if (error || !data || data.length === 0) return quarterlyDonationData;
+  if (error) throw new Error(`Unable to load quarterly statistics: ${error.message}`);
   const rows = data as unknown as QuarterRow[];
 
   const MONTHS_HE = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
@@ -181,6 +184,6 @@ export async function getQuarterlyStats(userId: string): Promise<typeof quarterl
   return {
     total,
     period: `${fmt(qStart)}–${fmt(qEnd)}`,
-    months: months.length > 0 ? months : quarterlyDonationData.months,
+    months,
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 import { Check, ChevronRight, Image as ImageIcon, Video, X } from "lucide-react";
-import { adminProductRows, adminCampaignRows } from "@/lib/nonprofit-admin-data";
+import type { AdminProductRow, AdminCampaignRow } from "@/lib/nonprofit-admin-data";
 
 export type Audience = "products" | "campaigns" | "all";
 export type Timing = "now" | "scheduled" | "trigger";
@@ -22,7 +22,7 @@ export function Step0({ t, lang, audience, setAudience, targetIds, toggleTarget,
   t: (k: string) => string; lang: string;
   audience: Audience; setAudience: (a: Audience) => void;
   targetIds: string[]; toggleTarget: (id: string) => void;
-  targetOptions: typeof adminProductRows | typeof adminCampaignRows;
+  targetOptions: AdminProductRow[] | AdminCampaignRow[];
 }) {
   return (
     <div className="max-w-xl">

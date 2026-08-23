@@ -4,13 +4,15 @@ import StatHeader from "@/components/nonprofit-admin/StatHeader";
 import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { adminDonationRows, adminDonationsTotal, adminDonationsCount } from "@/lib/nonprofit-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 const AS_OF = "12/08/23";
 
 export default function DonationsPage() {
   const { lang, t } = useLang();
+  const { data } = useSiteDataset("nonprofit_admin");
+  const adminDonationRows = data?.adminDonationRows ?? [];
 
   return (
     <div>
@@ -21,8 +23,8 @@ export default function DonationsPage() {
           <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות העמותה"} />
           <StatHeader
             stats={[
-              { label: t("adm.depositsCount"), value: adminDonationsCount.toLocaleString("he-IL") },
-              { label: `${t("adm.totalDonated")} (${lang === "en" ? "as of" : "נכון לתאריך"} ${AS_OF})`, value: formatNIS(adminDonationsTotal) },
+              { label: t("adm.depositsCount"), value: (data?.adminDonationsCount ?? 0).toLocaleString("he-IL") },
+              { label: `${t("adm.totalDonated")} (${lang === "en" ? "as of" : "נכון לתאריך"} ${AS_OF})`, value: formatNIS(data?.adminDonationsTotal ?? 0) },
             ]}
           />
         </div>

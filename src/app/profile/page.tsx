@@ -2,8 +2,9 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import BottomNav from "@/components/layout/BottomNav";
-import { donations as mockDonations, recurringDonations as mockRecurring, formatNIS, DONOR_NAME, DONOR_NAME_EN } from "@/lib/mock-data";
+import { formatNIS } from "@/lib/mock-data";
 import { getMyDonations, getMyRecurring } from "@/lib/supabase/queries-donations";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import { Download, ChevronLeft, Settings, Bell, HelpCircle, Shield, RotateCcw, LogIn } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,20 +13,27 @@ import EditableText from "@/components/admin/EditableText";
 export default function ProfilePage() {
   const { lang, t } = useLang();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [donations, setDonations] = useState(mockDonations as typeof mockDonations);
-  const [recurring, setRecurring] = useState(mockRecurring as typeof mockRecurring);
+  const { data } = useSiteDataset("shared");
+  const [remoteDonations, setRemoteDonations] = useState<Awaited<ReturnType<typeof getMyDonations>>>([]);
+  const [remoteRecurring, setRemoteRecurring] = useState<Awaited<ReturnType<typeof getMyRecurring>>>([]);
 
   useEffect(() => {
-    if (!user) return;
-    getMyDonations(user.id).then((d) => { if (d.length) setDonations(d as typeof mockDonations); });
-    getMyRecurring(user.id).then((r) => { if (r.length) setRecurring(r as typeof mockRecurring); });
+    if (user) {
+      getMyDonations(user.id).then(setRemoteDonations);
+      getMyRecurring(user.id).then(setRemoteRecurring);
+    }
   }, [user]);
+
+  const donations = user ? remoteDonations : (data?.donations ?? []).map((donation) => ({
+    ...donation, campaignEmoji: "💙", orgName: "",
+  }));
+  const recurring = user ? remoteRecurring : (data?.recurringDonations ?? []);
 
   const totalDonated = donations.reduce((sum, d) => sum + d.amount, 0);
   const totalMonthly = recurring.filter((r) => r.status === "active").reduce((sum, r) => sum + r.amount, 0);
   const donorDisplayName = user
-    ? (user.email ?? (lang === "en" ? DONOR_NAME_EN : DONOR_NAME))
-    : (lang === "en" ? DONOR_NAME_EN : DONOR_NAME);
+    ? (user.email ?? (lang === "en" ? data?.DONOR_NAME_EN : data?.DONOR_NAME) ?? "")
+    : (lang === "en" ? data?.DONOR_NAME_EN : data?.DONOR_NAME) ?? "";
 
   const settings = [
     { icon: Bell, label: t("profile.notifications"), sub: t("profile.notificationsSub") },

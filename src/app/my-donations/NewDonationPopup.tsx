@@ -1,7 +1,8 @@
 "use client";
 import { useState, useRef } from "react";
 import { X, ChevronLeft, ChevronRight, Heart } from "lucide-react";
-import { donationEmotions, formatNIS } from "@/lib/mock-data";
+import { formatNIS } from "@/lib/mock-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 
 interface Props {
   onClose: () => void;
@@ -26,12 +27,13 @@ const POPUP_PRODUCTS = [
 ];
 
 export default function NewDonationPopup({ onClose, lang, t }: Props) {
+  const { data } = useSiteDataset("shared");
   const [selectedIdx, setSelectedIdx] = useState(1);
   const productsRef = useRef<HTMLDivElement>(null);
-  const emotions = donationEmotions;
+  const emotions = data?.donationEmotions ?? [];
 
-  function prev() { setSelectedIdx((i) => (i - 1 + emotions.length) % emotions.length); }
-  function next() { setSelectedIdx((i) => (i + 1) % emotions.length); }
+  function prev() { if (emotions.length) setSelectedIdx((i) => (i - 1 + emotions.length) % emotions.length); }
+  function next() { if (emotions.length) setSelectedIdx((i) => (i + 1) % emotions.length); }
   function scrollProducts(dir: "prev" | "next") {
     productsRef.current?.scrollBy({ left: dir === "next" ? -230 : 230, behavior: "smooth" });
   }

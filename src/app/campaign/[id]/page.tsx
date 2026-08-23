@@ -6,7 +6,7 @@ import DonateAmountModal from "@/components/campaign/DonateAmountModal";
 import ProductBuyCard from "@/components/campaign/ProductBuyCard";
 import CampaignTabs from "@/components/campaign/CampaignTabs";
 import { getCampaignById, getProductsByIds } from "@/lib/supabase/queries";
-import { formatNIS, percent, getOrg } from "@/lib/mock-data";
+import { formatNIS, percent } from "@/lib/mock-data";
 import { Play, Share2, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useParams } from "next/navigation";
@@ -49,12 +49,12 @@ export default function CampaignDetail() {
     </div>
   );
 
-  const org = getOrg(campaign.orgId) ?? campaign._org;
+  const org = campaign._org;
   const pct = percent(campaign.raised, campaign.goal);
   const title = lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title;
   const story = lang === "en" ? (campaign.storyEn ?? campaign.story) : campaign.story;
-  const orgName = lang === "en" ? (org?.nameEn ?? org?.name) : org?.name;
-  const orgBio = lang === "en" ? (org && "bioEn" in org ? org.bioEn : "") : org && "bio" in org ? org.bio : "";
+  const orgName = lang === "en" ? (org?.name_en ?? org?.name) : org?.name;
+  const orgBio = lang === "en" ? (org?.description_en ?? "") : (org?.description ?? "");
 
   return (
     <div className="flex flex-col min-h-screen bg-raz-surface">

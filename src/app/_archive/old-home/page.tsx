@@ -6,18 +6,19 @@ import CampaignCard from "@/components/campaign/CampaignCard";
 import CategoryFilter from "@/components/campaign/CategoryFilter";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { getCampaigns } from "@/lib/supabase/queries";
-import { campaigns as mockCampaigns, formatNIS, DONOR_NAME, DONOR_NAME_EN } from "@/lib/mock-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import { Bell, Search } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 
 export default function DonorHome() {
   const { lang, t } = useLang();
-  const [campaigns, setCampaigns] = useState(mockCampaigns as typeof mockCampaigns);
+  const { data: sharedData } = useSiteDataset("shared");
+  const [campaigns, setCampaigns] = useState<Awaited<ReturnType<typeof getCampaigns>>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getCampaigns().then((data) => {
-      if (data && data.length > 0) setCampaigns(data as typeof mockCampaigns);
+      setCampaigns(data);
       setLoading(false);
     });
   }, []);
@@ -26,7 +27,7 @@ export default function DonorHome() {
   if (!featured) return null;
 
   const featuredOrg = { name: featured._org?.name ?? "", nameEn: featured._org?.name_en ?? "", color: featured._org?.color ?? "#00B5AD", initials: featured._org?.initials ?? "??" };
-  const donorName = lang === "en" ? DONOR_NAME_EN : DONOR_NAME;
+  const donorName = lang === "en" ? (sharedData?.DONOR_NAME_EN ?? "") : (sharedData?.DONOR_NAME ?? "");
   const featuredTitle = lang === "en" ? (featured.titleEn ?? featured.title) : featured.title;
   const orgName = lang === "en" ? (featuredOrg.nameEn ?? featuredOrg.name) : featuredOrg.name;
 
@@ -98,7 +99,7 @@ export default function DonorHome() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
             {campaigns.filter((c) => c.id !== featured.id).map((c) => (
-              <CampaignCard key={c.id} campaign={c as typeof mockCampaigns[0]} />
+              <CampaignCard key={c.id} campaign={c} />
             ))}
           </div>
         )}

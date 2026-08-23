@@ -3,11 +3,12 @@ import Link from "next/link";
 import { Pencil, Eye } from "lucide-react";
 import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
-import { adminProductCards } from "@/lib/nonprofit-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function ProductsGridPage() {
   const { lang } = useLang();
+  const { data } = useSiteDataset("nonprofit_admin");
 
   return (
     <div>
@@ -19,7 +20,7 @@ export default function ProductsGridPage() {
         >
           <EditableText tKey="adm.backToDashboard" as="p" className="font-bold text-lg leading-snug mb-2 block" />
         </Link>
-        {adminProductCards.map((c) => (
+        {(data?.adminProductCards ?? []).map((c) => (
           <div key={c.id} className="bg-white rounded-2xl p-4 relative">
             <div className="absolute top-4 end-4 flex flex-col gap-2">
               <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">

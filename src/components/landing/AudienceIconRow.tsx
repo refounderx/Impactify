@@ -1,5 +1,6 @@
 "use client";
-import { audienceIcons, type AudienceKind } from "@/lib/landing-data";
+import type { AudienceKind } from "@/lib/landing-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function AudienceIconRow({
@@ -9,6 +10,8 @@ export default function AudienceIconRow({
   selected: AudienceKind | null;
   onSelect: (kind: AudienceKind) => void;
 }) {
+  const { data } = useSiteDataset("landing");
+  const audienceIcons = data?.audienceIcons ?? [];
   return (
     <div className="grid grid-cols-4 sm:grid-cols-7 gap-4">
       {audienceIcons.map((a, i) => {

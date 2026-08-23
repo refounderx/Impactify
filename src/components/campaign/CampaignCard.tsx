@@ -1,19 +1,18 @@
 "use client";
 import Link from "next/link";
 import ProgressBar from "@/components/ui/ProgressBar";
-import { getOrg, formatNIS, percent } from "@/lib/mock-data";
+import { formatNIS } from "@/lib/mock-data";
 import { useLang } from "@/contexts/LanguageContext";
-import type { campaigns } from "@/lib/mock-data";
+import type { getCampaigns } from "@/lib/supabase/queries";
 import EditableText from "@/components/admin/EditableText";
 
-type Campaign = (typeof campaigns)[number];
+type Campaign = Awaited<ReturnType<typeof getCampaigns>>[number];
 
 export default function CampaignCard({ campaign }: { campaign: Campaign }) {
-  const org = getOrg(campaign.orgId);
-  const pct = percent(campaign.raised, campaign.goal);
+  const org = campaign._org;
   const { lang } = useLang();
   const title = lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title;
-  const orgName = lang === "en" ? (org?.nameEn ?? org?.name) : org?.name;
+  const orgName = lang === "en" ? (org?.name_en ?? org?.name) : org?.name;
 
   return (
     <Link

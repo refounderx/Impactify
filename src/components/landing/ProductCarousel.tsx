@@ -2,12 +2,14 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
-import { landingProducts } from "@/lib/landing-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import ProductCard from "./ProductCard";
 import EditableText from "@/components/admin/EditableText";
 
 export default function ProductCarousel() {
   const { t } = useLang();
+  const { data } = useSiteDataset("landing");
+  const landingProducts = data?.landingProducts ?? [];
   const [start, setStart] = useState(0);
   const visible = landingProducts.slice(start, start + 4);
 
@@ -15,7 +17,7 @@ export default function ProductCarousel() {
     setStart((s) => Math.max(0, s - 1));
   }
   function next() {
-    setStart((s) => Math.min(landingProducts.length - 4, s + 1));
+    setStart((s) => Math.max(0, Math.min(landingProducts.length - 4, s + 1)));
   }
 
   return (

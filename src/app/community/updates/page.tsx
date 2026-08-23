@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Pencil, MoreVertical } from "lucide-react";
 import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
-import { communityUpdateRows, communityUpdateScheduleRows } from "@/lib/community-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 type Tab = "trigger" | "schedule";
@@ -13,6 +13,9 @@ const SCHEDULE_HEADERS = ["סוג התראה", "כמות", "תזמון", "יום
 
 export default function CommunityUpdatesPage() {
   const { lang } = useLang();
+  const { data } = useSiteDataset("community_admin");
+  const communityUpdateRows = data?.communityUpdateRows ?? [];
+  const communityUpdateScheduleRows = data?.communityUpdateScheduleRows ?? [];
   const [tab, setTab] = useState<Tab>("trigger");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 

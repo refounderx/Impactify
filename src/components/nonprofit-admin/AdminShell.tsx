@@ -5,7 +5,7 @@ import { Heart, Flag, Package, LineChart, Bell, Users, ChevronUp, ChevronDown, L
 import BottomNav from "@/components/layout/BottomNav";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { adminGreetingName, adminGreetingNameEn, adminLastLogin, adminLastLoginTime } from "@/lib/nonprofit-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 const NONPROFIT_ROUTES = {
@@ -33,6 +33,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
   const pathname = usePathname();
   const { lang } = useLang();
   const { signOut } = useAuth();
+  const { data } = useSiteDataset("nonprofit_admin");
 
   const routes = variant === "community" ? COMMUNITY_ROUTES : NONPROFIT_ROUTES;
   const CAMPAIGNS_GRID = routes.campaignsGrid;
@@ -44,7 +45,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
   const campaignsGroupActive = pathname === CAMPAIGNS_GRID || pathname === CAMPAIGNS_DASHBOARD;
   const productsGroupActive = variant === "nonprofit" && pathname.startsWith(PRODUCTS_GRID);
 
-  const greeting = lang === "en" ? adminGreetingNameEn : adminGreetingName;
+  const greeting = lang === "en" ? data?.adminGreetingNameEn : data?.adminGreetingName;
 
   return (
     <div className="flex min-h-screen">
@@ -158,7 +159,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
               <span className="font-bold text-raz-teal">{greeting}</span>
             </p>
             <p className="text-gray-400 text-xs">
-              <EditableText tKey="adm.lastLogin" /> {adminLastLogin} <EditableText tKey="adm.at" /> {adminLastLoginTime}
+              <EditableText tKey="adm.lastLogin" /> {data?.adminLastLogin ?? ""} <EditableText tKey="adm.at" /> {data?.adminLastLoginTime ?? ""}
             </p>
           </div>
         </div>

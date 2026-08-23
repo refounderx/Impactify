@@ -4,11 +4,13 @@ import StatHeader from "@/components/nonprofit-admin/StatHeader";
 import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { communityDonationRows, communityDonationsTotal, communityDonationsCount, AS_OF } from "@/lib/community-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function CommunityDonationsPage() {
   const { lang, t } = useLang();
+  const { data } = useSiteDataset("community_admin");
+  const rows = data?.communityDonationRows ?? [];
 
   return (
     <div>
@@ -19,8 +21,8 @@ export default function CommunityDonationsPage() {
           <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות הקהילה"} />
           <StatHeader
             stats={[
-              { label: t("adm.depositsCount"), value: communityDonationsCount.toLocaleString("he-IL") },
-              { label: `${t("adm.totalDonated")} (${lang === "en" ? "as of" : "נכון לתאריך"} ${AS_OF})`, value: formatNIS(communityDonationsTotal) },
+              { label: t("adm.depositsCount"), value: (data?.communityDonationsCount ?? 0).toLocaleString("he-IL") },
+              { label: `${t("adm.totalDonated")} (${lang === "en" ? "as of" : "נכון לתאריך"} ${data?.AS_OF ?? ""})`, value: formatNIS(data?.communityDonationsTotal ?? 0) },
             ]}
           />
         </div>
@@ -35,7 +37,7 @@ export default function CommunityDonationsPage() {
               </tr>
             </thead>
             <tbody>
-              {communityDonationRows.map((row) => (
+              {rows.map((row) => (
                 <tr key={row.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                   <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{row.date}</td>
                   <td className="py-3 px-2 font-medium text-gray-800 whitespace-nowrap">{row.donorName}</td>

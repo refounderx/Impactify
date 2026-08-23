@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
-import { audienceProducts, type AudienceKind } from "@/lib/landing-data";
+import type { AudienceKind } from "@/lib/landing-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import AudienceIconRow from "./AudienceIconRow";
 import ProductCard from "./ProductCard";
 import CheckoutModal from "./checkout/CheckoutModal";
@@ -18,8 +19,9 @@ export default function AudienceFilterOverlay({
   onClose: () => void;
 }) {
   const { t, lang } = useLang();
+  const { data } = useSiteDataset("landing");
   const [chosenId, setChosenId] = useState<string | null>(null);
-  const products = audienceProducts[kind];
+  const products = data?.audienceProducts[kind] ?? [];
   const chosenProduct = products.find((p) => p.id === chosenId);
 
   return (

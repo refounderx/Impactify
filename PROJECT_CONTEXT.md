@@ -14,7 +14,9 @@
 
 ## Current Build Status
 
-**Demo-only UI** — all 10 screens are wired with mock data (`src/lib/mock-data.ts`). Navigation flows work end-to-end (home → campaign → donate → thanks). Role switching via the DemoBar. No backend, no auth, no real payments.
+**Supabase-backed demo application** — public, donor, nonprofit-admin, community-admin, and landing-page data now flow through Supabase. Normalized entities live in their own tables; remaining presentation fixtures are stored in the public-read-only `site_datasets` table and loaded through `SiteDataProvider`. Query errors and empty results are surfaced instead of silently falling back to bundled mock values. Authentication and donation persistence exist; a real payment-service-provider integration does not.
+
+The `site_datasets` and organization-profile migrations were applied to the live project through the Dashboard SQL Editor on 2026-08-23. REST verification confirms all four dataset rows and all five extended organization profiles are present.
 
 ### Screens Built
 - Donor home feed (featured campaign hero + category chips + grid)
@@ -30,7 +32,7 @@
 ### Not Yet Built
 - Phone OTP authentication
 - Real payment processing (Israeli PSP — Tranzilla/Cardcom, TBD)
-- Database / backend API
+- Real payment-service-provider integration
 - Non-profit verification flow
 - Personal campaigns (donor-created fundraisers)
 - SMS / push notifications

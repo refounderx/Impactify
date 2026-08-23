@@ -4,13 +4,15 @@ import StatHeader from "@/components/nonprofit-admin/StatHeader";
 import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { adminCommunityRows, adminCommunitiesTotalRaised, adminCommunitiesCount } from "@/lib/nonprofit-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 const AS_OF = "12/08/23";
 
 export default function CommunitiesPage() {
   const { lang, t } = useLang();
+  const { data } = useSiteDataset("nonprofit_admin");
+  const adminCommunityRows = data?.adminCommunityRows ?? [];
 
   return (
     <div>
@@ -26,8 +28,8 @@ export default function CommunitiesPage() {
           <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות הקהילה"} />
           <StatHeader
             stats={[
-              { label: t("adm.affiliatedCommunities"), value: String(adminCommunitiesCount) },
-              { label: `${t("adm.communitiesRaisedToDate")} ${AS_OF})`, value: formatNIS(adminCommunitiesTotalRaised) },
+              { label: t("adm.affiliatedCommunities"), value: String(data?.adminCommunitiesCount ?? 0) },
+              { label: `${t("adm.communitiesRaisedToDate")} ${AS_OF})`, value: formatNIS(data?.adminCommunitiesTotalRaised ?? 0) },
             ]}
           />
         </div>

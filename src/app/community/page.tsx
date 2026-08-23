@@ -6,19 +6,14 @@ import CampaignSourceTabs from "@/components/community/CampaignSourceTabs";
 import CommunityCampaignsTable from "@/components/community/CommunityCampaignsTable";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import {
-  communityCampaignRows,
-  communityCampaignsTotalRaised,
-  communityCampaignsActiveCount,
-  AS_OF,
-  type CommunityCampaignSource,
-} from "@/lib/community-admin-data";
+import type { CommunityCampaignSource } from "@/lib/community-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 
 export default function CommunityCampaignsDashboardPage() {
   const { lang, t } = useLang();
+  const { data } = useSiteDataset("community_admin");
   const [source, setSource] = useState<CommunityCampaignSource>("created");
-
-  const rows = communityCampaignRows.filter((r) => r.source === source);
+  const rows = (data?.communityCampaignRows ?? []).filter((r) => r.source === source);
 
   return (
     <div>
@@ -29,8 +24,8 @@ export default function CommunityCampaignsDashboardPage() {
           <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות העמותה"} />
           <StatHeader
             stats={[
-              { label: t("adm.activeCampaigns"), value: String(communityCampaignsActiveCount) },
-              { label: `${t("adm.totalRaisedToDate")} ${AS_OF})`, value: formatNIS(communityCampaignsTotalRaised) },
+              { label: t("adm.activeCampaigns"), value: String(data?.communityCampaignsActiveCount ?? 0) },
+              { label: `${t("adm.totalRaisedToDate")} ${data?.AS_OF ?? ""})`, value: formatNIS(data?.communityCampaignsTotalRaised ?? 0) },
             ]}
           />
         </div>

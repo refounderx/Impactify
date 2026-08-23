@@ -4,11 +4,13 @@ import StatHeader from "@/components/nonprofit-admin/StatHeader";
 import SearchFilterBar from "@/components/nonprofit-admin/SearchFilterBar";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { communityNonprofitRows, communityNonprofitsTotalRaised, communityNonprofitsCount, AS_OF } from "@/lib/community-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function CommunityNonprofitsPage() {
   const { lang, t } = useLang();
+  const { data } = useSiteDataset("community_admin");
+  const rows = data?.communityNonprofitRows ?? [];
 
   return (
     <div>
@@ -19,8 +21,8 @@ export default function CommunityNonprofitsPage() {
           <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות העמותה"} />
           <StatHeader
             stats={[
-              { label: t("cm.affiliatedNonprofits"), value: String(communityNonprofitsCount) },
-              { label: `${t("cm.nonprofitsRaisedToDate")} ${AS_OF})`, value: formatNIS(communityNonprofitsTotalRaised) },
+              { label: t("cm.affiliatedNonprofits"), value: String(data?.communityNonprofitsCount ?? 0) },
+              { label: `${t("cm.nonprofitsRaisedToDate")} ${data?.AS_OF ?? ""})`, value: formatNIS(data?.communityNonprofitsTotalRaised ?? 0) },
             ]}
           />
         </div>
@@ -35,7 +37,7 @@ export default function CommunityNonprofitsPage() {
               </tr>
             </thead>
             <tbody>
-              {communityNonprofitRows.map((row) => (
+              {rows.map((row) => (
                 <tr key={row.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                   <td className="py-3 px-2 font-medium text-gray-800 whitespace-nowrap">{lang === "en" ? row.nameEn : row.name}</td>
                   <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{lang === "en" ? row.activityAreaEn : row.activityArea}</td>

@@ -1,7 +1,8 @@
 "use client";
 import { Play } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
-import { checkoutProgress, type AudienceProduct } from "@/lib/landing-data";
+import type { AudienceProduct } from "@/lib/landing-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import { formatNIS } from "@/lib/mock-data";
 import EditableText from "@/components/admin/EditableText";
 
@@ -24,6 +25,8 @@ export default function StepProduct({
   total: number;
   onContinue: () => void;
 }) {
+  const { data } = useSiteDataset("landing");
+  const checkoutProgress = data?.checkoutProgress ?? { goal: 0, raised: 0 };
   const { lang } = useLang();
 
   return (

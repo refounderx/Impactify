@@ -1,6 +1,7 @@
 "use client";
 import { X, Download, CreditCard, Plus } from "lucide-react";
-import { myProductDonations, savedPaymentMethods, formatNIS, type ProductDonation } from "@/lib/mock-data";
+import { formatNIS, type ProductDonation } from "@/lib/mock-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -35,7 +36,7 @@ function Backdrop({ onClose, children }: { onClose: () => void; children: React.
   );
 }
 
-function CertificatePopup({ pd, onClose, t }: { pd: ProductDonation; onClose: () => void; t: (k: string) => string }) {
+function CertificatePopup({ onClose, t }: { pd: ProductDonation; onClose: () => void; t: (k: string) => string }) {
   return (
     <Backdrop onClose={onClose}>
       <div className="p-6 text-center relative">
@@ -133,7 +134,7 @@ function DonateMorePopup({ pd, onClose, onActivateRecurring, t, lang }: { pd: Pr
   );
 }
 
-function StandingOrderPopup({ pd, onClose, t, lang }: { pd: ProductDonation; onClose: () => void; t: (k: string) => string; lang: string }) {
+function StandingOrderPopup({ pd, paymentMethods, onClose, t, lang }: { pd: ProductDonation; paymentMethods: Array<{id: string; brand: string; last4: string}>; onClose: () => void; t: (k: string) => string; lang: string }) {
   const [selectedPm, setSelectedPm] = useState<string | null>(null);
   const name = lang === "en" ? pd.productNameEn : pd.productName;
   return (
@@ -150,7 +151,7 @@ function StandingOrderPopup({ pd, onClose, t, lang }: { pd: ProductDonation; onC
 
         <p className="text-sm font-bold text-gray-700 mb-3">{t("myDon.choosePayment")}</p>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          {savedPaymentMethods.map((pm) => (
+          {paymentMethods.map((pm) => (
             <button
               key={pm.id}
               onClick={() => setSelectedPm(pm.id)}
@@ -209,17 +210,20 @@ function TaxRefundPopup({ onClose, t, lang }: { onClose: () => void; t: (k: stri
 interface PopupsProps extends BaseProps {
   popup: PopupName;
   productId: string | null;
-  donations: typeof myProductDonations;
+  donations: ProductDonation[];
   onActivateRecurring: (id: string) => void;
 }
 
 export function Popups({ popup, productId, donations, onClose, onActivateRecurring, lang, t }: PopupsProps) {
+  const { data } = useSiteDataset("shared");
   const pd = donations.find((d) => d.id === productId) ?? donations[0];
+
+  if (!pd) return null;
 
   if (popup === "certificate") return <CertificatePopup pd={pd} onClose={onClose} t={t} />;
   if (popup === "receipts") return <ReceiptsPopup pd={pd} onClose={onClose} t={t} lang={lang} />;
   if (popup === "donate-more") return <DonateMorePopup pd={pd} onClose={onClose} onActivateRecurring={onActivateRecurring} t={t} lang={lang} />;
-  if (popup === "standing-order") return <StandingOrderPopup pd={pd} onClose={onClose} t={t} lang={lang} />;
+  if (popup === "standing-order") return <StandingOrderPopup pd={pd} paymentMethods={data?.savedPaymentMethods ?? []} onClose={onClose} t={t} lang={lang} />;
   if (popup === "tax-refund") return <TaxRefundPopup onClose={onClose} t={t} lang={lang} />;
   return null;
 }

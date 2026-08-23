@@ -1,5 +1,5 @@
 "use client";
-import { impactTiles, qualityBadgeCount } from "@/lib/landing-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 const tileColor: Record<string, string> = {
@@ -19,6 +19,9 @@ function LiveDot() {
 }
 
 export default function ImpactStatsGrid() {
+  const { data } = useSiteDataset("landing");
+  const impactTiles = data?.impactTiles ?? [];
+  const qualityBadgeCount = data?.qualityBadgeCount ?? 0;
   return (
     <section className="max-w-6xl mx-auto px-6 py-16">
       <EditableText tKey="landing.impact.heading1" as="h2" className="text-2xl font-bold text-gray-900 text-center mb-1 block" />

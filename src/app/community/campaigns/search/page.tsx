@@ -5,7 +5,7 @@ import { Search, SlidersHorizontal, ArrowUpDown, Check, Eye } from "lucide-react
 import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { communityCampaignCards } from "@/lib/community-admin-data";
+import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 
 const SORT_OPTIONS_HE = [
@@ -17,13 +17,16 @@ const FILTER_OPTIONS_HE = ["תחומי פעילות", "אזור פעילות"];
 
 export default function CommunitySearchCampaignsPage() {
   const { lang } = useLang();
+  const { data } = useSiteDataset("community_admin");
+  const communityCampaignCards = data?.communityCampaignCards ?? [];
   const [openDropdown, setOpenDropdown] = useState<"sort" | "filter" | null>(null);
   const [requested, setRequested] = useState<Set<string>>(new Set());
 
   const toggleRequest = (id: string) => {
     setRequested((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };

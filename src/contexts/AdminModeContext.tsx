@@ -15,6 +15,8 @@ export function AdminModeProvider({ children }: { children: React.ReactNode }) {
   const [adminMode, setAdminMode] = useState(false);
 
   useEffect(() => {
+    // Hydrate the browser-only preference after mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAdminMode(localStorage.getItem("it-admin-mode") === "1");
   }, []);
 

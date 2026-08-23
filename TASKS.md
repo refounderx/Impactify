@@ -2,7 +2,9 @@
 
 ## Current State
 
-Full desktop demo with 11 screens, responsive layout, bilingual (Hebrew/English), desktop TopNav, mobile BottomNav. Mock data throughout. No backend, no auth, no real payments.
+Responsive bilingual application with Supabase-backed normalized entities, authentication, donation writes, and shared presentation datasets. Local fixture modules are migration inputs only; active pages do not use them as runtime fallbacks. Real PSP processing is still not implemented.
+
+**Supabase-only migration complete (2026-08-23):** `20260823150000_site_datasets.sql` and `20260823151000_organization_profiles.sql` were applied through the Dashboard SQL Editor. REST verification confirms four dataset rows (`shared`, `landing`, `nonprofit_admin`, `community_admin`) and complete extended profiles for all five organizations. The CLI Management API login-role error remains an operational issue for future `db push` commands.
 
 ### Screens complete
 - `/` — Marketing landing page (changed 2026-08-23, previously donor home; see Known Tech Debt)
@@ -42,8 +44,8 @@ Full desktop demo with 11 screens, responsive layout, bilingual (Hebrew/English)
 - [x] Full PostgreSQL schema — 8 tables, enums, RLS policies, auto-triggers (`supabase/schema.sql`)
 - [x] Seed data — all 6 campaigns, 5 orgs, 5 products, 3 communities (`supabase/seed.sql`)
 - [x] TypeScript DB types (`src/lib/supabase/types.ts`)
-- [x] Data layer with mock fallback (`src/lib/supabase/queries.ts`)
-- [x] Home page reads from Supabase (loading skeleton + fallback to mock)
+- [x] Data layer reads Supabase without silent mock fallbacks (`src/lib/supabase/queries.ts`)
+- [x] Home and landing pages read all dynamic/presentation data from Supabase
 - [x] Query layer split: `query-helpers.ts` + `queries-campaigns.ts` + `queries-orgs.ts` + `queries-community.ts`
 - [x] Search — real-time Supabase full-text search with 300ms debounce
 - [x] Campaign detail — real campaign + org + products from DB
@@ -135,7 +137,8 @@ Full desktop demo with 11 screens, responsive layout, bilingual (Hebrew/English)
 - [ ] Impact-stats tile captions are best-effort readings of small screenshot text, not verified letter-for-letter — needs a copy pass against the actual Figma text layers.
 - [ ] Footer contact info (`Lorem@ipsum.com`, placeholder phone) is literally Lorem Ipsum in the source design — replace with real contact details before shipping.
 - [x] Hero image+bubble placeholders (2026-08-23): 3 distinct color-block placeholders + distinct captions, backed by a new `hero_cards` Supabase table (`image_url` nullable — swap in real photos later, no code change needed). See `ARCHITECTURE.md` and `INTERFACES.md`.
-- [ ] No real hero/product photography yet (`hero_cards.image_url` all null), no real video asset, mascot is a placeholder emoji (no illustration asset in the repo)
+- [x] Real hero photography added (2026-08-23): 3 branded photos (lone-soldier birthday, elderly home visit, family donation delivery) uploaded to the new `hero-images` Supabase Storage bucket, `hero_cards.image_url` updated to point at them, captions rewritten to match each photo's actual scene. Source files came from `C:\Users\ofern\OneDrive\Desktop\impactify\` (user-provided, AI-generated branded photos).
+- [ ] No real video asset yet, mascot is a placeholder emoji (no illustration asset in the repo)
 - [ ] Signup form, contact form, and social/auth-provider buttons are visual only — not wired to any backend or OAuth provider
 - [x] Brand name inconsistency resolved (2026-08-23): all "נתינה בקליק" / "יב קליק" / "Netina BeClick" occurrences in `translations.ts` replaced with "Impactify"
 
@@ -271,19 +274,19 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 
 ## Known Tech Debt
 
-- **Admin content-editing mode (2026-08-23, operable — partial rollout):** `AdminModeProvider` mounted in `layout.tsx`, "עריכה / Admin" toggle added to `DemoBar` (localStorage-persisted, all pages). `EditableText` wired into `Hero.tsx` (title/body/CTA) and `WhyJoinSection.tsx` (heading1/heading2/sub) — hover a wrapped text in admin mode to see the pencil icon, click to edit He/En, saves to live `site_content` table. Verified end-to-end via direct DB upsert (RLS write path confirmed working). Remaining work:
-  - Full site-wide rollout in progress (started 2026-08-23, background agent sweep across ~46 files / ~270 real call sites — corrected count from the initial ~354 estimate, which included false-positive grep matches on unrelated `.select("...(...)")`-style calls in Supabase query files). Not complete as of this note — final file/call-site tally and verification to follow once the sweep finishes.
+- **Admin content-editing mode (2026-08-23, operable — rollout complete for this pass):** `AdminModeProvider` mounted in `layout.tsx`, "עריכה / Admin" toggle added to `DemoBar` (localStorage-persisted, all pages). `EditableText` converted across ~55 files / ~270 real `t()` call sites (corrected count from an initial ~354 grep estimate that included false-positive matches on unrelated `.select("...(...)")`-style calls in Supabase query files) — hover a wrapped text in admin mode to see the pencil icon, click to edit He/En, saves to live `site_content` table. Done via 6 parallel background agents plus manual recovery of 11 files (`ImpactStatsGrid.tsx`, `ContactCTA.tsx`, `AdminShell.tsx`, `profile/page.tsx`, `recurring/page.tsx`, `search/page.tsx`, `CampaignCard.tsx`, and 4 `nonprofit/(admin)/*` dashboard pages) whose conversions were lost to a mid-session `git stash` collision between the parallel agents and manually redone. Verified end-to-end via direct DB upsert (RLS write path confirmed working) and `tsc`/live-server checks; not verified via full manual click-through of every converted screen. Remaining work:
+  - Attribute-position text (`placeholder`, `aria-label`, `title`, table-header string arrays, `StatHeader` label props) was intentionally left as plain `t()` calls — `EditableText` only wraps rendered JSX text nodes, not string props. Not in scope for this pass.
   - `site_content` RLS currently allows public write (no real admin auth exists in this app) — must be gated by a real role/auth check before production. Right now anyone with the site open (in admin mode) can edit any text.
-- **Supabase CLI connected (2026-08-23):** `supabase link --project-ref yyfntsplkrmzkjzzikjq` done; `supabase db push` now applies `supabase/migrations/*.sql` directly to the live project (confirmed working — see `DECISIONS.md`). Remaining open question: whether to retire the historical `schema.sql`/`seed.sql` append-only-block workflow in favor of `migrations/` only, or keep both (not decided).
+- **Supabase CLI linked, Management API currently blocked (2026-08-23):** the project is linked, but `db push` cannot initialize the database login role. Apply the two current migrations through the Dashboard SQL Editor, then return to migration-only CLI pushes after the endpoint is healthy.
 - **Root route swap (2026-08-23):** `/` now serves the marketing landing page (same content as `/landing`, duplicated). The old donor-home screen was archived to `app/_archive/old-home/page.tsx` (Next.js private folder, excluded from routing) rather than deleted or re-routed. Two follow-ups from this, not yet decided:
   - Where should donor-home live now? (e.g. new route like `/home` or `/dashboard`) — currently unreachable via any link.
   - These pages still `Link`/`redirect` to `/` expecting donor-home and will now land on the marketing page instead: `my-donations`, `auth`, `nonprofit/[id]`, `campaign/[id]`, `TopNav.tsx`, `recurring`, `donate/[id]/thanks`.
-- Amount state not threaded through donation flow (hardcoded ₪100)
+- Donation amount is threaded through the flow; payment submission now redirects only after the Supabase insert succeeds and the thanks page verifies the donation/receipt pair.
 - `CategoryFilter` state is local — doesn't filter the home page grid (only UI state, no effect on campaign list)
 - `BottomNav` active state uses `pathname === href` which breaks for nested routes like `/donate/[id]/amount`
 - No error boundaries or loading states on any page
 - No `not-found.tsx` pages for invalid campaign IDs
-- **`next.config.ts` has `typescript.ignoreBuildErrors: true`** (added 2026-08-18 to unblock the first Vercel deploy) — this suppresses ALL TypeScript errors at build time, not just the known ones. 51 pre-existing errors exist today, mostly embedded-join typing in `queries-campaigns.ts`, `queries-donations.ts`, `queries-community.ts`, `queries-profile.ts` (e.g. `.select("*, organizations(*)")` results typing as `never` because `types.ts` is hand-maintained, not CLI-generated, and its `Relationships: []` fields don't describe real foreign keys). Runtime is unaffected — every one of these queries has a mock-data fallback. **Real fix:** after applying the pending Supabase SQL migration, run `npx supabase gen types typescript --project-id <id> > src/lib/supabase/types.ts` to replace the hand-maintained types with CLI-generated ones (which include real `Relationships` metadata), then remove `ignoreBuildErrors`.
+- **TypeScript build escape hatch removed (2026-08-23):** embedded-join/table relationships were corrected in `src/lib/supabase/types.ts`; `tsc --noEmit` is clean and `next.config.ts` no longer ignores build errors. Regenerating types from the live schema remains preferable after the pending migrations are applied.
 
 ---
 

@@ -1,8 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import {
-  savedPaymentMethods, systemUpdates,
-  DONOR_NAME, DONOR_PHONE, DONOR_EMAIL, DONOR_ID_NUMBER, DONOR_JOIN_DATE,
-} from "@/lib/mock-data";
+import type { SharedSiteData } from "@/lib/site-dataset-types";
 
 // ── Personal details ─────────────────────────────────────────
 
@@ -14,13 +11,9 @@ export type DonorProfile = {
   joinDate: string;
 };
 
-const MOCK_PROFILE: DonorProfile = {
-  fullName: DONOR_NAME,
-  phone: DONOR_PHONE,
-  email: DONOR_EMAIL,
-  idNumber: DONOR_ID_NUMBER,
-  joinDate: DONOR_JOIN_DATE,
-};
+const EMPTY_PROFILE: DonorProfile = { fullName: "", phone: "", email: "", idNumber: "", joinDate: "" };
+type PaymentMethod = SharedSiteData["savedPaymentMethods"][number];
+type SystemUpdate = SharedSiteData["systemUpdates"][number];
 
 type ProfileRow = {
   full_name: string | null;
@@ -38,13 +31,13 @@ export async function getDonorProfile(userId: string): Promise<DonorProfile> {
     .eq("id", userId)
     .single();
 
-  if (error || !data) return MOCK_PROFILE;
+  if (error || !data) return EMPTY_PROFILE;
   const row = data as ProfileRow;
   return {
-    fullName: row.full_name ?? MOCK_PROFILE.fullName,
-    phone: row.phone ?? MOCK_PROFILE.phone,
-    email: row.email ?? MOCK_PROFILE.email,
-    idNumber: row.id_number ?? MOCK_PROFILE.idNumber,
+    fullName: row.full_name ?? "",
+    phone: row.phone ?? "",
+    email: row.email ?? "",
+    idNumber: row.id_number ?? "",
     joinDate: new Date(row.created_at).toLocaleDateString("he-IL"),
   };
 }
@@ -68,7 +61,7 @@ export async function updateDonorProfile(
 
 type PaymentMethodRow = { id: string; brand: string; last_four: string };
 
-export async function getPaymentMethods(userId: string): Promise<typeof savedPaymentMethods> {
+export async function getPaymentMethods(userId: string): Promise<PaymentMethod[]> {
   const sb = createClient();
   const { data, error } = await sb
     .from("payment_methods")
@@ -76,7 +69,7 @@ export async function getPaymentMethods(userId: string): Promise<typeof savedPay
     .eq("donor_id", userId)
     .order("created_at", { ascending: false });
 
-  if (error || !data || data.length === 0) return savedPaymentMethods;
+  if (error || !data) return [];
   return (data as PaymentMethodRow[]).map((r) => ({ id: r.id, brand: r.brand, last4: r.last_four }));
 }
 
@@ -123,7 +116,7 @@ type SystemUpdateRow = {
   created_at: string;
 };
 
-export async function getSystemUpdates(): Promise<typeof systemUpdates> {
+export async function getSystemUpdates(): Promise<SystemUpdate[]> {
   const sb = createClient();
   const { data, error } = await sb
     .from("system_updates")
@@ -131,7 +124,7 @@ export async function getSystemUpdates(): Promise<typeof systemUpdates> {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  if (error || !data || data.length === 0) return systemUpdates;
+  if (error || !data) return [];
   return (data as SystemUpdateRow[]).map((r) => ({
     id: r.id,
     date: new Date(r.created_at).toLocaleDateString("he-IL"),
