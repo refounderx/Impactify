@@ -11,9 +11,12 @@ Browser
         ├── /api/donations         → server route: validates + writes donations to DB
         └── Server components      → Supabase SSR client (cookie-based session)
               └── Admin client     → service role for validated server donation writes, never in browser
-                    └── PostgreSQL (Supabase) [Frankfurt eu-central-1]
+                    ├── PostgreSQL (Supabase) [Frankfurt eu-central-1]
                           ├── Row Level Security on every table
                           └── Triggers: auto-create profile, update campaign stats
+                    └── Supabase Storage
+                          ├── hero-images: public landing hero photography
+                          └── landing-media: public landing-page MP4 video
 ```
 
 ## Auth Flow
@@ -43,6 +46,8 @@ page/component → query module or SiteDataProvider → Supabase anon client
 ```
 
 Normalized campaigns, organizations, products, communities, donations, and profile fields use dedicated tables. Only shared and landing presentation records remain in `site_datasets`; authenticated admin dashboards query their normalized tenant data. Source fixture modules remain migration inputs/type sources and are not runtime fallbacks.
+
+Landing-page binary media is kept out of the application bundle and served from narrowly scoped public Supabase Storage buckets. `VideoSection.tsx` builds the landing-video URL from `NEXT_PUBLIC_SUPABASE_URL`; the `landing-media` bucket restricts uploads to MP4 files no larger than 25 MB.
 
 **Authenticated reads (profile, recurring):**
 ```

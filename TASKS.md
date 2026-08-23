@@ -146,7 +146,8 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - [ ] Footer contact info (`Lorem@ipsum.com`, placeholder phone) is literally Lorem Ipsum in the source design — replace with real contact details before shipping.
 - [x] Hero image+bubble placeholders (2026-08-23): 3 distinct color-block placeholders + distinct captions, backed by a new `hero_cards` Supabase table (`image_url` nullable — swap in real photos later, no code change needed). See `ARCHITECTURE.md` and `INTERFACES.md`.
 - [x] Real hero photography added (2026-08-23): 3 branded photos (lone-soldier birthday, elderly home visit, family donation delivery) uploaded to the new `hero-images` Supabase Storage bucket, `hero_cards.image_url` updated to point at them, captions rewritten to match each photo's actual scene. Source files came from `C:\Users\ofern\OneDrive\Desktop\impactify\` (user-provided, AI-generated branded photos).
-- [ ] No real video asset yet, mascot is a placeholder emoji (no illustration asset in the repo)
+- [x] Real landing video added (2026-08-23): the provided `landing_video.mp4` is hosted in the public, MP4-only `landing-media` Supabase Storage bucket and rendered with native playback controls in `VideoSection.tsx`.
+- [ ] Mascot is still a placeholder emoji (no illustration asset in the repo)
 - [ ] Signup form, contact form, and social/auth-provider buttons are visual only — not wired to any backend or OAuth provider
 - [x] Brand name inconsistency resolved (2026-08-23): all "נתינה בקליק" / "יב קליק" / "Netina BeClick" occurrences in `translations.ts` replaced with "Impactify"
 

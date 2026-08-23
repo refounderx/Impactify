@@ -1,22 +1,28 @@
 "use client";
-import { Play } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
 
 export default function VideoSection() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const videoUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/landing-media/landing-video.mp4`
+    : undefined;
+
   return (
     <section className="bg-raz-surface py-16">
       <div className="max-w-3xl mx-auto px-6 text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-1"><EditableText tKey="landing.video.heading1" /></h2>
         <p className="text-2xl font-bold text-gray-900 mb-8"><EditableText tKey="landing.video.heading2" /></p>
 
-        <div className="bg-white border border-gray-200 rounded-2xl h-72 flex items-center justify-center relative">
-          <button className="w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center text-red-500" aria-label="play">
-            <Play size={28} fill="currentColor" />
-          </button>
-          <div className="absolute bottom-6 inset-x-6 h-1 bg-gray-200 rounded-full">
-            <div className="h-full w-1/4 bg-raz-teal rounded-full" />
-          </div>
-        </div>
+        <video
+          className="w-full aspect-video rounded-2xl border border-gray-200 bg-black object-contain shadow-sm"
+          controls
+          playsInline
+          preload="metadata"
+          src={videoUrl}
+          aria-label="Impactify donation impact video"
+        >
+          Your browser does not support embedded videos.
+        </video>
       </div>
     </section>
   );

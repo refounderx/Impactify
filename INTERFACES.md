@@ -154,6 +154,8 @@ RLS: public read. Consumed by `getHeroCards()` in `src/lib/supabase/queries-land
 
 **`hero-images` Storage bucket** (public, created via `supabase/migrations/20260823140000_hero_images_storage.sql`): holds the 3 real hero photos (`soldier.jpeg`, `elderly.jpeg`, `family.jpeg`), uploaded via `supabase storage cp --experimental --linked`. RLS policy `hero_images_public_read` on `storage.objects` allows public `select` for this bucket only.
 
+**`landing-media` Storage bucket** (public, created via `supabase/migrations/20260823170000_landing_media_storage.sql`): holds media embedded directly on the public landing page. `VideoSection.tsx` expects the donation-impact video at `{SUPABASE_URL}/storage/v1/object/public/landing-media/landing-video.mp4`. The bucket accepts only `video/mp4` objects up to 25 MB; policy `landing_media_public_read` allows public reads for this bucket only. Uploads require a privileged operator/service role and are never permitted by the browser client.
+
 ### `site_content`
 | Column | Type | Notes |
 |---|---|---|
