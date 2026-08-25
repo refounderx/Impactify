@@ -58,6 +58,7 @@ Server-side donation write. Validates inputs at trust boundary.
 | `complete_community_signup(full_name, community_name, community_name_en?)` | Authenticated, incomplete user | Atomically creates a community and assigns its owner |
 | `admin_update_profile_role(profile_id, role, org_id?, community_id?)` | Admin only | Changes role/tenant, blocks self-change and last-admin demotion, writes an audit row |
 | `admin_delete_user(user_id)` | Admin only | Deletes another `auth.users` account, blocks self-deletion and last-admin deletion, anonymizes retained donation rows through FK `SET NULL`, and writes a non-PII audit row |
+| `create_ngo_product(name, name_en, description, description_en, price, emoji)` | NGO owner only | Validates product fields and creates an active product for the organization derived from `auth.uid()` |
 | `update_ngo_goals(goals)` | NGO owner only | Validates 1–10 goals and updates the organization derived from `auth.uid()`; no client-supplied organization ID is trusted |
 | `publish_campaign(title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Validates tenant products and HTTPS media URLs, then atomically publishes a campaign |
 

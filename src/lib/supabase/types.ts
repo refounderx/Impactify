@@ -270,6 +270,17 @@ export interface Database {
         Args: { p_user_id: string };
         Returns: undefined;
       };
+      create_ngo_product: {
+        Args: {
+          p_name: string;
+          p_name_en: string | null;
+          p_description: string | null;
+          p_description_en: string | null;
+          p_price: number;
+          p_emoji: string | null;
+        };
+        Returns: string;
+      };
       update_ngo_goals: {
         Args: { p_goals: OrganizationGoal[] };
         Returns: undefined;
