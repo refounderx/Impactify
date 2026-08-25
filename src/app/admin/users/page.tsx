@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { getAdminDirectory, updateProfileRole, type AdminDirectory } from "@/lib/supabase/queries-account-admin";
+import { deleteUser, getAdminDirectory, updateProfileRole, type AdminDirectory } from "@/lib/supabase/queries-account-admin";
 import type { AppRole } from "@/lib/supabase/types";
 
 const ROLE_LABELS: Record<AppRole, string> = {
@@ -23,6 +23,8 @@ export default function AdminUsersPage() {
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -76,6 +78,22 @@ export default function AdminUsersPage() {
     router.refresh();
   }
 
+  async function removeUser(id: string) {
+    setDeletingId(id);
+    setError("");
+    try {
+      await deleteUser(id);
+      setConfirmDeleteId(null);
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to delete user");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const deleteTarget = directory?.profiles.find((item) => item.id === confirmDeleteId);
+
   return (
     <main className="min-h-screen bg-raz-surface p-4 md:p-8" dir="ltr">
       <div className="max-w-6xl mx-auto">
@@ -120,14 +138,31 @@ export default function AdminUsersPage() {
                     {(draft?.role === "donor" || draft?.role === "admin") && <span className="text-gray-400">No tenant</span>}
                   </td>
                   <td className="p-3 text-gray-500">{isSelf ? "Your account — locked" : item.onboarding_completed_at ? "Active" : "Setup pending"}</td>
-                  <td className="p-3"><button onClick={() => save(item.id)} disabled={isSelf || savingId === item.id}
-                    className="bg-raz-teal text-white px-3 py-2 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed">{savingId === item.id ? "Saving…" : isSelf ? "Locked" : "Save"}</button></td>
+                  <td className="p-3"><div className="flex gap-2">
+                    <button onClick={() => save(item.id)} disabled={isSelf || savingId === item.id || deletingId === item.id}
+                      className="bg-raz-teal text-white px-3 py-2 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed">{savingId === item.id ? "Saving…" : isSelf ? "Locked" : "Save"}</button>
+                    {!isSelf && <button onClick={() => setConfirmDeleteId(item.id)} disabled={savingId === item.id || deletingId === item.id}
+                      className="border border-red-200 text-red-700 px-3 py-2 rounded-lg hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed" aria-haspopup="dialog">Delete</button>}
+                  </div></td>
                 </tr>;
               })}</tbody>
             </table>
           </div>
         )}
       </div>
+      {deleteTarget && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !deletingId && setConfirmDeleteId(null)}>
+        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="delete-user-title" onClick={(event) => event.stopPropagation()}>
+          <h2 id="delete-user-title" className="text-xl font-bold text-gray-900">Delete this user?</h2>
+          <p className="mt-2 text-sm text-gray-600">This permanently deletes <strong>{deleteTarget.full_name || deleteTarget.email || "this user"}</strong>, their sign-in account, and account-linked data. Donation history is retained without identifying the donor.</p>
+          <p className="mt-3 text-sm font-semibold text-red-700">This action cannot be undone.</p>
+          <div className="mt-6 flex justify-end gap-3">
+            <button onClick={() => setConfirmDeleteId(null)} disabled={deletingId === deleteTarget.id} className="rounded-lg border border-gray-200 px-4 py-2 text-sm disabled:opacity-40">Cancel</button>
+            <button onClick={() => removeUser(deleteTarget.id)} disabled={deletingId === deleteTarget.id} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-40">
+              {deletingId === deleteTarget.id ? "Deleting…" : "Delete permanently"}
+            </button>
+          </div>
+        </div>
+      </div>}
     </main>
   );
 }

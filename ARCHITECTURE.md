@@ -134,6 +134,7 @@ src/
 |---|---|---|
 | `profiles` | Extends `auth.users` — role, tenant, onboarding | Own row; admins read directory; personal-column updates only |
 | `admin_role_audit` | Immutable role/tenant-change record | Admin read; only privileged RPC inserts |
+| `admin_user_deletion_audit` | Non-PII record of privileged account deletions | Admin read; only privileged RPC inserts |
 | `organizations` | Non-profit orgs | Public read |
 | `campaigns` | Fundraising campaigns | Public read (active); org members read all |
 | `products` | Charitable items (ארוחה חמה etc.) | Public read |
@@ -159,7 +160,7 @@ Public (anon)   → active campaigns/products, communities, public org fields, s
 Donor           → own profile/donations/recurring; cannot change role or tenant
 NGO owner       → own NGO campaigns/products/received donations; atomic campaign publish; own-folder image uploads
 Community owner → own community and community-attributed donations
-Admin           → profile directory, audited role/tenant changes, site-content writes
+Admin           → profile directory, audited role/tenant changes, guarded account deletion, site-content writes
 ```
 
 ## Language Architecture
@@ -181,7 +182,7 @@ Admin           → profile directory, audited role/tenant changes, site-content
 | `/nonprofit` and `/nonprofit/*` admin pages | Authenticated NGO tenant queries over normalized Supabase tables |
 | `/nonprofit/[id]` | Supabase organizations and campaigns; extended profile fields are normalized organization columns |
 | `/community` and `/community/*` admin pages | Authenticated community tenant queries over normalized Supabase tables |
-| `/admin/users` | Admin-only Supabase profile/tenant directory and role-change RPC |
+| `/admin/users` | Admin-only Supabase profile/tenant directory plus role-change and account-deletion RPCs |
 | `/profile` | Auth-scoped Supabase reads; logged-out demo presentation data comes from `site_datasets` |
 | `/recurring` | Auth-scoped Supabase reads; no local fallback |
 

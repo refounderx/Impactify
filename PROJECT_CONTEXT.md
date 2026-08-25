@@ -11,7 +11,7 @@
 | **Donor** (תורם) | Individual | Browses campaigns, donates, creates personal fundraisers |
 | **NGO Owner** (בעל עמותה) | Organization owner | Creates campaigns and manages the assigned NGO's data |
 | **Community Owner** (בעל קהילה) | Community owner | Runs community campaigns and sees attributed activity |
-| **Admin** (מנהל מערכת) | Platform operator | Promotes/demotes users and assigns their NGO/community tenant |
+| **Admin** (מנהל מערכת) | Platform operator | Promotes/demotes users, assigns their NGO/community tenant, and permanently deletes other user accounts |
 
 ## Current Build Status
 

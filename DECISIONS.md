@@ -1,5 +1,15 @@
 # Technical Decisions — Impactify
 
+## 2026-08-25 — Delete user accounts through a guarded database RPC
+
+**Decision:** The admin user directory deletes the target `auth.users` account through an authenticated-only security-definer RPC. The RPC re-checks admin authorization, blocks self-deletion and deletion of the last admin, serializes against role changes, and records only actor/target UUIDs plus the deleted role in a dedicated audit table.
+
+**Context:** Deleting only `profiles` would leave a working authentication account, while exposing service-role credentials to the browser would cross the security boundary. Account deletion also activates existing foreign-key behavior across donor-linked data.
+
+**Consequences:** Account-linked profile, recurring-payment, saved-payment-method, and targeted-update rows cascade according to existing foreign keys; communities retain their records with a null manager, and immutable donation history remains with a null donor reference. The UI requires explicit confirmation, and the current admin cannot target their own row.
+
+---
+
 ## 2026-08-23 — Four persisted roles with audited, tenant-safe administration
 
 **Decision:** Use exactly `donor`, `ngo_owner`, `community_owner`, and `admin`. New users complete a one-time security-definer onboarding RPC; users cannot self-select admin or directly update role/tenant columns. Admins change other users through an atomic audited RPC that validates tenant assignment, blocks self-demotion, serializes changes, and preserves at least one admin.

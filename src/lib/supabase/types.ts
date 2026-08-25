@@ -233,6 +233,18 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      admin_user_deletion_audit: {
+        Row: {
+          id: number;
+          actor_id: string;
+          deleted_user_id: string;
+          deleted_role: AppRole;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -250,6 +262,10 @@ export interface Database {
       };
       admin_update_profile_role: {
         Args: { p_profile_id: string; p_role: AppRole; p_org_id?: string | null; p_community_id?: string | null };
+        Returns: undefined;
+      };
+      admin_delete_user: {
+        Args: { p_user_id: string };
         Returns: undefined;
       };
       publish_campaign: {

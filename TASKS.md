@@ -71,7 +71,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - [x] Supabase URL Config: production Site URL plus local and production `/auth/callback` URLs are allowlisted
 - [x] `/auth/setup` — one-time donor/NGO-owner/community-owner onboarding through atomic RPCs
 - [x] Four exact roles: `donor`, `ngo_owner`, `community_owner`, `admin`
-- [x] `/admin/users` — admin-only promotion, demotion, role, and tenant assignment with audit log
+- [x] `/admin/users` — admin-only promotion, demotion, role/tenant assignment, and guarded user deletion with audit logs
 - [x] Server layout guards enforce NGO-owner, community-owner, and admin routes
 - [x] Ordinary profile updates cannot modify role or tenant columns
 - [x] NGO/community dashboards query the authenticated tenant instead of shared snapshots

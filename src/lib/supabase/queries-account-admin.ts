@@ -38,3 +38,9 @@ export async function updateProfileRole(
   });
   if (error) throw new Error(error.message);
 }
+
+export async function deleteUser(userId: string) {
+  const sb = createClient();
+  const { error } = await sb.rpc("admin_delete_user", { p_user_id: userId });
+  if (error) throw new Error(error.message);
+}

@@ -45,7 +45,7 @@ Server-side donation write. Validates inputs at trust boundary.
 |---|---|
 | `/auth` | Email entry (step 1) + OTP verification (step 2) — single page |
 | `/auth/setup` | One-time donor/NGO-owner/community-owner onboarding; admin is never self-selectable |
-| `/admin/users` | Admin-only user role and tenant-assignment management |
+| `/admin/users` | Admin-only user role, tenant-assignment, and permanent account deletion management |
 
 **Auth mechanism:** Supabase email magic link. `/auth` sends `emailRedirectTo` as the current origin plus `/auth/callback`, so local and production sign-ins return to the site that initiated them. Supabase's redirect allowlist must contain `http://localhost:3000/auth/callback` and `https://impactify-sable.vercel.app/auth/callback`; its production Site URL is `https://impactify-sable.vercel.app`. The callback routes incomplete profiles to setup and returning users to the dashboard for their persisted role. `proxy.ts` refreshes sessions and performs coarse route protection; server layouts enforce the exact role.
 
@@ -57,6 +57,7 @@ Server-side donation write. Validates inputs at trust boundary.
 | `complete_ngo_signup(full_name, org_name, org_name_en?)` | Authenticated, incomplete user | Atomically creates an NGO and assigns its owner |
 | `complete_community_signup(full_name, community_name, community_name_en?)` | Authenticated, incomplete user | Atomically creates a community and assigns its owner |
 | `admin_update_profile_role(profile_id, role, org_id?, community_id?)` | Admin only | Changes role/tenant, blocks self-change and last-admin demotion, writes an audit row |
+| `admin_delete_user(user_id)` | Admin only | Deletes another `auth.users` account, blocks self-deletion and last-admin deletion, and writes a non-PII audit row |
 | `publish_campaign(title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Validates tenant products and HTTPS media URLs, then atomically publishes a campaign |
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
@@ -118,7 +119,7 @@ Key columns only — see `supabase/schema.sql` for full definitions.
 | `onboarding_completed_at` | timestamptz | Null until a one-time onboarding RPC succeeds |
 | `id_number` | text | Nullable — donor ID number, editable via `/my-donations` profile view |
 
-Auto-created by trigger on `auth.users` insert. Ordinary users may update personal fields only; role and tenant columns are not granted to them. Admin changes go through the audited security-definer RPC.
+Auto-created by trigger on `auth.users` insert. Ordinary users may update personal fields only; role and tenant columns are not granted to them. Admin changes go through audited security-definer RPCs. Deleting an authentication account cascades its profile and account-linked rows; donation-ledger rows remain with `donor_id = null`.
 
 ### `payment_methods`
 | Column | Type | Notes |
