@@ -43,7 +43,7 @@ export default function StepPersonalDetails({
         onClick={() => onContinue({ name, email, phone, declineUpdates })}
         className="w-full bg-raz-teal text-white font-bold py-3 rounded-full mb-3"
       >
-        <EditableText tKey="landing.checkout.confirmContinue" />
+        <EditableText tKey="landing.checkout.continueFrequency" />
       </button>
 
       <label className="flex items-center justify-center gap-2 text-xs text-gray-500">

@@ -12,10 +12,10 @@ export default function StepPaymentMethod({ onChoose }: { onChoose: (m: PaymentM
           onClick={() => onChoose("bit")}
           className="bg-gradient-to-l from-[#0d3b66] to-[#1a9dab] text-white font-bold py-3 rounded-full"
         >
-          <EditableText tKey="landing.checkout.payBit" />
+          <EditableText tKey="landing.checkout.payBitContinue" />
         </button>
         <button onClick={() => onChoose("card")} className="border border-gray-200 text-gray-700 font-bold py-3 rounded-full">
-          <EditableText tKey="landing.checkout.payCard" />
+          <EditableText tKey="landing.checkout.payCardContinue" />
         </button>
       </div>
     </div>

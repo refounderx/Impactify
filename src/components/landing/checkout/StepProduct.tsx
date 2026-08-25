@@ -83,7 +83,7 @@ export default function StepProduct({
         <span className="text-3xl font-bold font-numeric text-gray-900">{formatNIS(total)}</span>
       </div>
       <button onClick={onContinue} className="w-full bg-raz-teal text-white font-bold py-3 rounded-full">
-        <EditableText tKey="landing.products.ctaBuy" />
+        <EditableText tKey="landing.checkout.continuePersonal" />
       </button>
     </div>
   );
