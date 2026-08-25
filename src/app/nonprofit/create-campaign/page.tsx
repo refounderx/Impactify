@@ -11,6 +11,7 @@ import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
 import CampaignStoryEditor from "@/components/campaign/CampaignStoryEditor";
 import CampaignMediaStep from "@/components/campaign/CampaignMediaStep";
+import WizardShell from "@/components/wizard/WizardShell";
 import { uploadCampaignImage, validateCampaignVideoUrl } from "@/lib/campaign-media";
 import Link from "next/link";
 
@@ -27,6 +28,21 @@ export default function CreateCampaignPage() {
   const STEPS = lang === "en"
     ? ["Basics", "Story", "Media", "Products", "Communities", "Publish"]
     : ["בסיסי", "סיפור", "מדיה", "מוצרים", "קהילות", "פרסום"];
+  const STEP_DETAILS = lang === "en" ? [
+    ["Give your campaign a clear start", "Set the campaign name, category, fundraising goal, date, and short description."],
+    ["Tell the campaign story", "Explain why this campaign matters and what the donations will make possible."],
+    ["Add image and video", "Choose the media that will introduce the campaign to potential donors."],
+    ["Choose campaign products", "Connect tangible giving options so donors can understand their impact."],
+    ["Invite communities", "Select communities and partners that can help the campaign reach more people."],
+    ["Review and publish", "Confirm the campaign details before making it available for donations."],
+  ] : [
+    ["תנו לקמפיין התחלה ברורה", "הגדירו שם, קטגוריה, יעד גיוס, תאריך ותיאור קצר לקמפיין."],
+    ["ספרו את סיפור הקמפיין", "הסבירו למה הקמפיין חשוב ומה התרומות יאפשרו לכם להשיג."],
+    ["הוסיפו תמונה וסרטון", "בחרו את המדיה שתציג את הקמפיין בפני תורמים פוטנציאליים."],
+    ["בחרו מוצרים לקמפיין", "חברו אפשרויות תרומה מוחשיות שיעזרו לתורמים להבין את ההשפעה."],
+    ["הזמינו קהילות", "בחרו קהילות ושותפים שיוכלו לעזור לקמפיין להגיע לקהל רחב יותר."],
+    ["בדקו ופרסמו", "עברו על פרטי הקמפיין לפני שהוא הופך לזמין לתרומות."],
+  ];
   const categories = lang === "en"
     ? ["Education", "Food", "Health", "Elderly", "Children", "Environment", "Other"]
     : ["חינוך", "מזון", "בריאות", "קשישים", "ילדים", "סביבה", "אחר"];
@@ -106,41 +122,32 @@ export default function CreateCampaignPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-raz-surface">
-      
-
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <button onClick={back} disabled={step === 0} className="text-gray-400 disabled:opacity-30">
-          <ChevronLeft size={24} />
-        </button>
-        <div className="flex-1">
-          <EditableText tKey="wizard.title" as="h1" className="font-bold text-gray-800 text-sm" />
-          <p className="text-xs text-gray-400">{orgDisplayName} · <EditableText tKey="wizard.step" /> {step + 1} <EditableText tKey="wizard.of" /> {STEPS.length}</p>
-        </div>
-      </div>
-
-      {/* Step indicator */}
-      <div className="flex bg-white px-4 py-2 gap-1 overflow-x-auto">
-        {STEPS.map((s, i) => (
-          <div key={s} className="flex items-center gap-1 flex-shrink-0">
-            <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                i < step ? "bg-raz-teal text-white"
-                : i === step ? "bg-raz-teal/20 text-raz-teal border-2 border-raz-teal"
-                : "bg-gray-100 text-gray-400"
-              }`}
-            >
-              {i < step ? <Check size={12} /> : i + 1}
-            </div>
-            <span className={`text-xs ${i === step ? "text-raz-teal font-medium" : "text-gray-400"}`}>{s}</span>
-            {i < STEPS.length - 1 && <div className="w-3 h-px bg-gray-200 mx-1" />}
-          </div>
-        ))}
-      </div>
-
-      {/* Step content */}
-      <div className="flex-1 px-4 py-4 pb-24">
+    <div className="min-h-screen bg-[#eef0f1] p-0 md:p-7 lg:p-10">
+      <WizardShell
+        step={step}
+        stepCount={STEPS.length}
+        title={STEP_DETAILS[step][0]}
+        description={STEP_DETAILS[step][1]}
+        className="mx-auto min-h-[calc(100dvh-5rem)] max-w-6xl md:rounded-[2px]"
+        topActions={(
+          <>
+            <span className="rounded-full bg-raz-dark px-3 py-1 text-[11px] font-bold text-white"><EditableText tKey="wizard.title" /></span>
+            {orgDisplayName && <span className="max-w-40 truncate text-xs text-slate-400">{orgDisplayName}</span>}
+          </>
+        )}
+        footer={(
+          <>
+            <button onClick={back} disabled={step === 0} className="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50 disabled:invisible">
+              <ChevronLeft size={16} /> {lang === "en" ? "Back" : "חזרה"}
+            </button>
+            {step < STEPS.length - 1 && (
+              <button onClick={next} className="rounded-full border border-raz-teal px-6 py-2 text-sm font-bold text-raz-teal transition-colors hover:bg-raz-teal hover:text-white">
+                <EditableText tKey="wizard.next" /> · {STEPS[step + 1]}
+              </button>
+            )}
+          </>
+        )}
+      >
 
         {/* Step 0: Basics */}
         {step === 0 && (
@@ -224,8 +231,8 @@ export default function CreateCampaignPage() {
             )}
             {products.map((p) => (
               <div key={p.id} onClick={() => toggleProduct(p.id)}
-                className={`bg-white rounded-2xl p-3 flex items-center gap-3 cursor-pointer border-2 transition-colors ${
-                  form.selectedProducts.includes(p.id) ? "border-raz-teal" : "border-transparent"
+                className={`bg-white rounded-2xl p-3 flex items-center gap-3 cursor-pointer border transition-colors ${
+                  form.selectedProducts.includes(p.id) ? "border-raz-teal shadow-sm" : "border-slate-200 hover:border-raz-teal/50"
                 }`}
               >
                 <span className="text-3xl">{p.emoji}</span>
@@ -250,7 +257,7 @@ export default function CreateCampaignPage() {
             <h2 className="font-bold text-gray-700">הזמן קהילות ומשפיענים</h2>
             <p className="text-xs text-gray-500">בחר קהילות שיקדמו את הקמפיין שלך</p>
             {communities.map((c) => (
-              <div key={c.id} className="bg-white rounded-2xl p-3 flex items-center gap-3">
+              <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3">
                 <div className="w-10 h-10 bg-raz-teal/10 rounded-full flex items-center justify-center">
                   <Users size={18} className="text-raz-teal" />
                 </div>
@@ -285,16 +292,7 @@ export default function CreateCampaignPage() {
             </button>
           </div>
         )}
-      </div>
-
-      {/* Bottom nav */}
-      {step < STEPS.length - 1 && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4">
-          <button onClick={next} className="w-full bg-raz-teal text-white py-3.5 rounded-xl font-bold">
-            <EditableText tKey="wizard.next" /> — {STEPS[step + 1]}
-          </button>
-        </div>
-      )}
+      </WizardShell>
     </div>
   );
 }

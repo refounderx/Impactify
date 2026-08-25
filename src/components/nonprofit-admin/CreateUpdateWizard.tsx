@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useNgoAdminView } from "@/hooks/useNgoAdminView";
+import WizardShell from "@/components/wizard/WizardShell";
 import {
   Step0, Step1, Step2, PreviewPanel,
   type Audience, type Timing, type Trigger, type Cta,
@@ -58,21 +59,43 @@ export default function CreateUpdateWizard({ lang, t, onClose, onCreate }: Props
 
   const canAdvanceStep0 = audience === "all" || targetIds.length > 0;
   const canAdvanceStep2 = title.trim().length > 0 && body.trim().length > 0;
+  const stepTitles = [t("adm.uw.step1Title"), t("adm.uw.step2Title"), t("adm.uw.step3Title")];
+  const stepDescriptions = [t("adm.uw.step1Body"), t("adm.uw.step2Body"), lang === "en" ? "Write the message and add the media recipients will see." : "כתבו את ההודעה והוסיפו את המדיה שהנמענים יראו."];
 
   return (
-    <div className="fixed inset-0 z-50 bg-raz-surface flex flex-col">
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-          <X size={22} />
-        </button>
-        <h1 className="font-bold text-gray-800 text-sm flex-1">{t("adm.createUpdate")}</h1>
-        <span className="text-xs text-gray-400">
-          {step + 1} {t("adm.uw.stepOf")} {STEP_COUNT}
-        </span>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-6 md:p-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-raz-dark/80 p-0 backdrop-blur-[2px] md:p-7">
+      <WizardShell
+        step={step}
+        stepCount={STEP_COUNT}
+        title={stepTitles[step]}
+        description={stepDescriptions[step]}
+        className="h-full max-w-6xl md:h-[min(760px,calc(100dvh-3.5rem))] md:rounded-[2px]"
+        topActions={(
+          <>
+            <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={lang === "en" ? "Close" : "סגירה"}>
+              <X size={18} />
+            </button>
+            <span className="rounded-full bg-raz-dark px-3 py-1 text-[11px] font-bold text-white">{t("adm.createUpdate")}</span>
+          </>
+        )}
+        railContent={<PreviewPanel t={t} lang={lang} step={step} title={title} body={body} imageName={imageName} channels={channels} />}
+        footer={(
+          <>
+            <button onClick={back} disabled={step === 0} className="rounded-full px-5 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 disabled:invisible">
+              {t("adm.uw.back")}
+            </button>
+            {step < STEP_COUNT - 1 ? (
+              <button onClick={next} disabled={step === 0 ? !canAdvanceStep0 : false} className="rounded-full border border-raz-teal px-6 py-2.5 text-sm font-bold text-raz-teal hover:bg-raz-teal hover:text-white disabled:opacity-40">
+                {t("adm.uw.next")}
+              </button>
+            ) : (
+              <button onClick={handleSend} disabled={!canAdvanceStep2} className="rounded-full bg-raz-teal px-7 py-2.5 text-sm font-bold text-white hover:bg-teal-500 disabled:opacity-40">
+                {t("adm.uw.send")}
+              </button>
+            )}
+          </>
+        )}
+      >
           {step === 0 && (
             <Step0
               t={t} lang={lang}
@@ -99,35 +122,7 @@ export default function CreateUpdateWizard({ lang, t, onClose, onCreate }: Props
               imageName={imageName} setImageName={setImageName}
             />
           )}
-
-          <div className="flex gap-3 mt-8 max-w-xl">
-            {step > 0 && (
-              <button onClick={back} className="text-gray-500 text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-gray-100 transition-colors">
-                {t("adm.uw.back")}
-              </button>
-            )}
-            {step < STEP_COUNT - 1 ? (
-              <button
-                onClick={next}
-                disabled={step === 0 ? !canAdvanceStep0 : false}
-                className="bg-raz-teal text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-teal-500 transition-colors disabled:opacity-40"
-              >
-                {t("adm.uw.next")}
-              </button>
-            ) : (
-              <button
-                onClick={handleSend}
-                disabled={!canAdvanceStep2}
-                className="bg-raz-teal text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-teal-500 transition-colors disabled:opacity-40"
-              >
-                {t("adm.uw.send")}
-              </button>
-            )}
-          </div>
-        </div>
-
-        <PreviewPanel t={t} lang={lang} step={step} title={title} body={body} imageName={imageName} channels={channels} />
-      </div>
+      </WizardShell>
     </div>
   );
 }

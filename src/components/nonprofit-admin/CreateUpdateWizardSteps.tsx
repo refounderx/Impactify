@@ -26,9 +26,6 @@ export function Step0({ t, lang, audience, setAudience, targetIds, toggleTarget,
 }) {
   return (
     <div className="max-w-xl">
-      <h2 className="text-2xl font-black text-gray-800 mb-4">{t("adm.uw.step1Title")}</h2>
-      <p className="text-sm text-gray-500 mb-6">{t("adm.uw.step1Body")}</p>
-
       <p className="text-sm font-bold text-gray-700 mb-2">{t("adm.uw.recipientsQuestion")}</p>
       <div className="flex flex-wrap gap-5 mb-5">
         <RadioRow label={t("adm.uw.recipientCampaigns")} checked={audience === "campaigns"} onSelect={() => setAudience("campaigns")} />
@@ -85,9 +82,6 @@ export function Step1({ t, channels, setChannels, timing, setTiming, scheduledAt
 
   return (
     <div className="max-w-xl">
-      <h2 className="text-2xl font-black text-gray-800 mb-4">{t("adm.uw.step2Title")}</h2>
-      <p className="text-sm text-gray-500 mb-6">{t("adm.uw.step2Body")}</p>
-
       <p className="text-sm font-bold text-gray-700 mb-2">{t("adm.uw.channelsQuestion")}</p>
       <div className="flex flex-wrap gap-5 mb-6">
         {CHANNEL_KEYS.map(({ key, label }) => (
@@ -140,8 +134,6 @@ export function Step2({ t, title, setTitle, body, setBody, cta, setCta, imageNam
 }) {
   return (
     <div className="max-w-xl">
-      <h2 className="text-2xl font-black text-gray-800 mb-6">{t("adm.uw.step3Title")}</h2>
-
       <label className="block mb-4">
         <p className="text-sm font-bold text-gray-700 mb-2">{t("adm.uw.contentTitleLabel")}</p>
         <input
@@ -196,31 +188,29 @@ export function PreviewPanel({ t, lang, step, title, body, imageName, channels }
 }) {
   const activeChannels = Object.entries(channels).filter(([, v]) => v).map(([k]) => k);
   return (
-    <div className="hidden md:flex w-80 bg-raz-teal text-white flex-col p-8 flex-shrink-0">
-      <p className="text-xs text-teal-100 mb-1">{step + 1}/{3}</p>
-      <h3 className="text-2xl font-black mb-6">{t("adm.uw.previewTitle")}</h3>
-
+    <div className="hidden md:block">
+      <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-white/65">{t("adm.uw.previewTitle")}</p>
       {step < 2 ? (
-        <p className="text-sm text-teal-50 leading-relaxed">
+        <p className="text-sm leading-relaxed text-white/75">
           {lang === "en"
             ? "Choose who receives this update — donors to a specific product, campaign, or everyone."
             : "בחרו מוצר, קמפיין או כלל תורמים — כדי לצפות בתצוגה מקדימה של העדכון."}
         </p>
       ) : (
-        <div className="bg-white/10 rounded-2xl p-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-3 rounded-2xl border border-white/15 bg-white/10 p-4">
           {imageName && (
             <div className="bg-white/20 rounded-xl h-28 flex items-center justify-center text-xs">{imageName}</div>
           )}
           <p className="font-bold text-sm">{title || "—"}</p>
-          <p className="text-xs text-teal-50 leading-relaxed line-clamp-4">{body || "—"}</p>
-          <div className="flex items-center gap-1 text-xs text-teal-100">
+          <p className="line-clamp-4 text-xs leading-relaxed text-white/75">{body || "—"}</p>
+          <div className="flex items-center gap-1 text-xs text-white/65">
             <Check size={12} />
             {activeChannels.length > 0 ? activeChannels.join(", ") : "—"}
           </div>
         </div>
       )}
 
-      <div className="mt-auto flex items-center gap-1 text-xs text-teal-200/80">
+      <div className="mt-7 flex items-center gap-1 text-xs text-white/55">
         <ChevronRight size={14} />
         {lang === "en" ? "Manage from Updates dashboard" : "ניהול מתוך דשבורד עדכונים"}
       </div>

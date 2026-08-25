@@ -40,9 +40,9 @@ export default function CampaignMediaStep({ image, onImageChange, videoUrl, onVi
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex max-w-xl flex-col gap-5">
       <h2 className="font-bold text-gray-700">{lang === "en" ? "Campaign image and video" : "תמונות וסרטוני קמפיין"}</h2>
-      <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-4 flex flex-col items-center gap-3 text-center overflow-hidden">
+      <div className="flex min-h-72 flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center transition-colors hover:border-raz-teal md:p-8">
         {previewUrl ? (
           <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gray-100">
             {/* A local object URL is used only for the pre-upload preview. */}
