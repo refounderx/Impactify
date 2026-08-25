@@ -71,6 +71,7 @@ export default function NonprofitProfile() {
   const address = hasExtra ? (lang === "en" ? (org as { addressEn?: string }).addressEn : (org as { address?: string }).address) : undefined;
   const phone = hasExtra ? (org as { phone?: string }).phone : undefined;
   const videoGradient = hasExtra ? (org as { videoGradient?: string }).videoGradient ?? "from-gray-700 to-gray-900" : "from-gray-700 to-gray-900";
+  const goals = org.goals.map((goal) => lang === "en" ? (goal.en ?? goal.he) : goal.he);
 
   function changeQty(productId: string, delta: number) {
     setQty((prev) => ({ ...prev, [productId]: Math.max(0, (prev[productId] ?? 0) + delta) }));
@@ -159,6 +160,10 @@ export default function NonprofitProfile() {
             </div>
             <h1 className="text-2xl font-bold text-gray-800">{orgName}</h1>
             {bio && <p className="text-gray-600 text-sm leading-relaxed">{bio}</p>}
+            {goals.length > 0 && <div className="rounded-2xl bg-white p-4">
+              <h2 className="font-bold text-gray-800">{lang === "en" ? "Our goals" : "המטרות שלנו"}</h2>
+              <ul className="mt-2 list-disc space-y-1 ps-5 text-sm text-gray-600">{goals.map((goal, index) => <li key={index}>{goal}</li>)}</ul>
+            </div>}
 
             <div className="flex gap-1 border-b border-gray-100">
               {tabs.map((tb) => (

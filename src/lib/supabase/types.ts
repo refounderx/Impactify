@@ -2,6 +2,7 @@ export type AppRole = "donor" | "ngo_owner" | "community_owner" | "admin";
 export type CampaignStatus = "draft" | "active" | "paused" | "completed" | "archived" | "blocked";
 export type DonationStatus = "pending" | "completed" | "failed" | "refunded";
 export type RecurringStatus = "active" | "paused" | "cancelled";
+export type OrganizationGoal = { he: string; en: string | null };
 
 export interface Database {
   public: {
@@ -35,6 +36,7 @@ export interface Database {
           color: string;
           description: string | null;
           description_en: string | null;
+          goals: OrganizationGoal[];
           logo_url: string | null;
           registration_number: string | null;
           verified: boolean;
@@ -253,7 +255,7 @@ export interface Database {
         Returns: string;
       };
       complete_ngo_signup: {
-        Args: { p_full_name: string; p_org_name: string; p_org_name_en?: string | null };
+        Args: { p_full_name: string; p_org_name: string; p_org_name_en: string | null; p_goals: OrganizationGoal[] };
         Returns: string;
       };
       complete_community_signup: {
@@ -266,6 +268,10 @@ export interface Database {
       };
       admin_delete_user: {
         Args: { p_user_id: string };
+        Returns: undefined;
+      };
+      update_ngo_goals: {
+        Args: { p_goals: OrganizationGoal[] };
         Returns: undefined;
       };
       publish_campaign: {

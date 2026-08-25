@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLang } from "@/contexts/LanguageContext";
 import type { AppRole } from "@/lib/supabase/types";
+import type { OrganizationGoal } from "@/lib/supabase/types";
 
 type SignupRole = Exclude<AppRole, "admin">;
 const roles: { key: SignupRole; he: string; en: string; descriptionHe: string; descriptionEn: string; emoji: string }[] = [
@@ -29,6 +30,7 @@ export default function SetupPage() {
   const [role, setRole] = useState<SignupRole>("donor");
   const [tenantName, setTenantName] = useState("");
   const [tenantNameEn, setTenantNameEn] = useState("");
+  const [goals, setGoals] = useState<OrganizationGoal[]>([{ he: "", en: null }]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -47,6 +49,7 @@ export default function SetupPage() {
       : role === "ngo_owner"
         ? await sb.rpc("complete_ngo_signup", {
             p_full_name: name.trim(), p_org_name: tenantName.trim(), p_org_name_en: tenantNameEn.trim() || null,
+            p_goals: goals.map((goal) => ({ he: goal.he.trim(), en: goal.en?.trim() || null })),
           })
         : await sb.rpc("complete_community_signup", {
             p_full_name: name.trim(), p_community_name: tenantName.trim(),
@@ -102,8 +105,26 @@ export default function SetupPage() {
               </label>
             </div>
           )}
+          {role === "ngo_owner" && (
+            <div className="space-y-3">
+              <div><p className="text-sm font-bold text-gray-700">{lang === "en" ? "Organization goals" : "מטרות העמותה"}</p>
+                <p className="text-xs text-gray-400">{lang === "en" ? "Add 1–10 goals. Hebrew is required; English is optional." : "הוסיפו 1–10 מטרות. עברית חובה ואנגלית אופציונלית."}</p></div>
+              {goals.map((goal, index) => <div key={index} className="rounded-xl border border-gray-100 p-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="text-sm text-gray-500">מטרה בעברית
+                    <input value={goal.he} onChange={(event) => setGoals((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, he: event.target.value } : item))} maxLength={200} dir="rtl"
+                      className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-gray-800 outline-none focus:border-raz-teal" /></label>
+                  <label className="text-sm text-gray-500">Goal in English
+                    <input value={goal.en ?? ""} onChange={(event) => setGoals((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, en: event.target.value || null } : item))} maxLength={200} dir="ltr"
+                      className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-gray-800 outline-none focus:border-raz-teal" /></label>
+                </div>
+                {goals.length > 1 && <button type="button" onClick={() => setGoals((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="mt-2 text-xs text-red-600">{lang === "en" ? "Remove" : "הסר"}</button>}
+              </div>)}
+              {goals.length < 10 && <button type="button" onClick={() => setGoals((current) => [...current, { he: "", en: null }])} className="text-sm font-bold text-raz-teal">+ {lang === "en" ? "Add goal" : "הוסף מטרה"}</button>}
+            </div>
+          )}
           {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
-          <button onClick={completeSignup} disabled={saving || !name.trim() || (role !== "donor" && !tenantName.trim())}
+          <button onClick={completeSignup} disabled={saving || !name.trim() || (role !== "donor" && !tenantName.trim()) || (role === "ngo_owner" && goals.some((goal) => !goal.he.trim()))}
             className="w-full bg-raz-teal text-white py-3.5 rounded-xl font-bold disabled:opacity-50">
             {saving ? (lang === "en" ? "Creating account…" : "יוצר חשבון…") : (lang === "en" ? "Continue" : "המשך")}
           </button>

@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-08-25 — Store NGO goals as validated bilingual JSON
+
+**Decision:** Store each organization's goals in a `jsonb` array of `{ he, en }` objects. New NGO onboarding requires 1–10 entries with Hebrew text; owners update the list through a security-definer RPC that derives the target organization from `auth.uid()`.
+
+**Context:** Goals belong to the organization rather than the user profile, must be captured during NGO registration, and need to remain editable and publicly displayable in both supported languages.
+
+**Rationale:** Keeping each translation pair in one object avoids alignment bugs between parallel arrays. A guarded RPC prevents callers from selecting another tenant's organization ID and centralizes length/count normalization.
+
+**Consequences:** Legacy organizations receive an empty list instead of invented content and can add real goals from `/profile`. Public organization reads include goals but still exclude bank fields. English is optional and falls back to Hebrew in the public profile.
+
+---
+
 ## 2026-08-25 — Delete user accounts through a guarded database RPC
 
 **Decision:** The admin user directory deletes the target `auth.users` account through an authenticated-only security-definer RPC. The RPC re-checks admin authorization, blocks self-deletion and deletion of the last admin, serializes against role changes, and records only actor/target UUIDs plus the deleted role in a dedicated audit table.

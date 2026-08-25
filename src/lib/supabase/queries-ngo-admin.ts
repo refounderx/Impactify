@@ -15,7 +15,7 @@ export type NgoAdminData = {
   campaignProducts: { campaign_id: string; product_id: string }[];
 };
 
-const PUBLIC_ORG_COLUMNS = "id,name,name_en,initials,color,description,description_en,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,phone,video_gradient,created_at";
+const PUBLIC_ORG_COLUMNS = "id,name,name_en,initials,color,description,description_en,goals,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,phone,video_gradient,created_at";
 
 export async function getNgoAdminData(): Promise<NgoAdminData> {
   const sb = createClient();

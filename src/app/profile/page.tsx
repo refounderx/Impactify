@@ -9,10 +9,11 @@ import { Download, ChevronLeft, Settings, Bell, HelpCircle, Shield, RotateCcw, L
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import EditableText from "@/components/admin/EditableText";
+import NgoGoalsEditor from "@/components/profile/NgoGoalsEditor";
 
 export default function ProfilePage() {
   const { lang, t } = useLang();
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, profile, loading: authLoading, signOut } = useAuth();
   const { data } = useSiteDataset("shared");
   const [remoteDonations, setRemoteDonations] = useState<Awaited<ReturnType<typeof getMyDonations>>>([]);
   const [remoteRecurring, setRemoteRecurring] = useState<Awaited<ReturnType<typeof getMyRecurring>>>([]);
@@ -152,6 +153,7 @@ export default function ProfilePage() {
 
           {/* Right: impact */}
           <div className="lg:col-span-1">
+            {profile?.app_role === "ngo_owner" && profile.org_id && <div className="mb-5"><NgoGoalsEditor orgId={profile.org_id} /></div>}
             <div className="bg-white rounded-2xl p-5 sticky top-24">
               <h3 className="font-bold text-gray-700 mb-4"><EditableText tKey="profile.impact" /></h3>
               <div className="flex flex-col gap-4">

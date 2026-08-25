@@ -39,6 +39,7 @@ export function toUIOrg(row: PublicOrganization) {
     verified: row.verified,
     bio: row.description ?? undefined,
     bioEn: row.description_en ?? undefined,
+    goals: row.goals,
     founded: row.founded ?? undefined,
     foundedEn: row.founded_en ?? undefined,
     ceo: row.ceo ?? undefined,

@@ -10,6 +10,8 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 
 **Campaign media live (2026-08-25):** migrations `20260824120000`–`20260824121000` add tenant-scoped campaign image storage, persisted video URLs, the expanded publish RPC, and anonymous policy-helper execution required by public campaign reads. Both Dashboard-applied versions are reconciled in the migration ledger; REST checks confirm anonymous campaigns, media columns, and the bucket are reachable under their intended roles.
 
+**Organization goals live (2026-08-25):** migration `20260825130000` adds structured bilingual goals to every organization row, requires 1–10 goals for new NGO signup, and exposes an owner-scoped update RPC used from `/profile`. Existing organizations retain an empty list until their owner supplies real goals; no content was invented during migration.
+
 ### Screens complete
 - `/` — Marketing landing page (changed 2026-08-23, previously donor home; see Known Tech Debt)
 - `/landing` — same content as `/` (duplicate route, not deduplicated)
@@ -70,6 +72,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - [x] `/auth/callback` — exchanges `?code=`, then redirects by persisted role or incomplete onboarding
 - [x] Supabase URL Config: production Site URL plus local and production `/auth/callback` URLs are allowlisted
 - [x] `/auth/setup` — one-time donor/NGO-owner/community-owner onboarding through atomic RPCs
+- [x] NGO signup requires 1–10 bilingual organization goals; NGO owners can update them from `/profile`
 - [x] Four exact roles: `donor`, `ngo_owner`, `community_owner`, `admin`
 - [x] `/admin/users` — admin-only promotion, demotion, role/tenant assignment, and guarded user deletion with audit logs
 - [x] Server layout guards enforce NGO-owner, community-owner, and admin routes

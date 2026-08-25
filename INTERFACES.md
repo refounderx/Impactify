@@ -54,10 +54,11 @@ Server-side donation write. Validates inputs at trust boundary.
 | Function | Caller | Contract |
 |---|---|---|
 | `complete_donor_signup(full_name)` | Authenticated, incomplete user | Completes onboarding as donor |
-| `complete_ngo_signup(full_name, org_name, org_name_en?)` | Authenticated, incomplete user | Atomically creates an NGO and assigns its owner |
+| `complete_ngo_signup(full_name, org_name, org_name_en, goals)` | Authenticated, incomplete user | Validates 1–10 bilingual goals, atomically creates an NGO, and assigns its owner |
 | `complete_community_signup(full_name, community_name, community_name_en?)` | Authenticated, incomplete user | Atomically creates a community and assigns its owner |
 | `admin_update_profile_role(profile_id, role, org_id?, community_id?)` | Admin only | Changes role/tenant, blocks self-change and last-admin demotion, writes an audit row |
 | `admin_delete_user(user_id)` | Admin only | Deletes another `auth.users` account, blocks self-deletion and last-admin deletion, and writes a non-PII audit row |
+| `update_ngo_goals(goals)` | NGO owner only | Validates 1–10 goals and updates the organization derived from `auth.uid()`; no client-supplied organization ID is trusted |
 | `publish_campaign(title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Validates tenant products and HTTPS media URLs, then atomically publishes a campaign |
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
@@ -86,6 +87,15 @@ Two runtime public-read-only rows keyed by `shared` and `landing`. The historica
 ## Database Table Contracts
 
 Key columns only — see `supabase/schema.sql` for full definitions.
+
+### `organizations`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `name` / `name_en` | text | Hebrew name required; English nullable |
+| `goals` | jsonb | Array of 1–10 `{ he, en }` objects for new NGOs; legacy rows default to `[]` until their owner updates the profile |
+
+Public reads include `goals` but continue to exclude bank-account columns. Writes to `goals` are available only through `update_ngo_goals`, which resolves the target organization from the authenticated NGO-owner profile.
 
 ### `campaigns`
 | Column | Type | Notes |

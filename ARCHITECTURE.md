@@ -25,7 +25,7 @@ Browser
 /auth page
   Step 1: email entry → supabase.auth.signInWithOtp({ email }) → magic-link email
   Step 2: callback    → exchanges code for a cookie-backed session
-  Step 3: incomplete  → /auth/setup calls one atomic donor/NGO/community onboarding RPC
+  Step 3: incomplete  → /auth/setup calls one atomic donor/NGO/community onboarding RPC; NGO signup validates and stores 1–10 goals
   Step 4: returning   → callback redirects directly to the persisted role's home
 ```
 
@@ -135,7 +135,7 @@ src/
 | `profiles` | Extends `auth.users` — role, tenant, onboarding | Own row; admins read directory; personal-column updates only |
 | `admin_role_audit` | Immutable role/tenant-change record | Admin read; only privileged RPC inserts |
 | `admin_user_deletion_audit` | Non-PII record of privileged account deletions | Admin read; only privileged RPC inserts |
-| `organizations` | Non-profit orgs | Public read |
+| `organizations` | Non-profit orgs, including structured bilingual `goals` | Public read; goal writes only through an owner-scoped RPC |
 | `campaigns` | Fundraising campaigns | Public read (active); org members read all |
 | `products` | Charitable items (ארוחה חמה etc.) | Public read |
 | `campaign_products` | Campaign ↔ Product junction | Public read |
@@ -180,10 +180,10 @@ Admin           → profile directory, audited role/tenant changes, guarded acco
 | `/campaign/[id]` | Supabase normalized tables plus shared donor/community presentation records from `site_datasets` |
 | `/donate/[id]/amount` | Supabase campaign lookup |
 | `/nonprofit` and `/nonprofit/*` admin pages | Authenticated NGO tenant queries over normalized Supabase tables |
-| `/nonprofit/[id]` | Supabase organizations and campaigns; extended profile fields are normalized organization columns |
+| `/nonprofit/[id]` | Supabase organizations and campaigns; extended profile fields and goals are normalized organization columns |
 | `/community` and `/community/*` admin pages | Authenticated community tenant queries over normalized Supabase tables |
 | `/admin/users` | Admin-only Supabase profile/tenant directory plus role-change and account-deletion RPCs |
-| `/profile` | Auth-scoped Supabase reads; logged-out demo presentation data comes from `site_datasets` |
+| `/profile` | Auth-scoped Supabase reads; NGO owners can update only their assigned organization's goals through a guarded RPC; logged-out demo presentation data comes from `site_datasets` |
 | `/recurring` | Auth-scoped Supabase reads; no local fallback |
 
 No active page silently falls back to local fixture arrays. The fixture files are migration inputs and shared type sources only.

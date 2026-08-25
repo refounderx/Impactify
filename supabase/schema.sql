@@ -57,6 +57,8 @@ create table public.organizations (
   color               text not null default '#00B5AD',
   description         text,
   description_en      text,
+  goals               jsonb not null default '[]'::jsonb
+                        check (jsonb_typeof(goals) = 'array' and jsonb_array_length(goals) <= 10),
   logo_url            text,
   registration_number text,        -- מספר עמותה
   verified            boolean not null default false,
@@ -477,7 +479,7 @@ grant update (full_name, full_name_en, phone, avatar_url, id_number) on public.p
 -- Bank account columns are not part of the public organization contract.
 revoke select on public.organizations from anon, authenticated;
 grant select (id, name, name_en, initials, color, description, description_en,
-  logo_url, registration_number, verified, founded, founded_en, ceo, ceo_en,
+  goals, logo_url, registration_number, verified, founded, founded_en, ceo, ceo_en,
   volunteers, address, address_en, phone, video_gradient, created_at)
 on public.organizations to anon, authenticated;
 
