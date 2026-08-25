@@ -47,7 +47,7 @@ page/component → query module or SiteDataProvider → Supabase anon client
 
 Normalized campaigns, organizations, products, communities, donations, and profile fields use dedicated tables. Only shared and landing presentation records remain in `site_datasets`; authenticated admin dashboards query their normalized tenant data. Source fixture modules remain migration inputs/type sources and are not runtime fallbacks.
 
-Landing-page binary media is kept out of the application bundle and served from narrowly scoped public Supabase Storage buckets. `VideoSection.tsx` builds the landing-video URL from `NEXT_PUBLIC_SUPABASE_URL`; the `landing-media` bucket restricts uploads to MP4 files no larger than 25 MB.
+Binary media is kept out of the application bundle and served from narrowly scoped public Supabase Storage buckets. `VideoSection.tsx` builds the landing-video URL from `NEXT_PUBLIC_SUPABASE_URL`; the `landing-media` bucket restricts uploads to MP4 files no larger than 25 MB. Campaign header images use the separate `campaign-media` bucket, where authenticated NGO owners can write only beneath their own `org_id` folder. Campaign video URLs stay in the `campaigns` row and are rendered only as validated HTTPS YouTube/Vimeo embeds or direct video sources.
 
 **Authenticated reads (profile, recurring):**
 ```
@@ -73,7 +73,7 @@ src/
 ├── app/                    Next.js pages (all client components currently)
 ├── components/
 │   ├── layout/             DemoBar, TopNav, BottomNav, Header
-│   ├── campaign/           CampaignCard, CategoryFilter, DonateAmountModal, ProductBuyCard, CampaignTabs
+│   ├── campaign/           Campaign cards/tabs, centered donation modal, story editor/renderer, media step
 │   ├── nonprofit-admin/    AdminShell (sidebar+topbar; `variant: "nonprofit" | "community"` picks nav
 │   │                       routes/labels and whether the Products group renders), DonutChart, StatHeader,
 │   │                       SearchFilterBar, CampaignDetailPanel, ProductDetailPanel (row-expansion detail views)
@@ -91,6 +91,7 @@ src/
 │   ├── nonprofit-admin-data.ts   Historical migration/type input; not a runtime data source
 │   ├── community-admin-data.ts   Historical migration/type input; not a runtime data source
 │   ├── site-dataset-types.ts     Typed contract for shared/landing dataset rows
+│   ├── campaign-media.ts          Campaign image upload + safe video URL/source helpers
 │   ├── translations.ts           All UI strings in he + en
 │   └── supabase/
 │       ├── client.ts             Browser client (createBrowserClient)
@@ -156,7 +157,7 @@ src/
 ```
 Public (anon)   → active campaigns/products, communities, public org fields, shared datasets
 Donor           → own profile/donations/recurring; cannot change role or tenant
-NGO owner       → own NGO campaigns/products/received donations; atomic campaign publish
+NGO owner       → own NGO campaigns/products/received donations; atomic campaign publish; own-folder image uploads
 Community owner → own community and community-attributed donations
 Admin           → profile directory, audited role/tenant changes, site-content writes
 ```

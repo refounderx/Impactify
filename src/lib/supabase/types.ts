@@ -75,6 +75,7 @@ export interface Database {
           gradient: string;
           emoji: string;
           hero_image_url: string | null;
+          video_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -260,6 +261,8 @@ export interface Database {
           p_goal: number;
           p_end_date: string | null;
           p_product_ids?: string[];
+          p_hero_image_url?: string | null;
+          p_video_url?: string | null;
         };
         Returns: string;
       };

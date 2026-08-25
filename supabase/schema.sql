@@ -85,6 +85,7 @@ create table public.campaigns (
   gradient      text not null default 'from-teal-400 to-blue-400',
   emoji         text not null default '💙',
   hero_image_url text,
+  video_url      text,
   created_at    timestamptz default now() not null,
   updated_at    timestamptz default now() not null
 );
@@ -251,6 +252,7 @@ grant execute on function public.current_app_role() to authenticated;
 grant execute on function public.current_org_id() to authenticated;
 grant execute on function public.current_community_id() to authenticated;
 grant execute on function public.is_admin() to authenticated;
+grant execute on function public.is_admin() to anon;
 
 -- Organizations: public read
 create policy "orgs_public_read" on public.organizations

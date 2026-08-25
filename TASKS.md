@@ -4,9 +4,11 @@
 
 Responsive bilingual application with Supabase-backed normalized entities, authentication, donation writes, and shared presentation datasets. Local fixture modules are migration inputs only; active pages do not use them as runtime fallbacks. Real PSP processing is still not implemented.
 
-**Supabase-only migration complete (2026-08-23):** `20260823150000_site_datasets.sql` and `20260823151000_organization_profiles.sql` were applied through the Dashboard SQL Editor. The auth migration later removed the two obsolete admin snapshots; REST verification now confirms the required `shared` and `landing` rows and complete extended profiles for all five organizations. The CLI Management API login-role error remains an operational issue for future `db push` commands.
+**Supabase-only migration complete (2026-08-23):** `20260823150000_site_datasets.sql` and `20260823151000_organization_profiles.sql` were applied through the Dashboard SQL Editor. The auth migration later removed the two obsolete admin snapshots; REST verification confirms the required `shared` and `landing` rows. As of 2026-08-25, one of six organization rows is missing at least one extended profile field, so the profile-completeness verification remains red. The CLI Management API login-role error remains an operational issue for future `db push` commands.
 
 **Four-role auth live (2026-08-23):** code and migrations define donor, NGO owner, community owner, and admin; add atomic onboarding, audited admin promotion/demotion, route guards, tenant-scoped dashboards, protected content editing, campaign publishing, and hardened donation validation. Migrations `20260823160000`–`20260823162000` are applied. REST/SQL verification passed, including anonymous bank/RPC denial and simulated non-admin role-change rejection. Dashboard-applied versions `20260823140000`–`20260823162000` are reconciled in `supabase_migrations.schema_migrations` for future CLI pushes.
+
+**Campaign media live (2026-08-25):** migrations `20260824120000`–`20260824121000` add tenant-scoped campaign image storage, persisted video URLs, the expanded publish RPC, and anonymous policy-helper execution required by public campaign reads. Both Dashboard-applied versions are reconciled in the migration ledger; REST checks confirm anonymous campaigns, media columns, and the bucket are reachable under their intended roles.
 
 ### Screens complete
 - `/` — Marketing landing page (changed 2026-08-23, previously donor home; see Known Tech Debt)
@@ -56,7 +58,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - [x] Community dashboard — real community stats + leaderboard from DB
 - [x] Profile + recurring — read real data from DB when signed in; sign-in prompt when not
 - [x] Donation write — `POST /api/donations` (server-side, validates at trust boundary)
-- [ ] Image storage — campaign hero images (Supabase Storage)
+- [x] Campaign media — tenant-scoped hero-image uploads plus persisted HTTPS video playback
 
 ---
 

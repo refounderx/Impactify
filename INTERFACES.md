@@ -57,7 +57,7 @@ Server-side donation write. Validates inputs at trust boundary.
 | `complete_ngo_signup(full_name, org_name, org_name_en?)` | Authenticated, incomplete user | Atomically creates an NGO and assigns its owner |
 | `complete_community_signup(full_name, community_name, community_name_en?)` | Authenticated, incomplete user | Atomically creates a community and assigns its owner |
 | `admin_update_profile_role(profile_id, role, org_id?, community_id?)` | Admin only | Changes role/tenant, blocks self-change and last-admin demotion, writes an audit row |
-| `publish_campaign(...)` | NGO owner only | Validates tenant products and atomically publishes a campaign |
+| `publish_campaign(title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Validates tenant products and HTTPS media URLs, then atomically publishes a campaign |
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
 
@@ -94,6 +94,8 @@ Key columns only — see `supabase/schema.sql` for full definitions.
 | `status` | enum | `draft\|active\|paused\|completed\|archived\|blocked` |
 | `raised` | numeric | Auto-incremented by trigger on donation insert |
 | `donors_count` | integer | Auto-incremented by trigger |
+| `hero_image_url` | text | Nullable public URL for the uploaded campaign header image |
+| `video_url` | text | Nullable HTTPS YouTube, Vimeo, or direct-video URL; displayed ahead of the header image |
 
 ### `donations` (append-only)
 | Column | Type | Notes |
@@ -155,6 +157,8 @@ RLS: public read. Consumed by `getHeroCards()` in `src/lib/supabase/queries-land
 **`hero-images` Storage bucket** (public, created via `supabase/migrations/20260823140000_hero_images_storage.sql`): holds the 3 real hero photos (`soldier.jpeg`, `elderly.jpeg`, `family.jpeg`), uploaded via `supabase storage cp --experimental --linked`. RLS policy `hero_images_public_read` on `storage.objects` allows public `select` for this bucket only.
 
 **`landing-media` Storage bucket** (public, created via `supabase/migrations/20260823170000_landing_media_storage.sql`): holds media embedded directly on the public landing page. `VideoSection.tsx` expects the donation-impact video at `{SUPABASE_URL}/storage/v1/object/public/landing-media/landing-video.mp4`. The bucket accepts only `video/mp4` objects up to 25 MB; policy `landing_media_public_read` allows public reads for this bucket only. Uploads require a privileged operator/service role and are never permitted by the browser client.
+
+**`campaign-media` Storage bucket** (public, created via `supabase/migrations/20260824120000_campaign_media.sql`): holds campaign header images. It accepts JPG, PNG, and WebP objects up to 5 MB. Public reads support campaign pages; authenticated NGO owners may insert/delete only inside the folder named for their own `org_id`. The wizard uploads the image before calling `publish_campaign` and removes it if publication fails.
 
 ### `site_content`
 | Column | Type | Notes |

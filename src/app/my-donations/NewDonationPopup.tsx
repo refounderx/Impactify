@@ -40,13 +40,13 @@ export default function NewDonationPopup({ onClose, lang, t }: Props) {
 
   return (
     /* Dimmed backdrop — click outside to close */
-    <div className="fixed inset-0 z-50 flex items-end md:items-center md:justify-center p-0 md:p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6" onClick={onClose}>
 
       <div className="absolute inset-0 bg-black/65" />
 
-      {/* Dialog — bottom-sheet on mobile, centred modal on desktop */}
+      {/* Centered, viewport-bounded dialog on every screen size. */}
       <div
-        className="relative w-full md:max-w-2xl md:rounded-2xl overflow-hidden flex flex-col shadow-2xl"
+        className="relative w-full max-w-2xl rounded-2xl overflow-hidden flex flex-col shadow-2xl"
         style={{ maxHeight: "90vh" }}
         onClick={(e) => e.stopPropagation()}
       >

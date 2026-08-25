@@ -23,11 +23,11 @@ interface BaseProps {
 function Backdrop({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div
-      className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white w-full sm:max-w-sm sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-white w-full max-w-sm rounded-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {children}

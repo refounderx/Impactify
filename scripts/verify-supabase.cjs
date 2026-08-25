@@ -81,6 +81,22 @@ async function main() {
   });
   const bankFieldsProtected = !bankProbe.ok;
   console.log(`organization bank fields blocked for anon: ${bankFieldsProtected} (HTTP ${bankProbe.status})`);
+  const publicCampaignProbe = await fetch(`${baseUrl}/rest/v1/campaigns?select=id&limit=1`, {
+    headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+  });
+  const publicCampaignsReadable = publicCampaignProbe.ok;
+  console.log(`active campaigns readable for anon: ${publicCampaignsReadable} (HTTP ${publicCampaignProbe.status})`);
+  const campaignMediaProbe = await fetch(
+    `${baseUrl}/rest/v1/campaigns?select=hero_image_url,video_url&limit=1`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+  );
+  const campaignMediaColumnsReady = campaignMediaProbe.ok;
+  console.log(`campaign media columns ready: ${campaignMediaColumnsReady} (HTTP ${campaignMediaProbe.status})`);
+  const campaignMediaBucketProbe = await fetch(`${baseUrl}/storage/v1/bucket/campaign-media`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+  });
+  const campaignMediaBucketReady = campaignMediaBucketProbe.ok;
+  console.log(`campaign media bucket ready: ${campaignMediaBucketReady} (HTTP ${campaignMediaBucketProbe.status})`);
   const adminRpcProbe = await fetch(`${baseUrl}/rest/v1/rpc/admin_update_profile_role`, {
     method: "POST",
     headers: {
@@ -111,6 +127,9 @@ async function main() {
     !profileFieldsComplete ||
     !profilesConsistent ||
     !bankFieldsProtected ||
+    !publicCampaignsReadable ||
+    !campaignMediaColumnsReady ||
+    !campaignMediaBucketReady ||
     !anonAdminRpcBlocked
   ) process.exitCode = 1;
 }

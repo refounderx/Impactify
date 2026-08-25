@@ -24,7 +24,7 @@ export default function DemoBar() {
     : "/my-donations";
 
   return (
-    <div className="bg-raz-dark text-white text-sm py-1.5 px-4 md:px-6 flex items-center gap-2 sticky top-0 z-50">
+    <div className="bg-raz-dark text-white text-sm py-1.5 px-4 md:px-6 flex items-center gap-2">
       <span className="text-raz-teal font-bold text-xs me-1 hidden md:inline">◦ דמו</span>
       <span className="text-gray-500 text-xs hidden sm:inline">{lang === "he" ? "תפקיד:" : "Role:"}</span>
       {roles.map((r) => (

@@ -25,8 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SiteDataProvider>
             <AdminModeProvider>
               <AuthProvider>
-                {process.env.NODE_ENV === "development" && <DemoBar />}
-                <TopNav />
+                <div className="sticky top-0 z-50">
+                  {process.env.NODE_ENV === "development" && <DemoBar />}
+                  <TopNav />
+                </div>
                 {children}
               </AuthProvider>
             </AdminModeProvider>

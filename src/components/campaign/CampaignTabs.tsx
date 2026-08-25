@@ -4,6 +4,7 @@ import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
+import CampaignStory from "@/components/campaign/CampaignStory";
 
 type Tab = "donors" | "communities" | "story" | "org";
 
@@ -96,7 +97,7 @@ export default function CampaignTabs({ campaignId, donorsCount, story, orgBio }:
       )}
 
       {tab === "story" && (
-        <p className="text-gray-600 leading-relaxed" dir={lang === "en" ? "ltr" : "rtl"}>{story}</p>
+        <CampaignStory story={story} dir={lang === "en" ? "ltr" : "rtl"} />
       )}
 
       {tab === "org" && (

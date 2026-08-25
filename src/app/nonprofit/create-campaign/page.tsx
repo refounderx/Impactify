@@ -6,9 +6,13 @@ import { getNgoAdminData } from "@/lib/supabase/queries-ngo-admin";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Product } from "@/lib/supabase/types";
-import { Check, ChevronLeft, Image as ImageIcon, Video, Users } from "lucide-react";
+import { Check, ChevronLeft, PackagePlus, Users } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
+import CampaignStoryEditor from "@/components/campaign/CampaignStoryEditor";
+import CampaignMediaStep from "@/components/campaign/CampaignMediaStep";
+import { uploadCampaignImage, validateCampaignVideoUrl } from "@/lib/campaign-media";
+import Link from "next/link";
 
 export default function CreateCampaignPage() {
   const router = useRouter();
@@ -19,6 +23,7 @@ export default function CreateCampaignPage() {
   const [communities, setCommunities] = useState<Awaited<ReturnType<typeof getCommunities>>>([]);
   const [publishError, setPublishError] = useState("");
   const [publishing, setPublishing] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
   const STEPS = lang === "en"
     ? ["Basics", "Story", "Media", "Products", "Communities", "Publish"]
     : ["בסיסי", "סיפור", "מדיה", "מוצרים", "קהילות", "פרסום"];
@@ -33,6 +38,7 @@ export default function CreateCampaignPage() {
     endDate: "",
     shortDesc: "",
     story: "",
+    videoUrl: "",
     selectedProducts: [] as string[],
   });
 
@@ -50,14 +56,36 @@ export default function CreateCampaignPage() {
       setPublishError(lang === "en" ? "Title, category and a positive goal are required." : "נדרשים שם, קטגוריה ויעד חיובי.");
       return;
     }
+    const videoUrl = validateCampaignVideoUrl(form.videoUrl);
+    if (form.videoUrl.trim() && !videoUrl) {
+      setPublishError(lang === "en" ? "Enter a valid HTTPS video URL." : "יש להזין קישור HTTPS תקין לסרטון.");
+      setStep(2);
+      return;
+    }
+    if (image && !profile?.org_id) {
+      setPublishError(lang === "en" ? "Your organization profile is not ready for uploads." : "פרופיל העמותה עדיין לא מוכן להעלאת קבצים.");
+      return;
+    }
     setPublishing(true);
     const sb = createClient();
+    let uploadedImage: Awaited<ReturnType<typeof uploadCampaignImage>> | null = null;
+    try {
+      if (image && profile?.org_id) uploadedImage = await uploadCampaignImage(sb, image, profile.org_id);
+    } catch (uploadError) {
+      setPublishError(uploadError instanceof Error ? uploadError.message : (lang === "en" ? "Unable to upload the image." : "לא ניתן להעלות את התמונה."));
+      setPublishing(false);
+      setStep(2);
+      return;
+    }
     const { data: campaignId, error } = await sb.rpc("publish_campaign", {
       p_title: form.title.trim(), p_short_desc: form.shortDesc.trim(), p_story: form.story.trim(),
       p_category: form.category, p_goal: goal, p_end_date: form.endDate || null,
       p_product_ids: form.selectedProducts,
+      p_hero_image_url: uploadedImage?.publicUrl ?? null,
+      p_video_url: videoUrl,
     });
     if (error) {
+      if (uploadedImage) await sb.storage.from("campaign-media").remove([uploadedImage.path]);
       setPublishError(error.message);
       setPublishing(false);
       return;
@@ -160,37 +188,23 @@ export default function CreateCampaignPage() {
         {step === 1 && (
           <div className="flex flex-col gap-4">
             <h2 className="font-bold text-gray-700">סיפור הקמפיין</h2>
-            <div className="bg-white rounded-xl border border-gray-200">
-              <div className="flex gap-1 p-2 border-b border-gray-100 flex-wrap">
-                {["B","I","H1","H2","🔗","📷"].map(t => (
-                  <button key={t} className="px-2.5 py-1 rounded text-xs font-mono bg-gray-100 text-gray-600 hover:bg-gray-200">{t}</button>
-                ))}
-              </div>
-              <textarea value={form.story} onChange={(e) => setForm({...form, story: e.target.value})}
-                placeholder="ספר את הסיפור של הקמפיין שלך. למה זה חשוב? מה ישיג הכסף שייאסף?" rows={10}
-                className="w-full p-3 text-sm outline-none text-right resize-none rounded-b-xl" />
-            </div>
+            <CampaignStoryEditor
+              value={form.story}
+              onChange={(story) => setForm((current) => ({ ...current, story }))}
+              placeholder="ספר את הסיפור של הקמפיין שלך. למה זה חשוב? מה ישיג הכסף שייאסף?"
+            />
           </div>
         )}
 
         {/* Step 2: Media */}
         {step === 2 && (
-          <div className="flex flex-col gap-4">
-            <h2 className="font-bold text-gray-700">תמונות וסרטוני קמפיין</h2>
-            <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-8 flex flex-col items-center gap-3 text-center">
-              <ImageIcon size={36} className="text-gray-300" />
-              <p className="font-medium text-gray-600 text-sm">תמונת כותרת</p>
-              <p className="text-xs text-gray-400">מומלץ 16:9 | JPG, PNG עד 5MB</p>
-              <button className="bg-raz-teal text-white px-4 py-2 rounded-xl text-sm font-medium">העלה תמונה</button>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3">
-              <Video size={22} className="text-raz-teal flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700 mb-1">קישור לסרטון</p>
-                <input placeholder="YouTube / Vimeo URL" className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-raz-teal text-left" dir="ltr" />
-              </div>
-            </div>
-          </div>
+          <CampaignMediaStep
+            image={image}
+            onImageChange={setImage}
+            videoUrl={form.videoUrl}
+            onVideoUrlChange={(videoUrl) => setForm((current) => ({ ...current, videoUrl }))}
+            lang={lang}
+          />
         )}
 
         {/* Step 3: Products */}
@@ -198,6 +212,16 @@ export default function CreateCampaignPage() {
           <div className="flex flex-col gap-3">
             <h2 className="font-bold text-gray-700">בחר מוצרים לקמפיין</h2>
             <p className="text-xs text-gray-500">מוצרים מאפשרים לתורמים לראות את ההשפעה של תרומתם</p>
+            {products.length === 0 && (
+              <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-6 text-center">
+                <PackagePlus size={32} className="text-raz-teal mx-auto mb-3" />
+                <p className="font-bold text-gray-700 mb-1">{lang === "en" ? "No products yet" : "עדיין אין מוצרים"}</p>
+                <p className="text-xs text-gray-500 mb-4">{lang === "en" ? "Create a product, then return to add it to this campaign." : "צרו מוצר ולאחר מכן חזרו כדי להוסיף אותו לקמפיין."}</p>
+                <Link href="/nonprofit/products" className="inline-flex bg-raz-teal text-white px-4 py-2 rounded-xl text-sm font-bold">
+                  {lang === "en" ? "Create products" : "יצירת מוצרים"}
+                </Link>
+              </div>
+            )}
             {products.map((p) => (
               <div key={p.id} onClick={() => toggleProduct(p.id)}
                 className={`bg-white rounded-2xl p-3 flex items-center gap-3 cursor-pointer border-2 transition-colors ${

@@ -7,10 +7,11 @@ import ProductBuyCard from "@/components/campaign/ProductBuyCard";
 import CampaignTabs from "@/components/campaign/CampaignTabs";
 import { getCampaignById, getProductsByIds } from "@/lib/supabase/queries";
 import { formatNIS, percent } from "@/lib/mock-data";
-import { Play, Share2, ArrowRight } from "lucide-react";
+import { Share2, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useParams } from "next/navigation";
 import EditableText from "@/components/admin/EditableText";
+import { getCampaignVideoSource } from "@/lib/campaign-media";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -55,15 +56,28 @@ export default function CampaignDetail() {
   const story = lang === "en" ? (campaign.storyEn ?? campaign.story) : campaign.story;
   const orgName = lang === "en" ? (org?.name_en ?? org?.name) : org?.name;
   const orgBio = lang === "en" ? (org?.description_en ?? "") : (org?.description ?? "");
+  const video = getCampaignVideoSource(campaign.videoUrl);
 
   return (
     <div className="flex flex-col min-h-screen bg-raz-surface">
       {/* Hero: campaign video/image selected in the campaign wizard */}
-      <div className={`bg-gradient-to-br ${campaign.gradient} h-64 md:h-80 flex items-center justify-center relative`}>
-        <span className="text-8xl md:text-9xl opacity-40">{campaign.emoji}</span>
-        <button className="absolute w-16 h-16 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/35 transition-colors">
-          <Play size={26} fill="currentColor" className="ms-1" />
-        </button>
+      <div className={`bg-gradient-to-br ${campaign.gradient} h-64 md:h-80 flex items-center justify-center relative overflow-hidden`}>
+        {video?.kind === "embed" ? (
+          <iframe
+            src={video.url}
+            title={title}
+            className="absolute inset-0 w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        ) : video?.kind === "video" ? (
+          <video src={video.url} controls playsInline className="absolute inset-0 w-full h-full object-cover bg-black" />
+        ) : campaign.heroImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- public Supabase URLs are configured at runtime.
+          <img src={campaign.heroImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <span className="text-8xl md:text-9xl opacity-40">{campaign.emoji}</span>
+        )}
         <Link href="/" className="absolute top-4 start-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm">
           <ArrowRight size={20} />
         </Link>

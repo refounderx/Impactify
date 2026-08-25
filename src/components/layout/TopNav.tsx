@@ -43,7 +43,7 @@ export default function TopNav() {
     : donorLinks;
 
   return (
-    <nav className="hidden md:flex bg-white border-b border-gray-100 px-6 py-3 items-center justify-between sticky top-[33px] z-40">
+    <nav className="hidden md:flex bg-white border-b border-gray-100 px-6 py-3 items-center justify-between">
       {/* Logo */}
       <Link href="/" className="text-xl font-bold text-raz-teal font-hebrew whitespace-nowrap">
         <EditableText tKey="brand" />

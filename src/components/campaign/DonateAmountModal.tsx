@@ -29,9 +29,9 @@ export default function DonateAmountModal({ campaignId, title, gradient, emoji, 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 px-0 md:px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="bg-white w-full md:max-w-md md:rounded-2xl rounded-t-2xl p-6 relative"
+        className="bg-white w-full max-w-md rounded-2xl p-6 relative max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button onClick={onClose} className="absolute top-4 end-4 text-gray-400 hover:text-gray-600">

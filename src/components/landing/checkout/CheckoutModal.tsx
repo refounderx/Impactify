@@ -37,8 +37,8 @@ export default function CheckoutModal({
       : { personal: 1, frequency: 2, payment: 3, final: 4 };
 
   return (
-    <div className="fixed inset-0 z-50 bg-raz-dark/95 overflow-y-auto flex items-start justify-center py-10 px-4">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
+    <div className="fixed inset-0 z-50 bg-raz-dark/95 overflow-y-auto flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md p-6 relative max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl">
         <button onClick={onClose} className="absolute top-4 start-4 text-gray-400" aria-label={t("landing.filter.close")}>
           <X size={22} />
         </button>
