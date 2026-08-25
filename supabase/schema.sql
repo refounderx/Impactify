@@ -135,8 +135,31 @@ create table public.donations (
   -- No updated_at — donations are immutable
 );
 
--- Prevent any UPDATE or DELETE on donations (enforced at DB level)
-create rule donations_no_update as on update to public.donations do instead nothing;
+-- Block ledger edits while permitting FK-managed donor/product anonymization.
+create or replace function public.protect_donation_immutability()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if (
+    new.donor_id is not distinct from old.donor_id
+    or (old.donor_id is not null and new.donor_id is null)
+  ) and (
+    new.product_id is not distinct from old.product_id
+    or (old.product_id is not null and new.product_id is null)
+  ) and (
+    new.donor_id is distinct from old.donor_id
+    or new.product_id is distinct from old.product_id
+  ) and (
+    to_jsonb(new) - array['donor_id', 'product_id']
+    = to_jsonb(old) - array['donor_id', 'product_id']
+  ) then
+    return new;
+  end if;
+  raise exception 'Donations are immutable';
+end $$;
+revoke all on function public.protect_donation_immutability()
+  from public, anon, authenticated;
+create trigger donations_immutable_before_update before update on public.donations
+  for each row execute function public.protect_donation_immutability();
 create rule donations_no_delete as on delete to public.donations do instead nothing;
 
 -- Auto-update campaign raised amount + donors_count on new donation

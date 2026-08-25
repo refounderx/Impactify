@@ -139,7 +139,7 @@ src/
 | `campaigns` | Fundraising campaigns | Public read (active); org members read all |
 | `products` | Charitable items (ארוחה חמה etc.) | Public read |
 | `campaign_products` | Campaign ↔ Product junction | Public read |
-| `donations` | Immutable financial ledger | Own donations; org reads received |
+| `donations` | Immutable financial ledger; FK deletion anonymizes donor/product references | Own donations; org reads received |
 | `recurring_donations` | Standing orders (הוראות קבע) | Own only |
 | `communities` | Community groups | Public read |
 | `payment_methods` | Saved brand + last-4 (no raw card data) | Own only |
@@ -149,7 +149,7 @@ src/
 | `site_datasets` | Shared/landing JSON presentation records | Public read; no public writes |
 
 **Key constraints:**
-- `donations` is **append-only** — DB rules prevent UPDATE and DELETE
+- `donations` is **append-only** — a trigger rejects ordinary UPDATEs while allowing only FK-managed `donor_id`/`product_id` UUID-to-null anonymization; a DB rule prevents DELETE
 - Insert trigger auto-increments `campaigns.raised` and `campaigns.donors_count`
 - Insert trigger auto-creates `profiles` row when user signs up
 

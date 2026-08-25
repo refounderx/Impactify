@@ -12,6 +12,8 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 
 **Organization goals live (2026-08-25):** migration `20260825130000` adds structured bilingual goals to every organization row, requires 1–10 goals for new NGO signup, and exposes an owner-scoped update RPC used from `/profile`. Existing organizations retain an empty list until their owner supplies real goals; no content was invented during migration.
 
+**Donation anonymization fix live (2026-08-25):** migration `20260825140000` replaces the donation UPDATE rewrite rule with a trigger that blocks ordinary ledger edits while allowing foreign-key `SET NULL` anonymization of donor/product references. Catalog checks passed, a donor-reference update succeeded inside a rolled-back transaction, and an amount update was rejected. This resolves the referential-integrity failure encountered when an admin deletes a user while retaining immutable donation history.
+
 ### Screens complete
 - `/` — Marketing landing page (changed 2026-08-23, previously donor home; see Known Tech Debt)
 - `/landing` — same content as `/` (duplicate route, not deduplicated)

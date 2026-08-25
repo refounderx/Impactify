@@ -18,7 +18,7 @@
 
 **Context:** Deleting only `profiles` would leave a working authentication account, while exposing service-role credentials to the browser would cross the security boundary. Account deletion also activates existing foreign-key behavior across donor-linked data.
 
-**Consequences:** Account-linked profile, recurring-payment, saved-payment-method, and targeted-update rows cascade according to existing foreign keys; communities retain their records with a null manager, and immutable donation history remains with a null donor reference. The UI requires explicit confirmation, and the current admin cannot target their own row.
+**Consequences:** Account-linked profile, recurring-payment, saved-payment-method, and targeted-update rows cascade according to existing foreign keys; communities retain their records with a null manager, and immutable donation history remains with a null donor reference. Donation immutability is enforced by a trigger that rejects ordinary ledger edits but permits only UUID-to-null changes to `donor_id`/`product_id`; this replaces the UPDATE rewrite rule that prevented PostgreSQL's FK `SET NULL` action from completing. The UI requires explicit confirmation, and the current admin cannot target their own row.
 
 ---
 
