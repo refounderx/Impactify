@@ -82,11 +82,11 @@ export default function CreateUpdateWizard({ lang, t, onClose, onCreate }: Props
         footer={(
           <>
             <button onClick={back} disabled={step === 0} className="rounded-full px-5 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50 disabled:invisible">
-              {t("adm.uw.back")}
+              {lang === "en" ? `Back to ${stepTitles[step - 1]}` : `חזרה ל${stepTitles[step - 1]}`}
             </button>
             {step < STEP_COUNT - 1 ? (
               <button onClick={next} disabled={step === 0 ? !canAdvanceStep0 : false} className="rounded-full border border-raz-teal px-6 py-2.5 text-sm font-bold text-raz-teal hover:bg-raz-teal hover:text-white disabled:opacity-40">
-                {t("adm.uw.next")}
+                {lang === "en" ? `Continue to ${stepTitles[step + 1]}` : `המשך ל${stepTitles[step + 1]}`}
               </button>
             ) : (
               <button onClick={handleSend} disabled={!canAdvanceStep2} className="rounded-full bg-raz-teal px-7 py-2.5 text-sm font-bold text-white hover:bg-teal-500 disabled:opacity-40">

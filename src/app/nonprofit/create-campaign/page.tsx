@@ -27,7 +27,7 @@ export default function CreateCampaignPage() {
   const [image, setImage] = useState<File | null>(null);
   const STEPS = lang === "en"
     ? ["Basics", "Story", "Media", "Products", "Communities", "Publish"]
-    : ["בסיסי", "סיפור", "מדיה", "מוצרים", "קהילות", "פרסום"];
+    : ["פרטים בסיסיים", "סיפור", "מדיה", "מוצרים", "קהילות", "פרסום"];
   const STEP_DETAILS = lang === "en" ? [
     ["Give your campaign a clear start", "Set the campaign name, category, fundraising goal, date, and short description."],
     ["Tell the campaign story", "Explain why this campaign matters and what the donations will make possible."],
@@ -138,11 +138,12 @@ export default function CreateCampaignPage() {
         footer={(
           <>
             <button onClick={back} disabled={step === 0} className="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50 disabled:invisible">
-              <ChevronLeft size={16} /> {lang === "en" ? "Back" : "חזרה"}
+              <ChevronLeft size={16} className={lang === "he" ? "rotate-180" : ""} />
+              {lang === "en" ? `Back to ${STEPS[step - 1]}` : `חזרה ל${STEPS[step - 1]}`}
             </button>
             {step < STEPS.length - 1 && (
               <button onClick={next} className="rounded-full border border-raz-teal px-6 py-2 text-sm font-bold text-raz-teal transition-colors hover:bg-raz-teal hover:text-white">
-                <EditableText tKey="wizard.next" /> · {STEPS[step + 1]}
+                {lang === "en" ? `Continue to ${STEPS[step + 1]}` : `המשך ל${STEPS[step + 1]}`}
               </button>
             )}
           </>

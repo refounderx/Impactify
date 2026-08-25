@@ -13,6 +13,7 @@ const he = {
   "cancel": "ביטול", "confirm": "אישור", "all": "הכל",
   "share": "שתף", "download": "הורד", "verified": "✓ מאומת",
   "perMonth": "לחודש", "save": "שמור",
+  "wizard.title": "הקמת קמפיין", "wizard.next": "המשך", "wizard.publish": "פרסום הקמפיין",
   // Campaign card / detail
   "donors": "תורמים", "daysLeft": "ימים נותרו",
   "goalReached": "✓ יעד הושג!", "raised": "נאסף", "goal": "יעד",
@@ -315,6 +316,7 @@ const en: Record<string, string> = {
   "cancel": "Cancel", "confirm": "Confirm", "all": "All",
   "share": "Share", "download": "Download", "verified": "✓ Verified",
   "perMonth": "per month", "save": "Save",
+  "wizard.title": "Campaign setup", "wizard.next": "Continue", "wizard.publish": "Publish campaign",
   "donors": "donors", "daysLeft": "days left",
   "goalReached": "✓ Goal reached!", "raised": "raised", "goal": "Goal",
   "activeCampaigns": "Active Campaigns",
