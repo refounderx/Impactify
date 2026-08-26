@@ -3,9 +3,9 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import BottomNav from "@/components/layout/BottomNav";
 import { formatNIS } from "@/lib/mock-data";
-import { getMyDonations, getMyRecurring } from "@/lib/supabase/queries-donations";
+import { getMyDonations } from "@/lib/supabase/queries-donations";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
-import { Download, ChevronLeft, Settings, Bell, HelpCircle, Shield, RotateCcw, LogIn } from "lucide-react";
+import { Download, ChevronLeft, Settings, Bell, HelpCircle, Shield, LogIn } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import EditableText from "@/components/admin/EditableText";
@@ -16,22 +16,17 @@ export default function ProfilePage() {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const { data } = useSiteDataset("shared");
   const [remoteDonations, setRemoteDonations] = useState<Awaited<ReturnType<typeof getMyDonations>>>([]);
-  const [remoteRecurring, setRemoteRecurring] = useState<Awaited<ReturnType<typeof getMyRecurring>>>([]);
 
   useEffect(() => {
     if (user) {
       getMyDonations(user.id).then(setRemoteDonations);
-      getMyRecurring(user.id).then(setRemoteRecurring);
     }
   }, [user]);
 
   const donations = user ? remoteDonations : (data?.donations ?? []).map((donation) => ({
     ...donation, campaignEmoji: "💙", orgName: "",
   }));
-  const recurring = user ? remoteRecurring : (data?.recurringDonations ?? []);
-
   const totalDonated = donations.reduce((sum, d) => sum + d.amount, 0);
-  const totalMonthly = recurring.filter((r) => r.status === "active").reduce((sum, r) => sum + r.amount, 0);
   const donorDisplayName = user
     ? (user.email ?? (lang === "en" ? data?.DONOR_NAME_EN : data?.DONOR_NAME) ?? "")
     : (lang === "en" ? data?.DONOR_NAME_EN : data?.DONOR_NAME) ?? "";
@@ -113,22 +108,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Recurring card */}
-            <Link href="/recurring" className="bg-raz-teal/10 border border-raz-teal/20 rounded-2xl p-4 flex items-center justify-between hover:bg-raz-teal/15 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-raz-teal rounded-xl flex items-center justify-center">
-                  <RotateCcw size={20} className="text-white" />
-                </div>
-                <div>
-                  <p className="font-bold text-gray-800"><EditableText tKey="profile.recurringLink" /></p>
-                  <p className="text-sm text-gray-500">
-                    {recurring.filter(r => r.status === "active").length} <EditableText tKey="rec.activeCount" /> · {formatNIS(totalMonthly)}/<EditableText tKey="perMonth" />
-                  </p>
-                </div>
-              </div>
-              <ChevronLeft size={18} className="text-raz-teal" />
-            </Link>
-
             {/* Settings */}
             <div className="bg-white rounded-2xl divide-y divide-gray-50">
               {settings.map(({ icon: Icon, label, sub }) => (
@@ -178,13 +157,6 @@ export default function ProfilePage() {
                   <p className="font-bold text-gray-700 mt-1"><EditableText tKey="profile.loyal" /></p>
                   <p className="text-xs text-gray-500 mt-0.5"><EditableText tKey="profile.loyalSub" /></p>
                 </div>
-                <Link href="/recurring" className="flex items-center justify-between p-4 bg-raz-teal/10 rounded-xl border border-raz-teal/20">
-                  <div className="flex items-center gap-2">
-                    <RotateCcw size={16} className="text-raz-teal" />
-                    <p className="font-medium text-gray-700 text-sm"><EditableText tKey="profile.recurringLink" /></p>
-                  </div>
-                  <p className="font-bold text-raz-teal font-numeric text-sm">{formatNIS(totalMonthly)}/<EditableText tKey="perMonth" /></p>
-                </Link>
               </div>
             </div>
           </div>
