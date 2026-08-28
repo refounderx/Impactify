@@ -87,7 +87,7 @@ export default function ProductsDashboardPage() {
                   <td className="px-4 py-4"><ActionButton label={lang === "en" ? `View ${product.nameEn}` : `צפייה ב${product.name}`} onClick={() => setExpandedId(expanded ? null : product.id)}><Eye size={16} /></ActionButton></td>
                   <td className="px-4 py-4"><ActionButton label={lang === "en" ? `Edit ${product.nameEn}` : `עריכת ${product.name}`} onClick={() => setEditingProduct(product)}><Pencil size={16} /></ActionButton></td>
                 </tr>,
-                expanded && <tr key={`${product.id}-detail`} className="border-b border-slate-200"><td colSpan={12} className="bg-slate-50 p-4 lg:p-6"><ProductDetailPanel detail={getAdminProductDetail(Math.max(sourceIndex, 0))} /></td></tr>,
+                expanded && <tr key={`${product.id}-detail`} className="border-b border-slate-200"><td colSpan={12} className="p-0"><ProductDetailPanel detail={getAdminProductDetail(Math.max(sourceIndex, 0))} /></td></tr>,
               ];
             })}</tbody>
           </table>
