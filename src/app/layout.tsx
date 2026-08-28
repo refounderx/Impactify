@@ -6,6 +6,7 @@ import { AdminModeProvider } from "@/contexts/AdminModeContext";
 import { SiteDataProvider } from "@/contexts/SiteDataContext";
 import DemoBar from "@/components/layout/DemoBar";
 import TopNav from "@/components/layout/TopNav";
+import AccessibilityMenu from "@/components/layout/AccessibilityMenu";
 import "./globals.css";
 
 const heebo = Heebo({ subsets: ["hebrew", "latin"], variable: "--font-heebo", display: "swap" });
@@ -29,7 +30,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   {process.env.NODE_ENV === "development" && <DemoBar />}
                   <TopNav />
                 </div>
-                {children}
+                <div id="main-content" tabIndex={-1}>{children}</div>
+                <AccessibilityMenu />
               </AuthProvider>
             </AdminModeProvider>
           </SiteDataProvider>

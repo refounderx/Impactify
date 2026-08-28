@@ -163,6 +163,58 @@ html[dir="ltr"] textarea {
   .interactive-control:active:not(:disabled) { transform: none; }
 }
 
+/* User-controlled accessibility preferences. */
+html[data-a11y-font-size="1"] { font-size: 110%; }
+html[data-a11y-font-size="2"] { font-size: 120%; }
+
+html[data-a11y-links="true"] a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 0.14em !important;
+  text-underline-offset: 0.2em !important;
+}
+
+html[data-a11y-motion="true"] *,
+html[data-a11y-motion="true"] *::before,
+html[data-a11y-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+}
+
+html[data-a11y-contrast="true"] body {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+html[data-a11y-contrast="true"] body :where(header, nav, main, section, article, aside, footer, form, dialog, div) {
+  background-color: #000 !important;
+  background-image: none !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+html[data-a11y-contrast="true"] body :where(h1, h2, h3, h4, h5, h6, p, span, label) {
+  color: #fff !important;
+}
+
+html[data-a11y-contrast="true"] body :where(button, input, select, textarea) {
+  background: #000 !important;
+  border-color: #fff !important;
+  color: #fff !important;
+}
+
+html[data-a11y-contrast="true"] body :where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid #ffeb3b !important;
+  outline-offset: 3px !important;
+}
+
+html[data-a11y-contrast="true"] body a {
+  color: #ffeb3b !important;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
 /* ── Mobile phone container ── */
 .phone-frame {
   max-width: 430px;
