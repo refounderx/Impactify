@@ -112,6 +112,10 @@ export type AdminProductRow = {
   totalRaised: number;
   unitsDonated: number;
   ownerInitials: string;
+  description: string;
+  descriptionEn: string;
+  emoji: string;
+  active: boolean;
 };
 
 export const adminProductRows: AdminProductRow[] = Array.from({ length: 6 }).map((_, i) => ({
@@ -126,6 +130,10 @@ export const adminProductRows: AdminProductRow[] = Array.from({ length: 6 }).map
   totalRaised: 9500,
   unitsDonated: 700,
   ownerInitials: "אמ",
+  description: "",
+  descriptionEn: "",
+  emoji: "💙",
+  active: true,
 }));
 
 export const adminProductsTotalUnits = 12074;

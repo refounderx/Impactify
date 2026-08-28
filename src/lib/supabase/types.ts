@@ -314,6 +314,19 @@ export interface Database {
         };
         Returns: string;
       };
+      update_ngo_product: {
+        Args: {
+          p_product_id: string;
+          p_name: string;
+          p_name_en: string | null;
+          p_description: string | null;
+          p_description_en: string | null;
+          p_price: number;
+          p_emoji: string | null;
+          p_active: boolean;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       app_role: AppRole;

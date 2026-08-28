@@ -16,7 +16,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 
 **Donation anonymization fix live (2026-08-25):** migration `20260825140000` replaces the donation UPDATE rewrite rule with a trigger that blocks ordinary ledger edits while allowing foreign-key `SET NULL` anonymization of donor/product references. Catalog checks passed, a donor-reference update succeeded inside a rolled-back transaction, and an amount update was rejected. This resolves the referential-integrity failure encountered when an admin deletes a user while retaining immutable donation history.
 
-**NGO product creation live (2026-08-25):** migration `20260825150000` adds an authenticated-only `create_ngo_product` RPC that derives the organization from the NGO-owner profile and validates all persisted fields. `/nonprofit/products/dashboard` now provides a centered bilingual creation modal and refreshes the shared admin data after success. Catalog permission checks and a tenant-scoped creation inside a rolled-back transaction passed.
+**NGO product management live (2026-08-28):** migration `20260825150000` provides tenant-derived creation and migration `20260828130000` adds authenticated-only product editing with field validation and an ownership-scoped update. `/nonprofit/products/dashboard` now follows the supplied wide table design with summary metrics, live search/status filtering, expandable product analytics, and a shared bilingual create/edit modal. The new migration is applied; SQL checks passed for its ledger entry, security-definer function, fixed `search_path`, authenticated-only execution, and product tenant predicate.
 
 ### Screens complete
 - `/` — Marketing landing page (changed 2026-08-23, previously donor home; see Known Tech Debt)

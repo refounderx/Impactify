@@ -24,6 +24,8 @@ export type NewNgoProduct = {
   emoji: string;
 };
 
+export type NgoProductUpdate = NewNgoProduct & { id: string; active: boolean };
+
 const PUBLIC_ORG_COLUMNS = "id,name,name_en,initials,color,description,description_en,goals,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,phone,video_gradient,created_at";
 
 export async function getNgoAdminData(): Promise<NgoAdminData> {
@@ -66,6 +68,22 @@ export async function createNgoProduct(product: NewNgoProduct): Promise<string> 
     p_description_en: product.descriptionEn || null,
     p_price: product.price,
     p_emoji: product.emoji || null,
+  });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function updateNgoProduct(product: NgoProductUpdate): Promise<string> {
+  const sb = createClient();
+  const { data, error } = await sb.rpc("update_ngo_product", {
+    p_product_id: product.id,
+    p_name: product.name,
+    p_name_en: product.nameEn || null,
+    p_description: product.description || null,
+    p_description_en: product.descriptionEn || null,
+    p_price: product.price,
+    p_emoji: product.emoji || null,
+    p_active: product.active,
   });
   if (error) throw new Error(error.message);
   return data;

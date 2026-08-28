@@ -1,0 +1,63 @@
+-- Allow NGO owners to update products only within their own organization.
+create or replace function public.update_ngo_product(
+  p_product_id uuid,
+  p_name text,
+  p_name_en text,
+  p_description text,
+  p_description_en text,
+  p_price numeric,
+  p_emoji text,
+  p_active boolean
+) returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_org uuid;
+begin
+  select org_id into v_org
+  from public.profiles
+  where id = auth.uid()
+    and app_role = 'ngo_owner'
+    and onboarding_completed_at is not null;
+
+  if v_org is null then raise exception 'NGO owner access required'; end if;
+  if nullif(trim(p_name), '') is null or length(trim(p_name)) > 120 then
+    raise exception 'Product name is required and must be at most 120 characters';
+  end if;
+  if p_name_en is not null and length(trim(p_name_en)) > 120 then
+    raise exception 'English product name must be at most 120 characters';
+  end if;
+  if p_description is not null and length(trim(p_description)) > 1000 then
+    raise exception 'Description must be at most 1000 characters';
+  end if;
+  if p_description_en is not null and length(trim(p_description_en)) > 1000 then
+    raise exception 'English description must be at most 1000 characters';
+  end if;
+  if p_price is null or p_price <= 0 or p_price > 10000000 then
+    raise exception 'Price must be greater than zero and at most 10000000';
+  end if;
+  if p_emoji is not null and length(trim(p_emoji)) > 16 then
+    raise exception 'Emoji must be at most 16 characters';
+  end if;
+
+  update public.products set
+    name = trim(p_name),
+    name_en = nullif(trim(p_name_en), ''),
+    description = nullif(trim(p_description), ''),
+    description_en = nullif(trim(p_description_en), ''),
+    price = p_price,
+    emoji = nullif(trim(p_emoji), ''),
+    active = p_active
+  where id = p_product_id and org_id = v_org;
+
+  if not found then raise exception 'Product not found'; end if;
+  return p_product_id;
+end
+$$;
+
+revoke all on function public.update_ngo_product(uuid, text, text, text, text, numeric, text, boolean)
+  from public, anon, authenticated;
+grant execute on function public.update_ngo_product(uuid, text, text, text, text, numeric, text, boolean)
+  to authenticated;

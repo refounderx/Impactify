@@ -41,7 +41,9 @@ export function useNgoAdminView() {
           created: date(product.created_at), ended: product.active ? "—" : date(product.created_at),
           campaignsCount: campaignProducts.filter((row) => row.product_id === product.id).length,
           communities: 0, unitPrice: Number(product.price), totalRaised: totals.amount,
-          unitsDonated: totals.quantity, ownerInitials: initials };
+          unitsDonated: totals.quantity, ownerInitials: initials,
+          description: product.description ?? "", descriptionEn: product.description_en ?? "",
+          emoji: product.emoji ?? "💙", active: product.active };
       }),
       adminProductCards: products.map((product) => {
         const donated = productDonationTotals.get(product.id)?.quantity ?? 0;

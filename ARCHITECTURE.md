@@ -122,7 +122,7 @@ src/
     └── seed.sql             Demo data INSERT statements
 ```
 
-**`nonprofit/(admin)/` route group:** all pages inside share `AdminShell` (teal sidebar + top bar) via `nonprofit/(admin)/layout.tsx` — campaigns dashboard at `/nonprofit` (table) + grid at `/nonprofit/campaigns`, products dashboard with a centered creation modal at `/nonprofit/products/dashboard` (table) + grid at `/nonprofit/products`, plus `/nonprofit/donations`, `/nonprofit/updates`, `/nonprofit/communities` (stub). Product creation calls a security-definer RPC that derives `org_id` from the authenticated NGO-owner profile. The sibling `nonprofit/[id]/page.tsx` (public org profile) and `nonprofit/create-campaign/page.tsx` (creation/editing wizard) live outside the group so they render without the admin sidebar. Next.js resolves static segments (`campaigns`, `products`, …) before the `[id]` dynamic segment, so there's no routing collision.
+**`nonprofit/(admin)/` route group:** all pages inside share `AdminShell` (teal sidebar + top bar) via `nonprofit/(admin)/layout.tsx` — campaigns dashboard at `/nonprofit` (table) + grid at `/nonprofit/campaigns`, a searchable/filterable products-management table with expandable analytics and a shared create/edit modal at `/nonprofit/products/dashboard` + grid at `/nonprofit/products`, plus `/nonprofit/donations`, `/nonprofit/updates`, `/nonprofit/communities` (stub). Product creation and editing call security-definer RPCs that derive `org_id` from the authenticated NGO-owner profile. The sibling `nonprofit/[id]/page.tsx` (public org profile) and `nonprofit/create-campaign/page.tsx` (creation/editing wizard) live outside the group so they render without the admin sidebar. Next.js resolves static segments (`campaigns`, `products`, …) before the `[id]` dynamic segment, so there's no routing collision.
 
 **Root route `/` (changed 2026-08-23):** `app/page.tsx` now renders the marketing landing page (same content as `app/landing/page.tsx` — duplicated for now, not deduplicated). The previous donor-home screen (teal header, featured campaign, active-campaigns grid) was moved to `app/_archive/old-home/page.tsx`, a Next.js private folder (`_` prefix excludes it from routing) — code preserved, not deleted, pending a decision on where donor-home should live going forward. Several other pages still link/redirect to `/` expecting the old donor-home behavior (`my-donations`, `auth`, `nonprofit/[id]`, `campaign/[id]`, `TopNav.tsx`, `recurring`, `donate/[id]/thanks`) — not yet updated; see `TASKS.md`.
 
@@ -158,7 +158,7 @@ src/
 ```
 Public (anon)   → active campaigns/products, communities, public org fields, shared datasets
 Donor           → own profile/donations/recurring; cannot change role or tenant
-NGO owner       → own NGO campaigns/products/received donations; tenant-derived product creation; atomic campaign publish/update; own-folder image uploads
+NGO owner       → own NGO campaigns/products/received donations; tenant-derived product creation/update; atomic campaign publish/update; own-folder image uploads
 Community owner → own community and community-attributed donations
 Admin           → profile directory, audited role/tenant changes, guarded account deletion, site-content writes
 ```
