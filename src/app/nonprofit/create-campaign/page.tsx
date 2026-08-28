@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getCommunities } from "@/lib/supabase/queries";
 import { getNgoAdminData } from "@/lib/supabase/queries-ngo-admin";
 import { createClient } from "@/lib/supabase/client";
@@ -17,31 +17,41 @@ import Link from "next/link";
 
 export default function CreateCampaignPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const campaignId = searchParams.get("edit");
+  const isEditing = Boolean(campaignId);
   const { lang } = useLang();
   const { profile } = useAuth();
   const orgDisplayName = lang === "en" ? (profile?.full_name_en ?? profile?.full_name ?? "") : (profile?.full_name ?? "");
   const [products, setProducts] = useState<Product[]>([]);
   const [communities, setCommunities] = useState<Awaited<ReturnType<typeof getCommunities>>>([]);
   const [publishError, setPublishError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [loadingCampaign, setLoadingCampaign] = useState(isEditing);
   const [publishing, setPublishing] = useState(false);
   const [image, setImage] = useState<File | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const STEPS = lang === "en"
-    ? ["Basics", "Story", "Media", "Products", "Communities", "Publish"]
-    : ["פרטים בסיסיים", "סיפור", "מדיה", "מוצרים", "קהילות", "פרסום"];
+    ? ["Basics", "Story", "Media", "Products", "Communities", isEditing ? "Save" : "Publish"]
+    : ["פרטים בסיסיים", "סיפור", "מדיה", "מוצרים", "קהילות", isEditing ? "שמירה" : "פרסום"];
   const STEP_DETAILS = lang === "en" ? [
     ["Give your campaign a clear start", "Set the campaign name, category, fundraising goal, date, and short description."],
     ["Tell the campaign story", "Explain why this campaign matters and what the donations will make possible."],
     ["Add image and video", "Choose the media that will introduce the campaign to potential donors."],
     ["Choose campaign products", "Connect tangible giving options so donors can understand their impact."],
     ["Invite communities", "Select communities and partners that can help the campaign reach more people."],
-    ["Review and publish", "Confirm the campaign details before making it available for donations."],
+    isEditing
+      ? ["Review and save", "Confirm the updated campaign details before saving your changes."]
+      : ["Review and publish", "Confirm the campaign details before making it available for donations."],
   ] : [
     ["תנו לקמפיין התחלה ברורה", "הגדירו שם, קטגוריה, יעד גיוס, תאריך ותיאור קצר לקמפיין."],
     ["ספרו את סיפור הקמפיין", "הסבירו למה הקמפיין חשוב ומה התרומות יאפשרו לכם להשיג."],
     ["הוסיפו תמונה וסרטון", "בחרו את המדיה שתציג את הקמפיין בפני תורמים פוטנציאליים."],
     ["בחרו מוצרים לקמפיין", "חברו אפשרויות תרומה מוחשיות שיעזרו לתורמים להבין את ההשפעה."],
     ["הזמינו קהילות", "בחרו קהילות ושותפים שיוכלו לעזור לקמפיין להגיע לקהל רחב יותר."],
-    ["בדקו ופרסמו", "עברו על פרטי הקמפיין לפני שהוא הופך לזמין לתרומות."],
+    isEditing
+      ? ["בדקו ושמרו", "עברו על פרטי הקמפיין המעודכנים לפני שמירת השינויים."]
+      : ["בדקו ופרסמו", "עברו על פרטי הקמפיין לפני שהוא הופך לזמין לתרומות."],
   ];
   const categories = lang === "en"
     ? ["Education", "Food", "Health", "Elderly", "Children", "Environment", "Other"]
@@ -57,15 +67,47 @@ export default function CreateCampaignPage() {
     videoUrl: "",
     selectedProducts: [] as string[],
   });
+  const categoryOptions = form.category && !categories.includes(form.category)
+    ? [form.category, ...categories]
+    : categories;
 
   useEffect(() => {
-    getNgoAdminData().then((result) => setProducts(result.products)).catch((error: unknown) => {
-      setPublishError(error instanceof Error ? error.message : "Unable to load NGO products");
-    });
-    getCommunities().then(setCommunities);
-  }, []);
+    let active = true;
+    Promise.all([getNgoAdminData(), getCommunities()])
+      .then(([result, communityRows]) => {
+        if (!active) return;
+        setProducts(result.products);
+        setCommunities(communityRows);
+        if (!campaignId) return;
+        const campaign = result.campaigns.find((candidate) => candidate.id === campaignId);
+        if (!campaign) {
+          setLoadError("הקמפיין לא נמצא בעמותה שלך. / Campaign not found for your organization.");
+          return;
+        }
+        setForm({
+          title: campaign.title,
+          category: campaign.category,
+          goal: String(campaign.goal),
+          endDate: campaign.end_date ?? "",
+          shortDesc: campaign.short_desc ?? "",
+          story: campaign.story ?? "",
+          videoUrl: campaign.video_url ?? "",
+          selectedProducts: result.campaignProducts
+            .filter((row) => row.campaign_id === campaign.id)
+            .map((row) => row.product_id),
+        });
+        setExistingImageUrl(campaign.hero_image_url);
+      })
+      .catch((error: unknown) => {
+        if (active) setLoadError(error instanceof Error ? error.message : "Unable to load campaign");
+      })
+      .finally(() => {
+        if (active) setLoadingCampaign(false);
+      });
+    return () => { active = false; };
+  }, [campaignId]);
 
-  async function publishCampaign() {
+  async function saveCampaign() {
     setPublishError("");
     const goal = Number(form.goal);
     if (!form.title.trim() || !form.category || !goal || goal <= 0) {
@@ -93,20 +135,23 @@ export default function CreateCampaignPage() {
       setStep(2);
       return;
     }
-    const { data: campaignId, error } = await sb.rpc("publish_campaign", {
+    const sharedArgs = {
       p_title: form.title.trim(), p_short_desc: form.shortDesc.trim(), p_story: form.story.trim(),
       p_category: form.category, p_goal: goal, p_end_date: form.endDate || null,
       p_product_ids: form.selectedProducts,
-      p_hero_image_url: uploadedImage?.publicUrl ?? null,
+      p_hero_image_url: uploadedImage?.publicUrl ?? existingImageUrl,
       p_video_url: videoUrl,
-    });
+    };
+    const { data: savedCampaignId, error } = campaignId
+      ? await sb.rpc("update_campaign", { p_campaign_id: campaignId, ...sharedArgs })
+      : await sb.rpc("publish_campaign", sharedArgs);
     if (error) {
       if (uploadedImage) await sb.storage.from("campaign-media").remove([uploadedImage.path]);
       setPublishError(error.message);
       setPublishing(false);
       return;
     }
-    router.push(campaignId ? `/campaign/${campaignId}` : "/nonprofit");
+    router.push(isEditing ? "/nonprofit/campaigns" : (savedCampaignId ? `/campaign/${savedCampaignId}` : "/nonprofit"));
   }
 
   function next() { setStep((s) => Math.min(s + 1, STEPS.length - 1)); }
@@ -121,6 +166,13 @@ export default function CreateCampaignPage() {
     }));
   }
 
+  if (loadingCampaign) {
+    return <div className="min-h-screen bg-[#eef0f1] p-10 text-center text-sm text-gray-500">{lang === "en" ? "Loading campaign…" : "טוען קמפיין…"}</div>;
+  }
+  if (loadError) {
+    return <div className="min-h-screen bg-[#eef0f1] p-10 text-center"><p className="mb-4 text-sm text-red-600" role="alert">{loadError}</p><Link href="/nonprofit/campaigns" className="font-bold text-raz-teal">{lang === "en" ? "Back to campaigns" : "חזרה לקמפיינים"}</Link></div>;
+  }
+
   return (
     <div className="min-h-screen bg-[#eef0f1] p-0 md:p-7 lg:p-10">
       <WizardShell
@@ -131,7 +183,9 @@ export default function CreateCampaignPage() {
         className="mx-auto min-h-[calc(100dvh-5rem)] max-w-6xl md:rounded-[2px]"
         topActions={(
           <>
-            <span className="rounded-full bg-raz-dark px-3 py-1 text-[11px] font-bold text-white"><EditableText tKey="wizard.title" /></span>
+            <span className="rounded-full bg-raz-dark px-3 py-1 text-[11px] font-bold text-white">
+              {isEditing ? (lang === "en" ? "Edit campaign" : "עריכת קמפיין") : <EditableText tKey="wizard.title" />}
+            </span>
             {orgDisplayName && <span className="max-w-40 truncate text-xs text-slate-400">{orgDisplayName}</span>}
           </>
         )}
@@ -162,7 +216,7 @@ export default function CreateCampaignPage() {
             <div>
               <label className="text-xs text-gray-500 mb-1 block">קטגוריה</label>
               <div className="flex flex-wrap gap-2">
-                {categories.map((c) => (
+                {categoryOptions.map((c) => (
                   <button key={c} onClick={() => setForm({...form, category: c})}
                     className={`px-3 py-1.5 rounded-full text-sm ${form.category === c ? "bg-raz-teal text-white" : "bg-white border border-gray-200 text-gray-600"}`}>
                     {c}
@@ -209,6 +263,8 @@ export default function CreateCampaignPage() {
           <CampaignMediaStep
             image={image}
             onImageChange={setImage}
+            existingImageUrl={existingImageUrl}
+            onExistingImageRemove={() => setExistingImageUrl(null)}
             videoUrl={form.videoUrl}
             onVideoUrlChange={(videoUrl) => setForm((current) => ({ ...current, videoUrl }))}
             lang={lang}
@@ -279,17 +335,19 @@ export default function CreateCampaignPage() {
             <div className="w-16 h-16 bg-raz-teal/10 rounded-full flex items-center justify-center">
               <Check size={32} className="text-raz-teal" />
             </div>
-            <h2 className="font-bold text-gray-700 text-lg">הקמפיין מוכן לפרסום!</h2>
-            <p className="text-sm text-gray-500">הקמפיין יועלה לפלטפורמה ויהיה זמין לתרומות מיידית</p>
+            <h2 className="font-bold text-gray-700 text-lg">{isEditing ? "הקמפיין מוכן לשמירה!" : "הקמפיין מוכן לפרסום!"}</h2>
+            <p className="text-sm text-gray-500">{isEditing ? "השינויים יעודכנו בקמפיין הקיים" : "הקמפיין יועלה לפלטפורמה ויהיה זמין לתרומות מיידית"}</p>
             <div className="bg-gray-50 rounded-2xl p-4 text-sm text-right w-full">
               <div className="flex justify-between mb-2"><span className="text-gray-500">שם:</span><span className="font-medium">{form.title || "ארוחות חמות לקשישים"}</span></div>
               <div className="flex justify-between mb-2"><span className="text-gray-500">יעד:</span><span className="font-medium font-numeric">₪{form.goal || "25,000"}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">מוצרים:</span><span className="font-medium">{form.selectedProducts.length}</span></div>
             </div>
             {publishError && <p className="w-full text-sm text-red-600" role="alert">{publishError}</p>}
-            <button onClick={publishCampaign} disabled={publishing}
+            <button onClick={saveCampaign} disabled={publishing}
               className="w-full bg-raz-teal text-white py-4 rounded-xl font-bold text-base disabled:opacity-50">
-              {publishing ? (lang === "en" ? "Publishing…" : "מפרסם…") : <EditableText tKey="wizard.publish" />}
+              {publishing
+                ? (lang === "en" ? (isEditing ? "Saving…" : "Publishing…") : (isEditing ? "שומר…" : "מפרסם…"))
+                : (isEditing ? (lang === "en" ? "Save campaign changes" : "שמירת השינויים בקמפיין") : <EditableText tKey="wizard.publish" />)}
             </button>
           </div>
         )}

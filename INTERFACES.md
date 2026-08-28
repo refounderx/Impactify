@@ -61,6 +61,7 @@ Server-side donation write. Validates inputs at trust boundary.
 | `create_ngo_product(name, name_en, description, description_en, price, emoji)` | NGO owner only | Validates product fields and creates an active product for the organization derived from `auth.uid()` |
 | `update_ngo_goals(goals)` | NGO owner only | Validates 1–10 goals and updates the organization derived from `auth.uid()`; no client-supplied organization ID is trusted |
 | `publish_campaign(title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Validates tenant products and HTTPS media URLs, then atomically publishes a campaign |
+| `update_campaign(campaign_id, title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Derives the tenant from auth, verifies campaign/product ownership and HTTPS media, then atomically updates the campaign and product links |
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
 

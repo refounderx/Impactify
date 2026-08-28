@@ -299,6 +299,21 @@ export interface Database {
         };
         Returns: string;
       };
+      update_campaign: {
+        Args: {
+          p_campaign_id: string;
+          p_title: string;
+          p_short_desc: string;
+          p_story: string;
+          p_category: string;
+          p_goal: number;
+          p_end_date: string | null;
+          p_product_ids?: string[];
+          p_hero_image_url?: string | null;
+          p_video_url?: string | null;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       app_role: AppRole;

@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { Pencil, Eye } from "lucide-react";
 import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
@@ -8,7 +9,7 @@ import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
 import EditableText from "@/components/admin/EditableText";
 
 export default function CampaignsGridPage() {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const { data, loading, error, reload } = useNgoAdminView();
 
   if (loading || error) return <AdminDataStatus loading={loading} error={error} reload={reload} />;
@@ -20,12 +21,12 @@ export default function CampaignsGridPage() {
         {(data?.adminCampaignCards ?? []).map((c) => (
           <div key={c.id} className="bg-white rounded-2xl p-4 relative">
             <div className="absolute top-4 end-4 flex flex-col gap-2">
-              <button className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.edit")}>
-                <Pencil size={13} />
-              </button>
-              <button className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.view")}>
-                <Eye size={13} />
-              </button>
+              <Link href={`/nonprofit/create-campaign?edit=${c.id}`} className="micro-hint w-11 h-11 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={lang === "en" ? `Edit ${c.titleEn}` : `עריכת ${c.title}`}>
+                <Pencil size={13} aria-hidden="true" />
+              </Link>
+              <Link href={`/campaign/${c.id}`} className="micro-hint w-11 h-11 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={lang === "en" ? `View ${c.titleEn}` : `צפייה ב${c.title}`}>
+                <Eye size={13} aria-hidden="true" />
+              </Link>
             </div>
             <div className="w-24 h-24 rounded-xl bg-gray-50 flex items-center justify-center text-5xl mb-3">
               {c.emoji}

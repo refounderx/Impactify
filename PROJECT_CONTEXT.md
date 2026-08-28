@@ -30,7 +30,7 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 - Public non-profit profile (`/nonprofit/[id]`) — org video, verification/founding/CEO/volunteer/address info, product quantity picker with running total, one-click donate that skips straight to payment
 - Donation flow: amount selection → payment form → thank you
 - Non-Profit admin panel (`/nonprofit/*`, teal sidebar shell) — campaigns dashboard (table) + campaigns grid (donut-chart cards), products dashboard with tenant-scoped product creation + products grid (donut-chart cards), donations table, updates/alerts table with trigger/schedule tabs; replaces the old single-page NP dashboard
-- 6-step campaign creation wizard (basics → story → media → products → communities → publish)
+- 6-step campaign creation/editing wizard (basics → story → media → products → communities → publish/save)
 - Community manager dashboard (stats, leaderboard, styled social card export preview)
 - Donor profile (donation history, receipts menu)
 

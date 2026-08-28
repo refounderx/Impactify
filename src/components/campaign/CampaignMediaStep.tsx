@@ -9,12 +9,14 @@ const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 interface CampaignMediaStepProps {
   image: File | null;
   onImageChange: (image: File | null) => void;
+  existingImageUrl?: string | null;
+  onExistingImageRemove?: () => void;
   videoUrl: string;
   onVideoUrlChange: (url: string) => void;
   lang: "he" | "en";
 }
 
-export default function CampaignMediaStep({ image, onImageChange, videoUrl, onVideoUrlChange, lang }: CampaignMediaStepProps) {
+export default function CampaignMediaStep({ image, onImageChange, existingImageUrl, onExistingImageRemove, videoUrl, onVideoUrlChange, lang }: CampaignMediaStepProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const previewUrl = useMemo(() => image ? URL.createObjectURL(image) : "", [image]);
@@ -43,12 +45,12 @@ export default function CampaignMediaStep({ image, onImageChange, videoUrl, onVi
     <div className="mx-auto flex max-w-xl flex-col gap-5">
       <h2 className="font-bold text-gray-700">{lang === "en" ? "Campaign image and video" : "תמונות וסרטוני קמפיין"}</h2>
       <div className="flex min-h-72 flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center transition-colors hover:border-raz-teal md:p-8">
-        {previewUrl ? (
+        {previewUrl || existingImageUrl ? (
           <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gray-100">
-            {/* A local object URL is used only for the pre-upload preview. */}
-            {/* eslint-disable-next-line @next/next/no-img-element -- blob previews are local and cannot use next/image. */}
-            <img src={previewUrl} alt="" className="w-full h-full object-cover" />
-            <button type="button" onClick={() => onImageChange(null)} className="micro-hint micro-hint-below absolute top-2 end-2 rounded-full bg-black/60 text-white p-1.5" aria-label={lang === "en" ? "Remove image" : "הסר תמונה"}>
+            {/* Blob and persisted remote previews are intentionally rendered without image optimization. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewUrl || existingImageUrl || ""} alt="" className="w-full h-full object-cover" />
+            <button type="button" onClick={() => image ? onImageChange(null) : onExistingImageRemove?.()} className="micro-hint micro-hint-below absolute top-2 end-2 rounded-full bg-black/60 text-white p-1.5" aria-label={lang === "en" ? "Remove image" : "הסר תמונה"}>
               <X size={16} />
             </button>
           </div>
@@ -62,7 +64,7 @@ export default function CampaignMediaStep({ image, onImageChange, videoUrl, onVi
         <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => chooseImage(event.target.files?.[0])} />
         <button type="button" onClick={() => inputRef.current?.click()} className="bg-raz-teal text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
           <Upload size={16} />
-          {image ? (lang === "en" ? "Replace image" : "החלף תמונה") : (lang === "en" ? "Upload image" : "העלה תמונה")}
+          {image || existingImageUrl ? (lang === "en" ? "Replace image" : "החלף תמונה") : (lang === "en" ? "Upload image" : "העלה תמונה")}
         </button>
         {error && <p className="text-xs text-red-600" role="alert">{error}</p>}
       </div>
