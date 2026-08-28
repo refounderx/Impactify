@@ -48,7 +48,7 @@ export default function SearchPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 className="flex-1 py-3 text-sm outline-none bg-transparent text-right"
               />
-              {query && <button onClick={() => setQuery("")}><X size={16} className="text-gray-400" /></button>}
+              {query && <button onClick={() => setQuery("")} className="micro-hint" aria-label={t("hint.clearSearch")}><X size={16} className="text-gray-400" /></button>}
             </div>
             <button className="bg-white/20 text-white px-4 rounded-xl flex items-center gap-2 text-sm font-medium">
               <SlidersHorizontal size={18} /> <EditableText tKey="search.filter" />

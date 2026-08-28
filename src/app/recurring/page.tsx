@@ -11,7 +11,7 @@ import EditableText from "@/components/admin/EditableText";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
 
 export default function RecurringPage() {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const { user } = useAuth();
   const { data } = useSiteDataset("shared");
   const [remoteOrders, setRemoteOrders] = useState<Awaited<ReturnType<typeof getMyRecurring>>>([]);
@@ -46,7 +46,7 @@ export default function RecurringPage() {
       <div className="bg-raz-teal px-6 pt-6 pb-10">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
-            <Link href="/profile" className="text-white/70 hover:text-white">
+            <Link href="/profile" className="micro-hint text-white/70 hover:text-white" aria-label={t("hint.back")}>
               <ArrowRight size={22} />
             </Link>
             <h1 className="text-white font-bold text-2xl"><EditableText tKey="rec.title" /></h1>

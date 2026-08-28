@@ -40,7 +40,7 @@ function CertificatePopup({ onClose, t }: { pd: ProductDonation; onClose: () => 
   return (
     <Backdrop onClose={onClose}>
       <div className="p-6 text-center relative">
-        <button onClick={onClose} className="absolute top-4 end-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        <button onClick={onClose} className="micro-hint micro-hint-below absolute top-4 end-4 text-gray-400 hover:text-gray-600" aria-label={t("hint.close")}><X size={20} /></button>
         <div className="text-6xl mb-4">🏅</div>
         <p className="text-gray-500 text-sm mb-1">{t("myDon.certSub")}</p>
         <button className="mt-4 bg-raz-teal text-white rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 mx-auto">
@@ -60,7 +60,7 @@ function ReceiptsPopup({ pd, onClose, t, lang }: { pd: ProductDonation; onClose:
   return (
     <Backdrop onClose={onClose}>
       <div className="p-5 relative">
-        <button onClick={onClose} className="absolute top-4 end-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        <button onClick={onClose} className="micro-hint micro-hint-below absolute top-4 end-4 text-gray-400 hover:text-gray-600" aria-label={t("hint.close")}><X size={20} /></button>
         <h3 className="font-bold text-gray-800 text-base mb-1">{name}</h3>
         <p className="text-xs text-gray-400 mb-4">{pd.orgCode} · {pd.orgName}</p>
         <button className="flex items-center gap-2 text-sm text-raz-teal font-medium mb-4">
@@ -82,7 +82,7 @@ function ReceiptsPopup({ pd, onClose, t, lang }: { pd: ProductDonation; onClose:
                 <td className="py-2 font-bold font-numeric">{formatNIS(r.amount)}</td>
                 <td className="py-2 text-gray-500">{r.type}</td>
                 <td className="py-2 text-gray-500">••••{r.paymentLast4}</td>
-                <td className="py-2"><button className="text-raz-teal"><Download size={14} /></button></td>
+                <td className="py-2"><button className="micro-hint text-raz-teal" aria-label={t("hint.downloadReceipt")}><Download size={14} /></button></td>
               </tr>
             ))}
           </tbody>
@@ -100,7 +100,7 @@ function DonateMorePopup({ pd, onClose, onActivateRecurring, t, lang }: { pd: Pr
   return (
     <Backdrop onClose={onClose}>
       <div className="p-5 relative">
-        <button onClick={onClose} className="absolute top-4 end-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        <button onClick={onClose} className="micro-hint micro-hint-below absolute top-4 end-4 text-gray-400 hover:text-gray-600" aria-label={t("hint.close")}><X size={20} /></button>
         <h3 className="font-bold text-gray-800 text-lg mb-1 text-center">{t("myDon.donateMoreTitle")}</h3>
         <p className="text-sm text-gray-500 text-center mb-5">{name}</p>
         <div className="flex flex-col gap-3">
@@ -140,7 +140,7 @@ function StandingOrderPopup({ pd, paymentMethods, onClose, t, lang }: { pd: Prod
   return (
     <Backdrop onClose={onClose}>
       <div className="p-5 relative">
-        <button onClick={onClose} className="absolute top-4 end-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        <button onClick={onClose} className="micro-hint micro-hint-below absolute top-4 end-4 text-gray-400 hover:text-gray-600" aria-label={t("hint.close")}><X size={20} /></button>
         <h3 className="font-bold text-gray-800 text-base text-center mb-1">{t("myDon.activateRecurring")}</h3>
         <p className="text-sm text-gray-500 text-center mb-1">
           {t("myDon.forProduct")} {name}
@@ -187,7 +187,7 @@ function TaxRefundPopup({ onClose, t, lang }: { onClose: () => void; t: (k: stri
   return (
     <Backdrop onClose={onClose}>
       <div className="p-5 relative">
-        <button onClick={onClose} className="absolute top-4 end-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        <button onClick={onClose} className="micro-hint micro-hint-below absolute top-4 end-4 text-gray-400 hover:text-gray-600" aria-label={t("hint.close")}><X size={20} /></button>
         <h3 className="font-bold text-gray-800 text-base mb-4 text-center">{t("myDon.taxRefundTitle")}</h3>
         <div className="flex justify-center mb-4 text-5xl">🏛️</div>
         <p className="text-sm text-gray-600 leading-relaxed mb-4" dir={lang === "en" ? "ltr" : "rtl"}>

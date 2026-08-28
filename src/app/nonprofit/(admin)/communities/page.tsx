@@ -57,7 +57,7 @@ export default function CommunitiesPage() {
                   <td className="py-3 px-2 font-bold text-gray-800 font-numeric">{formatNIS(row.totalRaised)}</td>
                   <td className="py-3 px-2 text-gray-500 whitespace-nowrap" dir="ltr">{row.contactPhone} – {row.contactName}</td>
                   <td className="py-3 px-2">
-                    <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
+                    <button className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.actions")}>
                       <MoreVertical size={14} />
                     </button>
                   </td>

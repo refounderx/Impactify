@@ -41,7 +41,7 @@ export default function CreateProductModal({ onClose, onCreated }: {
       <form onSubmit={submit} className="relative z-10 max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-800">{lang === "en" ? "Create product" : "יצירת מוצר"}</h2>
-          <button type="button" onClick={onClose} className="rounded-full p-2 text-gray-500 hover:bg-gray-100" aria-label={lang === "en" ? "Close" : "סגירה"}>
+          <button type="button" onClick={onClose} className="micro-hint micro-hint-below rounded-full p-2 text-gray-500 hover:bg-gray-100" aria-label={lang === "en" ? "Close window" : "סגירת החלון"}>
             <X size={18} />
           </button>
         </div>

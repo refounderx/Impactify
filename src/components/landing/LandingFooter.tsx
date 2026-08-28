@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
+import { getSocialLinkLabel } from "@/lib/social-link-labels";
 
 export default function LandingFooter() {
   const { data } = useSiteDataset("landing");
@@ -13,7 +14,7 @@ export default function LandingFooter() {
           <span><EditableText tKey="landing.footer.lorem" /></span>
           <div className="flex gap-3 mt-2">
             {socialLinks.map((s) => (
-              <a key={s.id} href={s.href} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs">
+              <a key={s.id} href={s.href} className="micro-hint w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs" aria-label={getSocialLinkLabel(s.label)}>
                 {s.label}
               </a>
             ))}

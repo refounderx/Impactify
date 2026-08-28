@@ -15,7 +15,7 @@ import { getCampaignVideoSource } from "@/lib/campaign-media";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const [campaign, setCampaign] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
   const [loading, setLoading] = useState(true);
@@ -78,10 +78,10 @@ export default function CampaignDetail() {
         ) : (
           <span className="text-8xl md:text-9xl opacity-40">{campaign.emoji}</span>
         )}
-        <Link href="/" className="absolute top-4 start-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm">
+        <Link href="/" className="micro-hint absolute top-4 start-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.back")}>
           <ArrowRight size={20} />
         </Link>
-        <button className="absolute top-4 end-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm">
+        <button className="micro-hint absolute top-4 end-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.share")}>
           <Share2 size={20} />
         </button>
         {/* Org logo, set in the org's settings */}

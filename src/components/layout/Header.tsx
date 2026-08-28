@@ -1,5 +1,7 @@
+"use client";
 import Link from "next/link";
 import { ChevronLeft, Bell, Share2 } from "lucide-react";
+import { useLang } from "@/contexts/LanguageContext";
 
 interface HeaderProps {
   title?: string;
@@ -9,11 +11,12 @@ interface HeaderProps {
 }
 
 export default function Header({ title, backHref, showNotification, showShare }: HeaderProps) {
+  const { t } = useLang();
   return (
     <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
       <div className="w-9">
         {backHref && (
-          <Link href={backHref} className="text-gray-500 hover:text-gray-700">
+          <Link href={backHref} className="micro-hint text-gray-500 hover:text-gray-700" aria-label={t("hint.back")}>
             <ChevronLeft size={26} />
           </Link>
         )}
@@ -25,12 +28,12 @@ export default function Header({ title, backHref, showNotification, showShare }:
 
       <div className="flex items-center gap-2 w-9 justify-end">
         {showShare && (
-          <button className="text-gray-500">
+          <button className="micro-hint text-gray-500" aria-label={t("hint.share")}>
             <Share2 size={20} />
           </button>
         )}
         {showNotification && (
-          <button className="relative text-gray-500">
+          <button className="micro-hint relative text-gray-500" aria-label={t("hint.notifications")}>
             <Bell size={22} />
             <span className="absolute -top-0.5 -start-0.5 w-2 h-2 bg-raz-danger rounded-full" />
           </button>

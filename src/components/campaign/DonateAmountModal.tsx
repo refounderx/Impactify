@@ -34,7 +34,7 @@ export default function DonateAmountModal({ campaignId, title, gradient, emoji, 
         className="bg-white w-full max-w-md rounded-2xl p-6 relative max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose} className="absolute top-4 end-4 text-gray-400 hover:text-gray-600">
+        <button onClick={onClose} className="micro-hint micro-hint-below absolute top-4 end-4 text-gray-400 hover:text-gray-600" aria-label={t("hint.close")}>
           <X size={22} />
         </button>
 

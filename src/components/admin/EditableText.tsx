@@ -50,8 +50,8 @@ export default function EditableText({
       <button
         type="button"
         onClick={openEditor}
-        className="absolute -top-1 -end-5 opacity-0 group-hover:opacity-100 bg-raz-teal text-white rounded-full p-0.5 transition-opacity"
-        aria-label="Edit text"
+        className="micro-hint absolute -top-1 -end-5 opacity-0 group-hover:opacity-100 bg-raz-teal text-white rounded-full p-0.5 transition-opacity"
+        aria-label={t("hint.edit")}
       >
         <Pencil size={12} />
       </button>

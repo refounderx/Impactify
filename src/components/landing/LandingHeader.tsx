@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Mail, User } from "lucide-react";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
+import { getSocialLinkLabel } from "@/lib/social-link-labels";
 
 export default function LandingHeader() {
   const { data } = useSiteDataset("landing");
@@ -13,7 +14,7 @@ export default function LandingHeader() {
         <div className="flex items-center gap-3">
           <Mail size={18} className="text-gray-500" />
           {socialLinks.map((s) => (
-            <a key={s.id} href={s.href} className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold flex items-center justify-center">
+            <a key={s.id} href={s.href} className="micro-hint w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold flex items-center justify-center" aria-label={getSocialLinkLabel(s.label)}>
               {s.label}
             </a>
           ))}

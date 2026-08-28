@@ -54,13 +54,14 @@ export default function NewDonationPopup({ onClose, lang, t }: Props) {
         <div className="bg-gray-900 flex flex-col items-center pt-10 pb-6 relative">
           <button
             onClick={onClose}
-            className="absolute top-3 end-3 text-white/50 hover:text-white"
+            className="micro-hint micro-hint-below absolute top-3 end-3 text-white/50 hover:text-white"
+            aria-label={t("hint.close")}
           >
             <X size={20} />
           </button>
 
           <div className="flex items-end gap-3 px-4 w-full justify-center">
-            <button onClick={prev} className="text-white/60 hover:text-white mb-5 flex-shrink-0">
+            <button onClick={prev} className="micro-hint text-white/60 hover:text-white mb-5 flex-shrink-0" aria-label={t("hint.previous")}>
               <ChevronRight size={24} />
             </button>
 
@@ -89,7 +90,7 @@ export default function NewDonationPopup({ onClose, lang, t }: Props) {
               );
             })}
 
-            <button onClick={next} className="text-white/60 hover:text-white mb-5 flex-shrink-0">
+            <button onClick={next} className="micro-hint text-white/60 hover:text-white mb-5 flex-shrink-0" aria-label={t("hint.next")}>
               <ChevronLeft size={24} />
             </button>
           </div>
@@ -105,13 +106,15 @@ export default function NewDonationPopup({ onClose, lang, t }: Props) {
           <div className="relative pb-6">
             <button
               onClick={() => scrollProducts("prev")}
-              className="absolute start-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-400 hover:text-raz-teal"
+              className="micro-hint absolute start-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-400 hover:text-raz-teal"
+              aria-label={t("hint.previous")}
             >
               <ChevronRight size={16} />
             </button>
             <button
               onClick={() => scrollProducts("next")}
-              className="absolute end-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-400 hover:text-raz-teal"
+              className="micro-hint absolute end-1 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center text-gray-400 hover:text-raz-teal"
+              aria-label={t("hint.next")}
             >
               <ChevronLeft size={16} />
             </button>

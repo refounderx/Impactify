@@ -53,12 +53,12 @@ export default function DonationsPage() {
                   <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{lang === "en" ? row.frequencyEn : row.frequency}</td>
                   <td className="py-3 px-2 text-gray-500 font-numeric" dir="ltr">{"*".repeat(6)}{row.paymentLast4}</td>
                   <td className="py-3 px-2">
-                    <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
+                    <button className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.downloadReceipt")}>
                       <Download size={14} />
                     </button>
                   </td>
                   <td className="py-3 px-2">
-                    <button className="w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+                    <button className="micro-hint w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200" aria-label={t("hint.refund")}>
                       <RotateCcw size={14} />
                     </button>
                   </td>

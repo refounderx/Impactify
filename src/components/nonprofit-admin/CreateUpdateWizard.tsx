@@ -72,7 +72,7 @@ export default function CreateUpdateWizard({ lang, t, onClose, onCreate }: Props
         className="h-full max-w-6xl md:h-[min(760px,calc(100dvh-3.5rem))] md:rounded-[2px]"
         topActions={(
           <>
-            <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={lang === "en" ? "Close" : "סגירה"}>
+            <button onClick={onClose} className="micro-hint micro-hint-below rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={t("hint.close")}>
               <X size={18} />
             </button>
             <span className="rounded-full bg-raz-dark px-3 py-1 text-[11px] font-bold text-white">{t("adm.createUpdate")}</span>

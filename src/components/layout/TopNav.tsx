@@ -8,7 +8,7 @@ import EditableText from "@/components/admin/EditableText";
 
 export default function TopNav() {
   const pathname = usePathname();
-  const { lang, setLang } = useLang();
+  const { lang, setLang, t } = useLang();
   const { user, profile } = useAuth();
 
   const active = pathname.startsWith("/admin")
@@ -83,11 +83,11 @@ export default function TopNav() {
         </div>
 
         {active === "/" && (
-          <Link href="/search" className="text-gray-500 hover:text-raz-teal">
+          <Link href="/search" className="micro-hint text-gray-500 hover:text-raz-teal" aria-label={t("nav.search")}>
             <Search size={20} />
           </Link>
         )}
-        <button className="relative text-gray-500 hover:text-raz-teal">
+        <button className="micro-hint relative text-gray-500 hover:text-raz-teal" aria-label={t("hint.notifications")}>
           <Bell size={20} />
           <span className="absolute -top-0.5 -start-0.5 w-2 h-2 bg-red-400 rounded-full" />
         </button>

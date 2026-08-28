@@ -12,7 +12,7 @@ import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
 import EditableText from "@/components/admin/EditableText";
 
 export default function CommunityCampaignsGridPage() {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const { data, loading, error, reload } = useCommunityAdminView();
   const [source, setSource] = useState<CommunityCampaignSource>("linked");
 
@@ -32,10 +32,10 @@ export default function CommunityCampaignsGridPage() {
         {(data?.communityCampaignCards ?? []).map((c) => (
           <div key={c.id} className="bg-white rounded-2xl p-4 relative">
             <div className="absolute top-4 end-4 flex flex-col gap-2">
-              <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
+              <button className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.edit")}>
                 <Pencil size={13} />
               </button>
-              <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
+              <button className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.view")}>
                 <Eye size={13} />
               </button>
             </div>

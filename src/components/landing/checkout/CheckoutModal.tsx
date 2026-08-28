@@ -66,7 +66,7 @@ export default function CheckoutModal({
         className="h-full max-w-6xl md:h-[min(780px,calc(100dvh-3.5rem))] md:rounded-[2px]"
         contentClassName="md:px-12"
         topActions={(
-          <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={t("landing.filter.close")}>
+          <button onClick={onClose} className="micro-hint micro-hint-below rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={t("hint.close")}>
             <X size={18} />
           </button>
         )}

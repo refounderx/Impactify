@@ -48,7 +48,7 @@ export default function CampaignMediaStep({ image, onImageChange, videoUrl, onVi
             {/* A local object URL is used only for the pre-upload preview. */}
             {/* eslint-disable-next-line @next/next/no-img-element -- blob previews are local and cannot use next/image. */}
             <img src={previewUrl} alt="" className="w-full h-full object-cover" />
-            <button type="button" onClick={() => onImageChange(null)} className="absolute top-2 end-2 rounded-full bg-black/60 text-white p-1.5" aria-label={lang === "en" ? "Remove image" : "הסר תמונה"}>
+            <button type="button" onClick={() => onImageChange(null)} className="micro-hint micro-hint-below absolute top-2 end-2 rounded-full bg-black/60 text-white p-1.5" aria-label={lang === "en" ? "Remove image" : "הסר תמונה"}>
               <X size={16} />
             </button>
           </div>

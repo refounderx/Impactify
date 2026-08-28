@@ -16,7 +16,7 @@ const SORT_OPTIONS_HE = [
 const FILTER_OPTIONS_HE = ["תחומי פעילות", "אזור פעילות"];
 
 export default function CommunitySearchCampaignsPage() {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const [communityCampaignCards, setCommunityCampaignCards] = useState<Awaited<ReturnType<typeof getCampaigns>>>([]);
   const [loadError, setLoadError] = useState("");
   const [openDropdown, setOpenDropdown] = useState<"sort" | "filter" | null>(null);
@@ -118,13 +118,14 @@ export default function CommunitySearchCampaignsPage() {
               <div className="absolute top-4 end-4 flex items-center gap-2">
                 <button
                   onClick={() => toggleRequest(c.id)}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                  aria-label={isRequested ? (lang === "en" ? "Cancel join request" : "ביטול בקשת ההצטרפות") : (lang === "en" ? "Request to join" : "בקשת הצטרפות")}
+                  className={`micro-hint w-7 h-7 rounded-full flex items-center justify-center ${
                     isRequested ? "bg-raz-teal text-white" : "bg-raz-teal/10 text-raz-teal hover:bg-raz-teal/20"
                   }`}
                 >
                   <Check size={13} />
                 </button>
-                <button className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20">
+                <button className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.view")}>
                   <Eye size={13} />
                 </button>
               </div>

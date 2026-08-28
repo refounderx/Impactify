@@ -105,10 +105,10 @@ export default function MyDonationsPage() {
                   </h2>
                 </div>
                 <div className="relative">
-                  <button onClick={() => scrollCarousel("prev")} className="absolute start-0 top-1/2 -translate-y-1/2 -ms-4 z-10 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-raz-teal">
+                  <button onClick={() => scrollCarousel("prev")} className="micro-hint absolute start-0 top-1/2 -translate-y-1/2 -ms-4 z-10 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-raz-teal" aria-label={t("hint.previous")}>
                     <ChevronRight size={18} />
                   </button>
-                  <button onClick={() => scrollCarousel("next")} className="absolute end-0 top-1/2 -translate-y-1/2 -me-4 z-10 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-raz-teal">
+                  <button onClick={() => scrollCarousel("next")} className="micro-hint absolute end-0 top-1/2 -translate-y-1/2 -me-4 z-10 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-raz-teal" aria-label={t("hint.next")}>
                     <ChevronLeft size={18} />
                   </button>
                   <div ref={carouselRef} className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">

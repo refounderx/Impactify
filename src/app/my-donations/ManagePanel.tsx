@@ -17,7 +17,7 @@ type SubTab = "all" | "quarterly";
 
 const TODAY = "07/02/23";
 
-export default function ManagePanel({ lang, onTaxRefund, productDonations, quarterlyData }: Props) {
+export default function ManagePanel({ lang, t, onTaxRefund, productDonations, quarterlyData }: Props) {
   const [subTab, setSubTab] = useState<SubTab>("all");
   const [search, setSearch] = useState("");
 
@@ -95,8 +95,8 @@ export default function ManagePanel({ lang, onTaxRefund, productDonations, quart
                 </div>
               </div>
               <div className="flex items-center gap-2 text-gray-400 pt-1">
-                <button className="hover:text-gray-600"><Copy size={17} /></button>
-                <button className="hover:text-gray-600"><Printer size={17} /></button>
+                <button className="micro-hint hover:text-gray-600" aria-label={t("hint.copy")}><Copy size={17} /></button>
+                <button className="micro-hint hover:text-gray-600" aria-label={t("hint.print")}><Printer size={17} /></button>
               </div>
             </div>
 
@@ -150,7 +150,7 @@ export default function ManagePanel({ lang, onTaxRefund, productDonations, quart
                         </div>
                       </td>
                       <td className="py-3.5 px-2">
-                        <button className="w-8 h-8 bg-raz-teal rounded-full flex items-center justify-center text-white hover:bg-teal-500 transition-colors">
+                        <button className="micro-hint w-8 h-8 bg-raz-teal rounded-full flex items-center justify-center text-white hover:bg-teal-500 transition-colors" aria-label={t("hint.downloadReceipt")}>
                           <ArrowDown size={14} />
                         </button>
                       </td>
@@ -162,7 +162,7 @@ export default function ManagePanel({ lang, onTaxRefund, productDonations, quart
           </>
         )}
 
-        {subTab === "quarterly" && <QuarterlyView lang={lang} quarterlyData={quarterlyData} />}
+        {subTab === "quarterly" && <QuarterlyView lang={lang} t={t} quarterlyData={quarterlyData} />}
       </div>
     </div>
   );

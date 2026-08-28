@@ -10,7 +10,7 @@ import type { CommunityCampaignRow } from "@/lib/community-admin-data";
 const HEADERS = ["שם הקמפיין", "הקמה", "סיום", "מוצרים", "מוצרים שגויסו", "סכום שגויס", "מספר תורמים", "מצטרפים", "עמותה", "צפייה", "עריכה", ""];
 
 export default function CommunityCampaignsTable({ rows }: { rows: CommunityCampaignRow[] }) {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [openMenu, setOpenMenu] = useState<{ id: string; type: "edit" | "view" } | null>(null);
 
@@ -65,7 +65,8 @@ export default function CommunityCampaignsTable({ rows }: { rows: CommunityCampa
                   <td className="py-3 px-2 relative">
                     <button
                       onClick={() => setOpenMenu(openMenu?.id === row.id && openMenu.type === "view" ? null : { id: row.id, type: "view" })}
-                      className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20"
+                      className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20"
+                      aria-label={t("hint.view")}
                     >
                       <Eye size={14} />
                     </button>
@@ -86,7 +87,8 @@ export default function CommunityCampaignsTable({ rows }: { rows: CommunityCampa
                   <td className="py-3 px-2 relative">
                     <button
                       onClick={() => setOpenMenu(openMenu?.id === row.id && openMenu.type === "edit" ? null : { id: row.id, type: "edit" })}
-                      className="w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20"
+                      className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20"
+                      aria-label={t("hint.edit")}
                     >
                       <Pencil size={14} />
                     </button>
@@ -104,7 +106,8 @@ export default function CommunityCampaignsTable({ rows }: { rows: CommunityCampa
                   <td className="py-3 px-2">
                     <button
                       onClick={() => setExpandedId(expanded ? null : row.id)}
-                      className="w-7 h-7 rounded-full text-gray-400 flex items-center justify-center hover:bg-gray-100"
+                      className="micro-hint w-7 h-7 rounded-full text-gray-400 flex items-center justify-center hover:bg-gray-100"
+                      aria-label={t(expanded ? "hint.collapse" : "hint.expand")}
                     >
                       {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>

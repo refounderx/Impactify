@@ -101,7 +101,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
                       <p className="font-bold text-gray-800 font-numeric">{formatNIS(d.amount)}</p>
-                      <button className="text-raz-teal"><Download size={16} /></button>
+                      <button className="micro-hint text-raz-teal" aria-label={t("hint.downloadReceipt")}><Download size={16} /></button>
                     </div>
                   </div>
                 ))}

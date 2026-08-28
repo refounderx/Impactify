@@ -26,7 +26,7 @@ export default function ProductCarousel() {
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-8"><EditableText tKey="landing.products.heading" /></h2>
 
         <div className="flex items-center gap-4">
-          <button onClick={prev} className="text-gray-400 hover:text-gray-700 flex-shrink-0" aria-label="prev">
+          <button onClick={prev} className="micro-hint text-gray-400 hover:text-gray-700 flex-shrink-0" aria-label={t("hint.previous")}>
             <ChevronLeft size={28} />
           </button>
 
@@ -43,7 +43,7 @@ export default function ProductCarousel() {
             ))}
           </div>
 
-          <button onClick={next} className="text-gray-400 hover:text-gray-700 flex-shrink-0" aria-label="next">
+          <button onClick={next} className="micro-hint text-gray-400 hover:text-gray-700 flex-shrink-0" aria-label={t("hint.next")}>
             <ChevronRight size={28} />
           </button>
         </div>

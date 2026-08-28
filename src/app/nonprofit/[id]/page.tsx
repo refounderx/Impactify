@@ -95,7 +95,7 @@ export default function NonprofitProfile() {
           {/* Left in reading order / visually right in RTL: video + public org info */}
           <div className="flex flex-col gap-4">
             <div className={`bg-gradient-to-br ${videoGradient} rounded-2xl aspect-video flex items-center justify-center relative`}>
-              <button className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/35 transition-colors">
+              <button className="micro-hint w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/35 transition-colors" aria-label={t("hint.play")}>
                 <span className="text-2xl">▶</span>
               </button>
             </div>
@@ -154,9 +154,9 @@ export default function NonprofitProfile() {
           {/* Right in reading order: share, name, description, tabs, products, donate */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3 text-gray-400">
-              <button className="hover:text-raz-teal"><Mail size={18} /></button>
-              <button className="hover:text-raz-teal"><MessageCircle size={18} /></button>
-              <button className="hover:text-raz-teal"><Share2 size={18} /></button>
+              <button className="micro-hint hover:text-raz-teal" aria-label={t("hint.email")}><Mail size={18} /></button>
+              <button className="micro-hint hover:text-raz-teal" aria-label={t("hint.message")}><MessageCircle size={18} /></button>
+              <button className="micro-hint hover:text-raz-teal" aria-label={t("hint.share")}><Share2 size={18} /></button>
             </div>
             <h1 className="text-2xl font-bold text-gray-800">{orgName}</h1>
             {bio && <p className="text-gray-600 text-sm leading-relaxed">{bio}</p>}
@@ -195,14 +195,16 @@ export default function NonprofitProfile() {
                           <div className="flex items-center gap-2 mb-2">
                             <button
                               onClick={() => changeQty(p.id, -1)}
-                              className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50"
+                              className="micro-hint w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50"
+                              aria-label={t("hint.decrease")}
                             >
                               <Minus size={14} />
                             </button>
                             <span className="font-numeric font-bold text-gray-800 w-5 text-center">{q}</span>
                             <button
                               onClick={() => changeQty(p.id, 1)}
-                              className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50"
+                              className="micro-hint w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50"
+                              aria-label={t("hint.increase")}
                             >
                               <Plus size={14} />
                             </button>

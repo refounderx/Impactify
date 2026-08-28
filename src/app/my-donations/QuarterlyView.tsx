@@ -7,7 +7,7 @@ const BAR_COLORS = ["bg-yellow-400", "bg-teal-200", "bg-raz-teal"];
 const BAR_H = 120;
 const YEARS = ["2023", "2022", "2021", "כל השנים"];
 
-export default function QuarterlyView({ lang, quarterlyData }: { lang: string; quarterlyData?: SharedSiteData["quarterlyDonationData"] }) {
+export default function QuarterlyView({ lang, t, quarterlyData }: { lang: string; t: (key: string) => string; quarterlyData?: SharedSiteData["quarterlyDonationData"] }) {
   const [selectedYear, setSelectedYear] = useState("2023");
   const { total, period, months } = quarterlyData ?? { total: 0, period: "", months: [] };
   const MAX_BAR = Math.max(...months.flatMap(m => m.bars.map(b => b.amount)), 1);
@@ -49,12 +49,12 @@ export default function QuarterlyView({ lang, quarterlyData }: { lang: string; q
       <div className="flex-1 min-w-0">
         {/* Quarter navigation — RTL: > on right = go back, < on left = go forward */}
         <div className="flex items-center justify-center gap-4 mb-8">
-          <button className="text-gray-400 hover:text-gray-600"><ChevronRight size={18} /></button>
+          <button className="micro-hint text-gray-400 hover:text-gray-600" aria-label={t("hint.previous")}><ChevronRight size={18} /></button>
           <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
             <span>{lang === "en" ? "This quarter" : "הרבעון הזה"}</span>
             <Calendar size={15} className="text-gray-400" />
           </div>
-          <button className="text-gray-400 hover:text-gray-600"><ChevronLeft size={18} /></button>
+          <button className="micro-hint text-gray-400 hover:text-gray-600" aria-label={t("hint.next")}><ChevronLeft size={18} /></button>
         </div>
 
         {/* Monthly bar groups — months in chronological RTL order (פברואר rightmost) */}
