@@ -30,23 +30,16 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...   # server-only, never commit
 ```
 
 ### 3. Run the database schema
-Two ways to apply schema/seed changes:
-
-**Via Supabase CLI (connected 2026-08-23):**
-```bash
-npx supabase login          # one-time, opens a browser
-npx supabase link --project-ref <your-project-ref>
-npx supabase db push        # applies supabase/migrations/*.sql to the linked project
-```
 New schema/seed changes should be added as a new timestamped file under `supabase/migrations/` going forward (not appended to `schema.sql`/`seed.sql` — see `PROJECT_CONTEXT.md`/`DECISIONS.md` for the still-open question of whether the historical `schema.sql`/`seed.sql` files get retired in favor of `migrations/`).
 
-**Manual fallback (Dashboard → SQL Editor):**
+**Required deployment path (Dashboard → SQL Editor):**
 
 - For initial setup, run `supabase/schema.sql`, followed by `supabase/seed.sql` for demo data.
-- If a timestamped migration cannot be pushed because the CLI fails to initialize its temporary database login role, run that exact migration in a transaction through the already-authenticated SQL Editor. Record its version/name in `supabase_migrations.schema_migrations` in the same transaction when the migration does not already do so.
+- Do not retry the Supabase CLI for migration deployment; this project consistently hits the same temporary database `login role` failure. Run the exact timestamped migration in a transaction through the already-authenticated SQL Editor.
+- Record its version/name in `supabase_migrations.schema_migrations` in the same transaction when the migration does not already do so.
 - Run a separate read-only verification query afterward. Confirm the ledger entry and changed objects, plus grants, fixed `search_path`, and tenant checks for privileged functions. Do not treat the migration as live until these checks pass.
 
-See `AGENTS.md` for the required agent workflow and security constraints for this fallback.
+See `AGENTS.md` for the required agent workflow and security constraints.
 
 ### 4. Start dev server
 ```bash

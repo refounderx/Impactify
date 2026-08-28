@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-08-28 — Deploy migrations directly through the Supabase SQL Editor
+
+**Decision:** Keep timestamped files under `supabase/migrations/` as the source of truth, but do not attempt deployment through the linked Supabase CLI. Apply authorized migrations directly through the authenticated Dashboard SQL Editor, reconcile `supabase_migrations.schema_migrations`, and verify the result with a separate read-only query.
+
+**Context:** Repeated CLI attempts fail at the same temporary database `login role` initialization step and have not yielded a usable deployment path.
+
+**Rationale:** Going directly to the working SQL Editor avoids a known, repeatable failure while retaining reproducible migration files and ledger consistency.
+
+**Consequences:** Future agents must not retry `supabase db push` for this project unless the user explicitly reverses this decision. A migration is live only after the editor transaction succeeds and the verification query confirms the ledger entry, changed objects, and relevant security properties.
+
+---
+
 ## 2026-08-25 — Store NGO goals as validated bilingual JSON
 
 **Decision:** Store each organization's goals in a `jsonb` array of `{ he, en }` objects. New NGO onboarding requires 1–10 entries with Hebrew text; owners update the list through a security-definer RPC that derives the target organization from `auth.uid()`.
