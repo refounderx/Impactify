@@ -6,8 +6,6 @@ export const audienceIcons: { id: string; kind: AudienceKind; labelKey: string; 
   { id: "teen", kind: "teen", labelKey: "landing.aud.teen", emoji: "🧑" },
   { id: "baby", kind: "baby", labelKey: "landing.aud.baby", emoji: "🍼" },
   { id: "child", kind: "child", labelKey: "landing.aud.child", emoji: "🧒" },
-  { id: "soldier-2", kind: "soldier", labelKey: "landing.aud.soldier", emoji: "🪖" },
-  { id: "elderly-2", kind: "elderly", labelKey: "landing.aud.elderly", emoji: "👵" },
 ];
 
 export type AudienceProduct = { id: string; title: string; titleEn: string; price: number; emoji: string };

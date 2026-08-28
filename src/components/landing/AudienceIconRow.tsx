@@ -11,9 +11,11 @@ export default function AudienceIconRow({
   onSelect: (kind: AudienceKind) => void;
 }) {
   const { data } = useSiteDataset("landing");
-  const audienceIcons = data?.audienceIcons ?? [];
+  const audienceIcons = (data?.audienceIcons ?? []).filter(
+    (icon, index, icons) => icons.findIndex((candidate) => candidate.kind === icon.kind) === index
+  );
   return (
-    <div className="grid grid-cols-4 sm:grid-cols-7 gap-4">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {audienceIcons.map((a, i) => {
         const isSelected = a.kind === selected;
         return (
