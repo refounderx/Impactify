@@ -20,7 +20,7 @@ export default function AudienceIconRow({
           <button
             key={`${a.id}-${i}`}
             onClick={() => onSelect(a.kind)}
-            className={`interactive-control flex flex-col items-center gap-2 rounded-2xl border py-6 transition-colors ${
+            className={`flex cursor-pointer flex-col items-center gap-2 rounded-2xl border py-6 transition-transform duration-150 hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none motion-reduce:hover:scale-100 ${
               isSelected ? "bg-raz-teal border-raz-teal text-white" : "bg-white border-gray-100 text-gray-800"
             }`}
           >
