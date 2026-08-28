@@ -10,7 +10,7 @@ import EditableText from "@/components/admin/EditableText";
 
 function Badge({ text }: { text: string }) {
   return (
-    <span className="absolute bottom-2 start-2 end-2 z-10 bg-white rounded-xl shadow-md px-3 py-1.5 text-xs font-medium text-gray-700 text-center leading-snug">
+    <span className="absolute bottom-0 left-1/2 z-10 flex min-h-8 w-[86%] -translate-x-1/2 items-center justify-center rounded-lg border border-gray-100 bg-white px-2.5 py-1 text-[11px] font-medium leading-tight text-gray-700 shadow-sm text-center">
       {text}
     </span>
   );
@@ -21,13 +21,15 @@ type HeroCard = Awaited<ReturnType<typeof getHeroCards>>[number];
 function HeroImageCard({ card, lang, className }: { card: HeroCard; lang: string; className: string }) {
   const text = lang === "en" ? card.bubbleTextEn : card.bubbleText;
   return (
-    <div className={`relative overflow-hidden ${className}`}>
-      {card.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={card.imageUrl} alt={text} className="absolute inset-0 w-full h-full object-cover" />
-      ) : (
-        <div className={`absolute inset-0 ${card.placeholderClass}`} />
-      )}
+    <div className={`relative ${className}`}>
+      <div className="absolute inset-x-0 top-0 bottom-10 overflow-hidden rounded-2xl">
+        {card.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={card.imageUrl} alt={text} className="h-full w-full object-cover" />
+        ) : (
+          <div className={`h-full w-full ${card.placeholderClass}`} />
+        )}
+      </div>
       <Badge text={text} />
     </div>
   );
@@ -47,23 +49,23 @@ export default function Hero() {
   const [soldierCard, elderlyCard, childCard] = cards;
 
   return (
-    <section className="max-w-6xl mx-auto px-6 py-14">
-      <div className="grid md:grid-cols-2 gap-10 items-center">
-        {/* Image+bubble cards — each pair is one unit, see heroCards in mock-data.ts */}
-        <div className="grid grid-cols-2 gap-4">
-          {soldierCard && <HeroImageCard card={soldierCard} lang={lang} className="rounded-2xl h-72 col-span-1" />}
-          <div className="flex flex-col gap-4">
-            {elderlyCard && <HeroImageCard card={elderlyCard} lang={lang} className="rounded-2xl h-32" />}
-            {childCard && <HeroImageCard card={childCard} lang={lang} className="rounded-2xl h-32" />}
-          </div>
-        </div>
-
-        <div>
-          <EditableText tKey="landing.hero.title" as="h1" className="text-5xl font-bold text-gray-900 leading-tight mb-6 block" />
+    <section className="mx-auto max-w-7xl px-6 py-14">
+      <div className="grid items-center gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-16" dir="ltr">
+        <div className="order-1 text-right md:order-2" dir={lang === "he" ? "rtl" : "ltr"}>
+          <EditableText tKey="landing.hero.title" as="h1" className="mb-6 block text-4xl font-bold leading-tight text-gray-900 sm:text-5xl" />
           <EditableText tKey="landing.hero.body" as="p" className="text-gray-500 leading-relaxed mb-6 block" />
           <Link href="/auth" className="interactive-control inline-block border-2 border-raz-teal text-raz-teal font-bold px-8 py-3 rounded-full">
             <EditableText tKey="landing.hero.cta" />
           </Link>
+        </div>
+
+        {/* Image+bubble cards — captions use their own reserved space below each image. */}
+        <div className="order-2 grid grid-cols-[0.95fr_1.05fr] gap-5 md:order-1" dir="ltr">
+          <div className="flex flex-col gap-5">
+            {elderlyCard && <HeroImageCard card={elderlyCard} lang={lang} className="h-[9.5rem]" />}
+            {childCard && <HeroImageCard card={childCard} lang={lang} className="h-[9.5rem]" />}
+          </div>
+          {soldierCard && <HeroImageCard card={soldierCard} lang={lang} className="h-80" />}
         </div>
       </div>
 
