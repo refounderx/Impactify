@@ -21,12 +21,12 @@ export default function MascotDonationForm() {
         }}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input type="email" placeholder={t("landing.cta.emailPH")} className="border border-gray-200 rounded-xl px-4 py-3 text-sm" />
-          <input type="tel" placeholder={t("landing.cta.phonePH")} className="border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+          <input type="email" placeholder={t("landing.cta.emailPH")} className="interactive-field border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+          <input type="tel" placeholder={t("landing.cta.phonePH")} className="interactive-field border border-gray-200 rounded-xl px-4 py-3 text-sm" />
         </div>
-        <input type="text" placeholder={t("landing.cta.namePH")} className="border border-gray-200 rounded-xl px-4 py-3 text-sm" />
-        <textarea placeholder={t("landing.cta.messagePH")} rows={4} className="border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none" />
-        <button type="submit" className="bg-raz-teal text-white font-bold py-3 rounded-xl">
+        <input type="text" placeholder={t("landing.cta.namePH")} className="interactive-field border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+        <textarea placeholder={t("landing.cta.messagePH")} rows={4} className="interactive-field border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none" />
+        <button type="submit" className="interactive-control bg-raz-teal text-white font-bold py-3 rounded-xl">
           {submitted ? "✓" : <EditableText tKey="landing.cta.submit" />}
         </button>
       </form>

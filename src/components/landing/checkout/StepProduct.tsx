@@ -32,7 +32,7 @@ export default function StepProduct({
   return (
     <div>
       <div className="bg-black rounded-2xl h-56 flex items-center justify-center mb-6">
-        <button className="micro-hint w-14 h-14 rounded-full bg-white/90 flex items-center justify-center text-gray-700" aria-label={t("hint.play")}>
+        <button className="micro-hint interactive-control w-14 h-14 rounded-full bg-white/90 flex items-center justify-center text-gray-700" aria-label={t("hint.play")}>
           <Play size={22} fill="currentColor" />
         </button>
       </div>
@@ -42,9 +42,9 @@ export default function StepProduct({
           <h3 className="font-bold text-gray-900 mb-2">{lang === "en" ? product.titleEn : product.title}</h3>
           <p className="text-2xl font-bold font-numeric text-gray-900 mb-2">{formatNIS(product.price * qty)}</p>
           <div className="inline-flex items-center gap-2 border border-raz-teal rounded-full px-2 py-1 text-sm">
-            <button onClick={() => onQtyChange(Math.max(1, qty + 1))} className="micro-hint text-raz-teal font-bold" aria-label={t("hint.increase")}>+</button>
+            <button onClick={() => onQtyChange(Math.max(1, qty + 1))} className="micro-hint interactive-control text-raz-teal font-bold" aria-label={t("hint.increase")}>+</button>
             <span className="font-numeric">{qty}</span>
-            <button onClick={() => onQtyChange(Math.max(0, qty - 1))} className="micro-hint text-raz-teal font-bold" aria-label={t("hint.decrease")}>-</button>
+            <button onClick={() => onQtyChange(Math.max(0, qty - 1))} className="micro-hint interactive-control text-raz-teal font-bold" aria-label={t("hint.decrease")}>-</button>
           </div>
           <p className="text-xs text-gray-400 mt-2">257 ❤ <EditableText tKey="landing.products.chosen" /></p>
         </div>
@@ -70,9 +70,9 @@ export default function StepProduct({
             <p className="text-xs text-gray-700 mb-1 leading-snug">{lang === "en" ? p.titleEn : p.title}</p>
             <p className="text-sm font-bold font-numeric text-gray-900 mb-2">{formatNIS(p.price)}</p>
             <div className="inline-flex items-center gap-2 border border-raz-teal rounded-full px-2 py-0.5 text-xs">
-              <button onClick={() => onOtherQtyChange(p.id, (otherQty[p.id] ?? 0) + 1)} className="micro-hint text-raz-teal font-bold" aria-label={t("hint.increase")}>+</button>
+              <button onClick={() => onOtherQtyChange(p.id, (otherQty[p.id] ?? 0) + 1)} className="micro-hint interactive-control text-raz-teal font-bold" aria-label={t("hint.increase")}>+</button>
               <span className="font-numeric">{otherQty[p.id] ?? 0}</span>
-              <button onClick={() => onOtherQtyChange(p.id, Math.max(0, (otherQty[p.id] ?? 0) - 1))} className="micro-hint text-raz-teal font-bold" aria-label={t("hint.decrease")}>-</button>
+              <button onClick={() => onOtherQtyChange(p.id, Math.max(0, (otherQty[p.id] ?? 0) - 1))} className="micro-hint interactive-control text-raz-teal font-bold" aria-label={t("hint.decrease")}>-</button>
             </div>
           </div>
         ))}
@@ -82,7 +82,7 @@ export default function StepProduct({
         <span className="text-sm text-gray-500"><EditableText tKey="landing.checkout.totalLabel" /></span>
         <span className="text-3xl font-bold font-numeric text-gray-900">{formatNIS(total)}</span>
       </div>
-      <button onClick={onContinue} className="w-full bg-raz-teal text-white font-bold py-3 rounded-full">
+      <button onClick={onContinue} className="interactive-control w-full bg-raz-teal text-white font-bold py-3 rounded-full">
         <EditableText tKey="landing.checkout.continuePersonal" />
       </button>
     </div>

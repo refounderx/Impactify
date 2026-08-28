@@ -10,11 +10,11 @@ export default function StepPaymentMethod({ onChoose }: { onChoose: (m: PaymentM
       <div className="flex flex-col gap-3">
         <button
           onClick={() => onChoose("bit")}
-          className="bg-gradient-to-l from-[#0d3b66] to-[#1a9dab] text-white font-bold py-3 rounded-full"
+          className="interactive-control bg-gradient-to-l from-[#0d3b66] to-[#1a9dab] text-white font-bold py-3 rounded-full"
         >
           <EditableText tKey="landing.checkout.payBitContinue" />
         </button>
-        <button onClick={() => onChoose("card")} className="border border-gray-200 text-gray-700 font-bold py-3 rounded-full">
+        <button onClick={() => onChoose("card")} className="interactive-control border border-gray-200 text-gray-700 font-bold py-3 rounded-full">
           <EditableText tKey="landing.checkout.payCardContinue" />
         </button>
       </div>

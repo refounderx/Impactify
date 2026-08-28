@@ -8,10 +8,10 @@ export default function StepFrequency({ onChoose }: { onChoose: (f: Frequency) =
     <div className="text-center">
       <h3 className="font-bold text-gray-900 mb-6"><EditableText tKey="landing.checkout.frequencyTitle" /></h3>
       <div className="flex flex-col gap-3">
-        <button onClick={() => onChoose("recurring")} className="bg-raz-teal text-white font-bold py-3 rounded-full">
+        <button onClick={() => onChoose("recurring")} className="interactive-control bg-raz-teal text-white font-bold py-3 rounded-full">
           <EditableText tKey="landing.checkout.recurringContinue" />
         </button>
-        <button onClick={() => onChoose("onetime")} className="border border-gray-200 text-gray-700 font-bold py-3 rounded-full">
+        <button onClick={() => onChoose("onetime")} className="interactive-control border border-gray-200 text-gray-700 font-bold py-3 rounded-full">
           <EditableText tKey="landing.checkout.onetimeContinue" />
         </button>
       </div>

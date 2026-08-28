@@ -117,6 +117,52 @@ html[dir="ltr"] textarea {
   .micro-hint[aria-label]::after { display: none; }
 }
 
+/* Shared press/hover/focus feedback for controls that did not already define it. */
+.interactive-control {
+  cursor: pointer;
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.interactive-control:hover:not(:disabled) {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+.interactive-control:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(0) scale(0.98);
+}
+
+.interactive-control:focus-visible {
+  outline: 2px solid #00B5AD;
+  outline-offset: 3px;
+}
+
+.interactive-control:disabled {
+  cursor: not-allowed;
+}
+
+.interactive-field {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.interactive-field:hover {
+  border-color: #9ca3af;
+}
+
+.interactive-field:focus {
+  border-color: #00B5AD;
+  box-shadow: 0 0 0 3px rgba(0, 181, 173, 0.14);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive-control { transition: none; }
+  .interactive-field { transition: none; }
+  .interactive-control:hover:not(:disabled),
+  .interactive-control:active:not(:disabled) { transform: none; }
+}
+
 /* ── Mobile phone container ── */
 .phone-frame {
   max-width: 430px;

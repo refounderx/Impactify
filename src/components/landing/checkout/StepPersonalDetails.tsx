@@ -34,14 +34,14 @@ export default function StepPersonalDetails({
       <EditableText tKey="landing.checkout.personalSub" as="p" className="text-xs text-gray-400 mb-4 block" />
 
       <div className="flex flex-col gap-3 mb-4">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("landing.checkout.namePH")} className="border border-gray-200 rounded-xl px-4 py-3 text-sm" />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder={t("landing.checkout.emailPH")} className="border border-gray-200 rounded-xl px-4 py-3 text-sm" />
-        <input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder={t("landing.checkout.phonePH")} className="border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("landing.checkout.namePH")} className="interactive-field border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder={t("landing.checkout.emailPH")} className="interactive-field border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+        <input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder={t("landing.checkout.phonePH")} className="interactive-field border border-gray-200 rounded-xl px-4 py-3 text-sm" />
       </div>
 
       <button
         onClick={() => onContinue({ name, email, phone, declineUpdates })}
-        className="w-full bg-raz-teal text-white font-bold py-3 rounded-full mb-3"
+        className="interactive-control w-full bg-raz-teal text-white font-bold py-3 rounded-full mb-3"
       >
         <EditableText tKey="landing.checkout.continueFrequency" />
       </button>
