@@ -48,14 +48,14 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
 
   return (
     <div className="flex h-dvh max-h-dvh min-h-0 overflow-hidden">
-      <aside className="hidden md:flex h-dvh max-h-dvh min-h-0 flex-col w-56 overflow-hidden bg-raz-teal flex-shrink-0 sticky top-0">
+      <aside className="relative hidden md:flex h-dvh max-h-dvh min-h-0 flex-col w-56 overflow-hidden bg-raz-teal flex-shrink-0 sticky top-0">
         <div className="flex items-center justify-center py-6 border-b border-teal-400/30">
           <div className="w-11 h-11 bg-white/15 rounded-2xl flex items-center justify-center">
             <Heart size={22} className="text-white" fill="white" />
           </div>
         </div>
 
-        <nav className="flex-1 min-h-0 flex flex-col gap-1 overflow-hidden p-3 pt-4 text-sm">
+        <nav className="flex-1 min-h-0 flex flex-col gap-1 overflow-hidden p-3 pb-24 pt-4 text-sm">
           {/* Campaigns group */}
           <div>
             <Link
@@ -138,7 +138,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
           </Link>
         </nav>
 
-        <div className="shrink-0 p-3 border-t border-teal-400/30">
+        <div className="absolute inset-x-0 bottom-0 z-10 shrink-0 border-t border-teal-400/30 bg-raz-teal p-3">
           <Link
             href={variant === "community" ? "/community/campaigns/search" : "/nonprofit/create-campaign"}
             className="w-full bg-white text-raz-teal text-sm font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
