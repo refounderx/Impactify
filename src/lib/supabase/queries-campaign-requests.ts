@@ -5,7 +5,7 @@ export async function getNgoCampaignRequests(): Promise<CampaignJoinRequest[]> {
   if (error) throw new Error(error.message);
   return data ?? [];
 }
-export async function manageNgoCampaignRequest(id: string, action: "approve" | "reject") {
-  const { error } = await createClient().rpc("manage_ngo_campaign_request", { p_membership_id: id, p_action: action });
+export async function manageNgoCampaignRequest(communityId: string, campaignId: string, action: "approve" | "reject") {
+  const { error } = await createClient().rpc("manage_ngo_campaign_request", { p_community_id: communityId, p_campaign_id: campaignId, p_action: action });
   if (error) throw new Error(error.message);
 }

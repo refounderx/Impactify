@@ -18,7 +18,7 @@ export default function NgoDashboardPage() {
   const [requests, setRequests] = useState<CampaignJoinRequest[]>([]);
   const [requestBusy, setRequestBusy] = useState<string | null>(null);
   useEffect(() => { void getNgoCampaignRequests().then(setRequests).catch(() => setRequests([])); }, []);
-  async function decideRequest(request: CampaignJoinRequest, action: "approve" | "reject") { setRequestBusy(request.community_campaign_id); try { await manageNgoCampaignRequest(request.community_campaign_id, action); setRequests((current) => current.filter((item) => item.community_campaign_id !== request.community_campaign_id)); } finally { setRequestBusy(null); } }
+  async function decideRequest(request: CampaignJoinRequest, action: "approve" | "reject") { setRequestBusy(request.community_campaign_id); try { await manageNgoCampaignRequest(request.community_id, request.campaign_id, action); setRequests((current) => current.filter((item) => item.community_campaign_id !== request.community_campaign_id)); } finally { setRequestBusy(null); } }
   if (loading || error) return <AdminDataStatus loading={loading} error={error} reload={reload} />;
   const campaigns = (data?.adminCampaignRows ?? []).filter((campaign) => !query.trim() || `${campaign.name} ${campaign.nameEn}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   return <div>
