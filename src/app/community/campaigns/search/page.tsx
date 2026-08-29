@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, SlidersHorizontal, ArrowUpDown, Check, Eye } from "lucide-react";
 import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import { getCampaigns } from "@/lib/supabase/queries";
+import { getCommunityCampaignStatuses, setCommunityCampaign, type CommunityCampaignStatus } from "@/lib/supabase/queries-community-admin";
 import EditableText from "@/components/admin/EditableText";
 
 const SORT_OPTIONS_HE = [
@@ -16,26 +18,38 @@ const SORT_OPTIONS_HE = [
 const FILTER_OPTIONS_HE = ["תחומי פעילות", "אזור פעילות"];
 
 export default function CommunitySearchCampaignsPage() {
+  const router = useRouter();
   const { lang, t } = useLang();
   const [communityCampaignCards, setCommunityCampaignCards] = useState<Awaited<ReturnType<typeof getCampaigns>>>([]);
   const [loadError, setLoadError] = useState("");
   const [openDropdown, setOpenDropdown] = useState<"sort" | "filter" | null>(null);
-  const [requested, setRequested] = useState<Set<string>>(new Set());
+  const [statuses, setStatuses] = useState<Record<string, CommunityCampaignStatus>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
-    getCampaigns().then(setCommunityCampaignCards).catch((error: unknown) => {
+    Promise.all([getCampaigns(), getCommunityCampaignStatuses()]).then(([campaigns, membershipStatuses]) => {
+      setCommunityCampaignCards(campaigns);
+      setStatuses(membershipStatuses);
+    }).catch((error: unknown) => {
       setLoadError(error instanceof Error ? error.message : "Unable to load campaigns");
     });
   }, []);
 
-  const toggleRequest = (id: string) => {
-    setRequested((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  async function toggleRequest(id: string) {
+    const current = statuses[id];
+    if (current === "active" || current === "paused") return;
+    setSavingId(id); setLoadError("");
+    try {
+      const status = await setCommunityCampaign(id, current === "pending" ? "cancel" : "request");
+      setStatuses((previous) => {
+        const next = { ...previous };
+        if (status === "cancelled") delete next[id];
+        else next[id] = status as CommunityCampaignStatus;
+        return next;
+      });
+    } catch (error) { setLoadError(error instanceof Error ? error.message : "Unable to update join request"); }
+    finally { setSavingId(null); }
+  }
 
   return (
     <div>
@@ -109,7 +123,9 @@ export default function CommunitySearchCampaignsPage() {
       {loadError && <p className="bg-red-50 text-red-700 rounded-xl p-3 mb-4">{loadError}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {communityCampaignCards.map((c) => {
-          const isRequested = requested.has(c.id);
+          const status = statuses[c.id];
+          const isRequested = status === "pending";
+          const isJoined = status === "active" || status === "paused";
           return (
             <div key={c.id} className="bg-white rounded-2xl p-4 relative">
               <span className="absolute top-4 start-4 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full px-2.5 py-1">
@@ -117,15 +133,16 @@ export default function CommunitySearchCampaignsPage() {
               </span>
               <div className="absolute top-4 end-4 flex items-center gap-2">
                 <button
-                  onClick={() => toggleRequest(c.id)}
-                  aria-label={isRequested ? (lang === "en" ? "Cancel join request" : "ביטול בקשת ההצטרפות") : (lang === "en" ? "Request to join" : "בקשת הצטרפות")}
+                  onClick={() => void toggleRequest(c.id)}
+                  disabled={isJoined || savingId === c.id}
+                  aria-label={isJoined ? (lang === "en" ? "Already joined" : "הקהילה כבר הצטרפה") : isRequested ? (lang === "en" ? "Cancel join request" : "ביטול בקשת ההצטרפות") : (lang === "en" ? "Request to join" : "בקשת הצטרפות")}
                   className={`micro-hint w-7 h-7 rounded-full flex items-center justify-center ${
-                    isRequested ? "bg-raz-teal text-white" : "bg-raz-teal/10 text-raz-teal hover:bg-raz-teal/20"
+                    isRequested || isJoined ? "bg-raz-teal text-white" : "bg-raz-teal/10 text-raz-teal hover:bg-raz-teal/20"
                   }`}
                 >
                   <Check size={13} />
                 </button>
-                <button className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.view")}>
+                <button onClick={() => router.push(`/campaign/${c.id}`)} className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.view")}>
                   <Eye size={13} />
                 </button>
               </div>
@@ -142,12 +159,13 @@ export default function CommunitySearchCampaignsPage() {
                 remainingLabel={formatNIS(c.goal - c.raised)}
               />
               <button
-                onClick={() => toggleRequest(c.id)}
+                onClick={() => void toggleRequest(c.id)}
+                disabled={isJoined || savingId === c.id}
                 className={`w-full mt-3 py-2.5 rounded-xl font-bold text-sm transition-colors ${
-                  isRequested ? "bg-gray-100 text-gray-400" : "bg-raz-teal text-white hover:bg-raz-teal-dark"
+                  isRequested || isJoined ? "bg-gray-100 text-gray-500" : "bg-raz-teal text-white hover:bg-raz-teal-dark"
                 }`}
               >
-                {isRequested ? (lang === "en" ? "Request Sent" : "הבקשה נשלחה") : <EditableText tKey="adm.requestToJoin" />}
+                {savingId === c.id ? (lang === "en" ? "Saving…" : "שומר…") : isJoined ? (lang === "en" ? "Joined" : "הקהילה מחוברת") : isRequested ? (lang === "en" ? "Cancel request" : "ביטול בקשה") : <EditableText tKey="adm.requestToJoin" />}
               </button>
             </div>
           );

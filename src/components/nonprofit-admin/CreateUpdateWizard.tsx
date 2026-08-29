@@ -26,23 +26,26 @@ interface Props {
   t: (k: string) => string;
   onClose: () => void;
   onCreate: (draft: NewUpdateDraft) => void;
+  initialDraft?: NewUpdateDraft;
+  busy?: boolean;
+  error?: string;
 }
 
 const STEP_COUNT = 3;
 
-export default function CreateUpdateWizard({ lang, t, onClose, onCreate }: Props) {
+export default function CreateUpdateWizard({ lang, t, onClose, onCreate, initialDraft, busy = false, error = "" }: Props) {
   const { data } = useNgoAdminView();
   const [step, setStep] = useState(0);
-  const [audience, setAudience] = useState<Audience>("campaigns");
-  const [targetIds, setTargetIds] = useState<string[]>([]);
-  const [channels, setChannels] = useState({ push: true, email: true, sms: false });
-  const [timing, setTiming] = useState<Timing>("now");
-  const [scheduledAt, setScheduledAt] = useState("");
-  const [trigger, setTrigger] = useState<Trigger>("donation");
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [cta, setCta] = useState<Cta>("none");
-  const [imageName, setImageName] = useState<string | null>(null);
+  const [audience, setAudience] = useState<Audience>(initialDraft?.audience ?? "campaigns");
+  const [targetIds, setTargetIds] = useState<string[]>(initialDraft?.targetIds ?? []);
+  const [channels, setChannels] = useState(initialDraft?.channels ?? { push: true, email: false, sms: false });
+  const [timing, setTiming] = useState<Timing>(initialDraft?.timing ?? "now");
+  const [scheduledAt, setScheduledAt] = useState(initialDraft?.scheduledAt ?? "");
+  const [trigger, setTrigger] = useState<Trigger>(initialDraft?.trigger ?? "donation");
+  const [title, setTitle] = useState(initialDraft?.title ?? "");
+  const [body, setBody] = useState(initialDraft?.body ?? "");
+  const [cta, setCta] = useState<Cta>(initialDraft?.cta ?? "none");
+  const [imageName, setImageName] = useState<string | null>(initialDraft?.imageName ?? null);
 
   const targetOptions = audience === "products" ? (data?.adminProductRows ?? []) : (data?.adminCampaignRows ?? []);
 
@@ -58,7 +61,7 @@ export default function CreateUpdateWizard({ lang, t, onClose, onCreate }: Props
   }
 
   const canAdvanceStep0 = audience === "all" || targetIds.length > 0;
-  const canAdvanceStep2 = title.trim().length > 0 && body.trim().length > 0;
+  const canAdvanceStep2 = title.trim().length > 0 && body.trim().length > 0 && Object.values(channels).some(Boolean);
   const stepTitles = [t("adm.uw.step1Title"), t("adm.uw.step2Title"), t("adm.uw.step3Title")];
   const stepDescriptions = [t("adm.uw.step1Body"), t("adm.uw.step2Body"), lang === "en" ? "Write the message and add the media recipients will see." : "כתבו את ההודעה והוסיפו את המדיה שהנמענים יראו."];
 
@@ -89,10 +92,11 @@ export default function CreateUpdateWizard({ lang, t, onClose, onCreate }: Props
                 {lang === "en" ? `Continue to ${stepTitles[step + 1]}` : `המשך ל${stepTitles[step + 1]}`}
               </button>
             ) : (
-              <button onClick={handleSend} disabled={!canAdvanceStep2} className="rounded-full bg-raz-teal px-7 py-2.5 text-sm font-bold text-white hover:bg-teal-500 disabled:opacity-40">
-                {t("adm.uw.send")}
+              <button onClick={handleSend} disabled={!canAdvanceStep2 || busy} className="rounded-full bg-raz-teal px-7 py-2.5 text-sm font-bold text-white hover:bg-teal-500 disabled:opacity-40">
+                {busy ? (lang === "en" ? "Saving…" : "שומר…") : t("adm.uw.send")}
               </button>
             )}
+            {error && <p className="text-xs font-medium text-red-600" role="alert">{error}</p>}
           </>
         )}
       >

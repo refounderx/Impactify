@@ -301,3 +301,12 @@
 **Decision:** `src/lib/supabase/queries.ts` wraps all Supabase calls in try/catch and falls back to `mock-data.ts` on error or empty result.
 **Rationale:** Allows the demo to run without Supabase credentials configured, and protects against transient connectivity issues during development.
 **Consequences:** Pages always render. When Supabase is connected and seeded, real data takes over automatically with no code change. Fallback should be removed before production to surface real errors.
+
+---
+
+## 2026-08-29 — Tenant-derived persistence for admin updates and community campaign participation
+
+**Decision:** Store NGO update configurations in `ngo_updates` and community-to-campaign relationships in `community_campaigns`; expose mutations only through security-definer RPCs that derive the tenant from `auth.uid()`.
+**Context:** The admin update wizard and community join controls were previously local UI state, so refresh discarded changes and no donor-facing update was created.
+**Rationale:** Database-enforced tenant derivation prevents a client from writing another organization's updates or another community's campaign relationship. Immediate Push updates are materialized as donor `system_updates` rows; external Email/SMS and scheduled/trigger execution require a provider/worker.
+**Consequences:** Admin screens now survive refresh and community requests have durable `pending` status. NGO approval/notification UI and external delivery infrastructure remain explicit follow-ups.

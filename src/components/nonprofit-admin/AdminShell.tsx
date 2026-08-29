@@ -48,14 +48,14 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
 
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden md:flex flex-col w-56 bg-raz-teal flex-shrink-0 self-start sticky top-0 min-h-screen">
+      <aside className="hidden md:flex h-screen max-h-screen flex-col w-56 overflow-hidden bg-raz-teal flex-shrink-0 self-start sticky top-0">
         <div className="flex items-center justify-center py-6 border-b border-teal-400/30">
           <div className="w-11 h-11 bg-white/15 rounded-2xl flex items-center justify-center">
             <Heart size={22} className="text-white" fill="white" />
           </div>
         </div>
 
-        <nav className="flex-1 flex flex-col gap-1 p-3 pt-4 text-sm">
+        <nav className="flex-1 min-h-0 flex flex-col gap-1 overflow-hidden p-3 pt-4 text-sm">
           {/* Campaigns group */}
           <div>
             <Link

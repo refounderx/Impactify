@@ -48,6 +48,8 @@ page/component → query module or SiteDataProvider → Supabase anon client
 
 Normalized campaigns, organizations, products, communities, donations, and profile fields use dedicated tables. Only shared and landing presentation records remain in `site_datasets`; authenticated admin dashboards query their normalized tenant data. Source fixture modules remain migration inputs/type sources and are not runtime fallbacks.
 
+NGO update authoring uses `ngo_updates` for durable audience/channel/timing configuration. The tenant-derived `save_ngo_update` RPC creates donor-facing `system_updates` rows for immediate Push deliveries; scheduled/trigger execution and external Email/SMS delivery remain provider/worker work. Community campaign participation is stored in `community_campaigns`; community owners can create pending requests and pause/resume only their own active relationships through `set_community_campaign`.
+
 Binary media is kept out of the application bundle and served from narrowly scoped public Supabase Storage buckets. `VideoSection.tsx` builds the landing-video URL from `NEXT_PUBLIC_SUPABASE_URL`; the `landing-media` bucket restricts uploads to MP4 files no larger than 25 MB. Campaign header images use the separate `campaign-media` bucket, where authenticated NGO owners can write only beneath their own `org_id` folder. Campaign video URLs stay in the `campaigns` row and are rendered only as validated HTTPS YouTube/Vimeo embeds or direct video sources.
 
 **Authenticated reads (profile, recurring):**

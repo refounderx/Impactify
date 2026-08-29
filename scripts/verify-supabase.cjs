@@ -40,6 +40,7 @@ async function main() {
   const tables = [
     "organizations", "campaigns", "products", "communities", "donations",
     "hero_cards", "site_content", "site_datasets", "admin_role_audit",
+    "ngo_updates", "community_campaigns",
   ];
   const results = await Promise.all(tables.map((table) => inspectTable(baseUrl, key, table)));
   for (const result of results) console.log(`${result.table}: HTTP ${result.status}, rows ${result.count}`);
@@ -120,6 +121,10 @@ async function main() {
     const schema = await schemaResponse.json();
     const rpcPaths = Object.keys(schema.paths ?? {}).filter((route) => route.startsWith("/rpc/"));
     console.log(`RPC functions: ${rpcPaths.length ? rpcPaths.join(", ") : "none"}`);
+    const requiredRpcs = ["/rpc/save_ngo_update", "/rpc/manage_ngo_update", "/rpc/set_community_campaign"];
+    const missingRpcs = requiredRpcs.filter((route) => !rpcPaths.includes(route));
+    console.log(`updates/community RPCs ready: ${missingRpcs.length === 0}`);
+    if (missingRpcs.length > 0) process.exitCode = 1;
   }
   if (
     results.some((result) => ![200, 206].includes(result.status)) ||

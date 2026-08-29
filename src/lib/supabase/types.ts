@@ -181,6 +181,21 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["communities"]["Insert"]>;
         Relationships: [{ foreignKeyName: "communities_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }];
       };
+      community_campaigns: {
+        Row: { community_id: string; campaign_id: string; status: "pending" | "active" | "paused" | "rejected"; source: "created" | "linked"; requested_at: string; updated_at: string };
+        Insert: { community_id: string; campaign_id: string; status?: "pending" | "active" | "paused" | "rejected"; source?: "created" | "linked"; requested_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["community_campaigns"]["Insert"]>;
+        Relationships: [
+          { foreignKeyName: "community_campaigns_community_id_fkey"; columns: ["community_id"]; isOneToOne: false; referencedRelation: "communities"; referencedColumns: ["id"] },
+          { foreignKeyName: "community_campaigns_campaign_id_fkey"; columns: ["campaign_id"]; isOneToOne: false; referencedRelation: "campaigns"; referencedColumns: ["id"] },
+        ];
+      };
+      ngo_updates: {
+        Row: { id: string; org_id: string; audience: "all" | "campaigns" | "products"; target_ids: string[]; channels: string[]; timing: "now" | "scheduled" | "trigger"; scheduled_at: string | null; trigger_type: "donation" | "quantity" | "days" | null; title: string; body: string; cta: "none" | "addProduct" | "priceQty"; image_name: string | null; status: "active" | "paused" | "sent"; sent_so_far: number; created_at: string; updated_at: string };
+        Insert: Omit<Database["public"]["Tables"]["ngo_updates"]["Row"], "id" | "created_at" | "updated_at"> & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["ngo_updates"]["Insert"]>;
+        Relationships: [{ foreignKeyName: "ngo_updates_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }];
+      };
       payment_methods: {
         Row: { id: string; donor_id: string | null; brand: string; last_four: string; psp_token: string | null; created_at: string };
         Insert: { id?: string; donor_id?: string | null; brand: string; last_four: string; psp_token?: string | null; created_at?: string };
@@ -277,6 +292,12 @@ export interface Database {
         Args: { p_user_id: string };
         Returns: undefined;
       };
+      save_ngo_update: {
+        Args: { p_update_id: string | null; p_audience: string; p_target_ids: string[]; p_channels: string[]; p_timing: string; p_scheduled_at: string | null; p_trigger_type: string; p_title: string; p_body: string; p_cta: string; p_image_name: string | null };
+        Returns: string;
+      };
+      manage_ngo_update: { Args: { p_update_id: string; p_action: string }; Returns: string };
+      set_community_campaign: { Args: { p_campaign_id: string; p_action: string }; Returns: string };
       create_ngo_product: {
         Args: {
           p_name: string;

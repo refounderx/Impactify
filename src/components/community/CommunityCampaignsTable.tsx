@@ -1,6 +1,7 @@
 "use client";
 import { useState, Fragment } from "react";
-import { Pencil, Eye, ChevronDown, ChevronUp, Info } from "lucide-react";
+import { Eye, ChevronDown, ChevronUp, Info, Pause, Play } from "lucide-react";
+import { useRouter } from "next/navigation";
 import CampaignDetailPanel from "@/components/nonprofit-admin/CampaignDetailPanel";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
@@ -9,12 +10,20 @@ import type { CommunityCampaignRow } from "@/lib/community-admin-data";
 
 const HEADERS = ["שם הקמפיין", "הקמה", "סיום", "מוצרים", "מוצרים שגויסו", "סכום שגויס", "מספר תורמים", "מצטרפים", "עמותה", "צפייה", "עריכה", ""];
 
-export default function CommunityCampaignsTable({ rows }: { rows: CommunityCampaignRow[] }) {
+export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows: CommunityCampaignRow[]; onStatusChange: (id: string, action: "pause" | "resume") => Promise<void> }) {
+  const router = useRouter();
   const { lang, t } = useLang();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [openMenu, setOpenMenu] = useState<{ id: string; type: "edit" | "view" } | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const closeMenu = () => setOpenMenu(null);
+
+  async function changeStatus(row: CommunityCampaignRow) {
+    setSavingId(row.id);
+    try { await onStatusChange(row.id, row.paused ? "resume" : "pause"); closeMenu(); }
+    finally { setSavingId(null); }
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -72,7 +81,7 @@ export default function CommunityCampaignsTable({ rows }: { rows: CommunityCampa
                     </button>
                     {openMenu?.id === row.id && openMenu.type === "view" && (
                       <div className="absolute z-10 top-9 start-0 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[140px] text-start">
-                        <button onClick={closeMenu} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+                        <button onClick={() => router.push(`/campaign/${row.id}`)} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
                           {lang === "en" ? "View campaign" : "צפייה בקמפיין"}
                         </button>
                         <button
@@ -88,16 +97,13 @@ export default function CommunityCampaignsTable({ rows }: { rows: CommunityCampa
                     <button
                       onClick={() => setOpenMenu(openMenu?.id === row.id && openMenu.type === "edit" ? null : { id: row.id, type: "edit" })}
                       className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20"
-                      aria-label={t("hint.edit")}
+                      aria-label={lang === "en" ? "Manage campaign participation" : "ניהול השתתפות בקמפיין"}
                     >
-                      <Pencil size={14} />
+                      {row.paused ? <Play size={14} /> : <Pause size={14} />}
                     </button>
                     {openMenu?.id === row.id && openMenu.type === "edit" && (
                       <div className="absolute z-10 top-9 start-0 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[140px] text-start">
-                        <button onClick={closeMenu} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
-                          {lang === "en" ? "Edit campaign" : "עריכת קמפיין"}
-                        </button>
-                        <button onClick={closeMenu} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+                        <button disabled={savingId === row.id} onClick={() => void changeStatus(row)} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50">
                           {row.paused ? (lang === "en" ? "Reactivate campaign" : "הפעלת קמפיין") : (lang === "en" ? "Pause campaign" : "הפסקת קמפיין")}
                         </button>
                       </div>

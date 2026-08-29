@@ -9,25 +9,29 @@ export function useCommunityAdminView() {
   const state = useCommunityAdminData();
   const data = useMemo(() => {
     if (!state.data) return null;
-    const { community, organization, campaigns, donations } = state.data;
-    const orgName = organization?.name ?? "";
-    const orgNameEn = organization?.name_en ?? orgName;
-    const campaignRows = campaigns.map((campaign) => ({
-      id: campaign.id, name: campaign.title, nameEn: campaign.title_en ?? campaign.title,
-      created: date(campaign.created_at), ended: date(campaign.end_date), productsCount: 0,
-      productsRaisedCount: donations.filter((item) => item.campaign_id === campaign.id).reduce((sum, item) => sum + item.quantity, 0),
-      amountRaised: donations.filter((item) => item.campaign_id === campaign.id).reduce((sum, item) => sum + Number(item.amount), 0),
-      joinedCount: 1, donorCount: donations.filter((item) => item.campaign_id === campaign.id).length,
-      orgName, orgNameEn, source: "linked" as const, paused: campaign.status === "paused",
-    }));
+    const { community, organization, organizations, campaigns, donations } = state.data;
+    const campaignRows = campaigns.map((campaign) => {
+      const campaignOrganization = organizations.find((item) => item.id === campaign.org_id);
+      const orgName = campaignOrganization?.name ?? "";
+      const orgNameEn = campaignOrganization?.name_en ?? orgName;
+      return {
+        id: campaign.id, name: campaign.title, nameEn: campaign.title_en ?? campaign.title,
+        created: date(campaign.created_at), ended: date(campaign.end_date), productsCount: 0,
+        productsRaisedCount: donations.filter((item) => item.campaign_id === campaign.id).reduce((sum, item) => sum + item.quantity, 0),
+        amountRaised: donations.filter((item) => item.campaign_id === campaign.id).reduce((sum, item) => sum + Number(item.amount), 0),
+        joinedCount: 1, donorCount: donations.filter((item) => item.campaign_id === campaign.id).length,
+        orgName, orgNameEn, source: campaign.membershipSource, paused: campaign.membershipStatus === "paused",
+      };
+    });
     return {
       AS_OF: new Date().toLocaleDateString("he-IL"),
       communityCampaignRows: campaignRows,
       communityCampaignCards: campaigns.map((campaign) => ({ id: campaign.id, title: campaign.title,
         titleEn: campaign.title_en ?? campaign.title, emoji: campaign.emoji,
-        raised: Number(campaign.raised), goal: Number(campaign.goal), activityArea: "—", activityAreaEn: "—" })),
+        raised: Number(campaign.raised), goal: Number(campaign.goal), activityArea: "—", activityAreaEn: "—",
+        source: campaign.membershipSource, paused: campaign.membershipStatus === "paused" })),
       communityCampaignsTotalRaised: donations.reduce((sum, item) => sum + Number(item.amount), 0),
-      communityCampaignsActiveCount: campaigns.length,
+      communityCampaignsActiveCount: campaigns.filter((campaign) => campaign.membershipStatus === "active").length,
       communityDonationRows: donations.map((item) => ({ id: item.id, date: date(item.created_at),
         donorName: item.dedication_name || "Anonymous donor", campaign: item.campaigns?.title ?? "",
         product: item.products?.name ?? "—", quantity: item.quantity, amount: Number(item.amount),

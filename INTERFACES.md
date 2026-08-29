@@ -64,6 +64,9 @@ Server-side donation write. Validates inputs at trust boundary.
 | `update_ngo_profile(name, description, activity_area, address, phone, ceo, founded, logo_url)` | NGO owner only | Validates editable organization fields and updates the organization derived from `auth.uid()`; no client-supplied organization ID is trusted |
 | `publish_campaign(title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Validates tenant products and HTTPS media URLs, then atomically publishes a campaign |
 | `update_campaign(campaign_id, title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Derives the tenant from auth, verifies campaign/product ownership and HTTPS media, then atomically updates the campaign and product links |
+| `save_ngo_update(update_id?, audience, target_ids, channels, timing, scheduled_at, trigger_type, title, body, cta, image_name)` | NGO owner only | Persists an update in the NGO tenant; a new immediate Push update also creates donor-facing `system_updates` rows for matching donors |
+| `manage_ngo_update(update_id, action)` | NGO owner only | Duplicates, pauses/resumes, or deletes only an update owned by the caller's organization |
+| `set_community_campaign(campaign_id, action)` | Community owner only | Creates/cancels a pending join request or pauses/resumes the caller's own active campaign relationship |
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
 
@@ -83,6 +86,8 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `updateRecurringStatus(id, status)` | Yes (RLS) | `boolean` | `recurring_donations` |
 | `cancelRecurring(id)` | Yes (RLS) | `boolean` | `recurring_donations` |
 | `getSiteDatasets()` | No | typed shared/landing presentation bundle | `site_datasets` |
+| `getNgoUpdates()` / `saveNgoUpdate()` / `manageNgoUpdate()` | NGO owner | Persistent update rows and tenant-safe mutations | `ngo_updates`, `system_updates` |
+| `getCommunityCampaignStatuses()` / `setCommunityCampaign()` | Community owner | Persistent join-request status and participation controls | `community_campaigns` |
 
 ### `site_datasets`
 
@@ -170,7 +175,28 @@ RLS and grants: only `authenticated` receives table privileges, and every select
 | `status` | text | `info \| pending \| action_required` |
 | `action_label` / `action_label_en` | text | Nullable |
 
-RLS: readable when `donor_id = auth.uid()` or `donor_id is null`. Surfaced in the "עדכוני מערכת" tab of `/my-donations` (updates view). The nonprofit-admin authoring flow that writes into this table is not yet built.
+RLS: readable when `donor_id = auth.uid()` or `donor_id is null`. Surfaced in the "עדכוני מערכת" tab of `/my-donations` (updates view). Immediate NGO Push updates are written here by the `save_ngo_update` security-definer RPC. Email/SMS delivery still requires a configured provider/worker.
+
+### `ngo_updates`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `org_id` | uuid | FK → organizations; derived from the authenticated NGO owner for writes |
+| `audience` / `target_ids` | text / uuid[] | `all`, `campaigns`, or `products`; target ownership is validated by the RPC |
+| `channels` / `timing` | text[] / text | Push, email, SMS and `now`, `scheduled`, or `trigger` configuration |
+| `title` / `body` | text | Required bounded update content |
+| `status` | text | `active`, `paused`, or `sent`; immediate Push sends are marked sent with a recipient count |
+
+RLS: NGO owners can read only their organization's rows. All writes use the tenant-derived `save_ngo_update` and `manage_ngo_update` RPCs.
+
+### `community_campaigns`
+| Column | Type | Notes |
+|---|---|---|
+| `community_id` / `campaign_id` | uuid | Composite PK linking a community to a campaign |
+| `status` | text | `pending`, `active`, `paused`, or `rejected`; join requests start as `pending` |
+| `source` | text | `linked` or `created` for the community campaigns tabs |
+
+RLS: a community owner can read only its own relationships. Mutations use `set_community_campaign`, which derives the community from `auth.uid()` and never accepts a client-supplied tenant ID.
 
 ### `hero_cards`
 | Column | Type | Notes |
