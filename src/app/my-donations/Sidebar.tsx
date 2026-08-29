@@ -31,7 +31,7 @@ export default function Sidebar({ view, onNav }: Props) {
   const { lang } = useLang();
 
   return (
-    <aside className="hidden md:flex h-dvh max-h-dvh min-h-0 flex-col w-52 bg-raz-teal flex-shrink-0 sticky top-0 overflow-hidden">
+    <aside className="hidden md:flex h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] min-h-0 flex-col w-52 bg-raz-teal flex-shrink-0 sticky top-0 overflow-hidden">
       {/* Logo */}
       <div className="flex items-center justify-center py-6 border-b border-teal-400/30">
         <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">🤝</div>
