@@ -8,7 +8,7 @@ import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
 import CreateProductModal from "@/components/nonprofit-admin/CreateProductModal";
 import ProductDetailPanel from "@/components/nonprofit-admin/ProductDetailPanel";
 import { formatNIS } from "@/lib/mock-data";
-import { getAdminProductDetail, type AdminProductRow } from "@/lib/nonprofit-admin-data";
+import { type AdminProductRow } from "@/lib/nonprofit-admin-data";
 
 type ActivityFilter = "all" | "active" | "inactive";
 
@@ -77,7 +77,6 @@ export default function ProductsDashboardPage() {
             </tr></thead>
             <tbody>{products.map((product) => {
               const expanded = expandedId === product.id;
-              const sourceIndex = (data?.adminProductRows ?? []).findIndex((item) => item.id === product.id);
               return [
                 <tr key={product.id} className="border-b border-slate-200 text-slate-800 transition-colors hover:bg-slate-50/80">
                   <td className="px-3 py-4 text-center"><RowToggle product={product} expanded={expanded} onClick={() => setExpandedId(expanded ? null : product.id)} /></td>
@@ -87,7 +86,7 @@ export default function ProductsDashboardPage() {
                   <td className="px-4 py-4"><ActionButton label={lang === "en" ? `View ${product.nameEn}` : `צפייה ב${product.name}`} onClick={() => setExpandedId(expanded ? null : product.id)}><Eye size={16} /></ActionButton></td>
                   <td className="px-4 py-4"><ActionButton label={lang === "en" ? `Edit ${product.nameEn}` : `עריכת ${product.name}`} onClick={() => setEditingProduct(product)}><Pencil size={16} /></ActionButton></td>
                 </tr>,
-                expanded && <tr key={`${product.id}-detail`} className="border-b border-slate-200"><td colSpan={12} className="p-0"><ProductDetailPanel detail={getAdminProductDetail(Math.max(sourceIndex, 0))} /></td></tr>,
+                expanded && data?.adminProductDetails[product.id] && <tr key={`${product.id}-detail`} className="border-b border-slate-200"><td colSpan={12} className="p-0"><ProductDetailPanel detail={data.adminProductDetails[product.id]} /></td></tr>,
               ];
             })}</tbody>
           </table>

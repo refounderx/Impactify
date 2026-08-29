@@ -2,8 +2,10 @@
 
 import { useMemo } from "react";
 import { useNgoAdminData } from "@/contexts/NgoAdminDataContext";
+import type { AdminProductDetail } from "@/lib/nonprofit-admin-data";
 
 const date = (value: string | null) => value ? new Date(value).toLocaleDateString("he-IL") : "—";
+const months: [string, string][] = [["ינואר", "January"], ["פברואר", "February"], ["מרץ", "March"], ["אפריל", "April"], ["מאי", "May"], ["יוני", "June"], ["יולי", "July"], ["אוגוסט", "August"], ["ספטמבר", "September"], ["אוקטובר", "October"], ["נובמבר", "November"], ["דצמבר", "December"]];
 
 export function useNgoAdminView() {
   const state = useNgoAdminData();
@@ -45,6 +47,14 @@ export function useNgoAdminView() {
           description: product.description ?? "", descriptionEn: product.description_en ?? "",
           emoji: product.emoji ?? "💙", active: product.active };
       }),
+      adminProductDetails: Object.fromEntries(products.map((product) => {
+        const productDonations = donations.filter((donation) => donation.product_id === product.id);
+        const donated = productDonations.reduce((sum, donation) => sum + donation.quantity, 0);
+        const campaignOptions = campaigns.filter((campaign) => campaignProducts.some((link) => link.product_id === product.id && link.campaign_id === campaign.id)).map((campaign) => campaign.title);
+        const monthly = months.map(([month, monthEn], index) => ({ month, monthEn, donated: productDonations.filter((donation) => new Date(donation.created_at).getMonth() === index).reduce((sum, donation) => sum + donation.quantity, 0), total: 0 }));
+        const detail: AdminProductDetail = { sku: product.id.slice(0, 8).toUpperCase(), year: String(new Date().getFullYear()), campaignOptions: campaignOptions.length ? campaignOptions : ["כל הקמפיינים"], selectedCampaign: campaignOptions[0] ?? "כל הקמפיינים", yearlyTotal: donated, monthly, donated, goal: donated };
+        return [product.id, detail];
+      })),
       adminProductCards: products.map((product) => {
         const donated = productDonationTotals.get(product.id)?.quantity ?? 0;
         return { id: product.id, name: product.name, nameEn: product.name_en ?? product.name,

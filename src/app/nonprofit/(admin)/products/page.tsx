@@ -10,7 +10,7 @@ import DonutChart from "@/components/nonprofit-admin/DonutChart";
 import ProductDetailPanel from "@/components/nonprofit-admin/ProductDetailPanel";
 import { useLang } from "@/contexts/LanguageContext";
 import { useNgoAdminView } from "@/hooks/useNgoAdminView";
-import { getAdminProductDetail, type AdminProductCard, type AdminProductRow } from "@/lib/nonprofit-admin-data";
+import { type AdminProductCard, type AdminProductRow } from "@/lib/nonprofit-admin-data";
 
 function ProductCard({ card, onEdit, onView }: { card: AdminProductCard; onEdit: () => void; onView: () => void }) {
   const { lang, t } = useLang();
@@ -90,7 +90,7 @@ export default function ProductsGridPage() {
           <button type="button" className="absolute inset-0 bg-black/45" onClick={() => setViewingIndex(null)} aria-label={lang === "en" ? "Close" : "סגירה"} />
           <div className="relative z-10 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-7">
             <button type="button" onClick={() => setViewingIndex(null)} className="micro-hint mb-3 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100" aria-label={lang === "en" ? "Close window" : "סגירת החלון"}><X size={20} /></button>
-            <ProductDetailPanel detail={getAdminProductDetail(viewingIndex)} />
+            {data?.adminProductDetails[rows[viewingIndex]?.id] && <ProductDetailPanel detail={data.adminProductDetails[rows[viewingIndex].id]} />}
           </div>
         </div>
       )}
