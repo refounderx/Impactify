@@ -1,11 +1,9 @@
 "use client";
 import { useState, Fragment } from "react";
-import { Eye, ChevronDown, ChevronUp, Info, Pause, Play } from "lucide-react";
+import { Eye, Info, Pause, Play } from "lucide-react";
 import { useRouter } from "next/navigation";
-import CampaignDetailPanel from "@/components/nonprofit-admin/CampaignDetailPanel";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { getAdminCampaignDetail } from "@/lib/nonprofit-admin-data";
 import type { CommunityCampaignRow } from "@/lib/community-admin-data";
 
 const HEADERS = ["שם הקמפיין", "הקמה", "סיום", "מוצרים", "מוצרים שגויסו", "סכום שגויס", "מספר תורמים", "מצטרפים", "עמותה", "צפייה", "עריכה", ""];
@@ -13,7 +11,6 @@ const HEADERS = ["שם הקמפיין", "הקמה", "סיום", "מוצרים", 
 export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows: CommunityCampaignRow[]; onStatusChange: (id: string, action: "pause" | "resume") => Promise<void> }) {
   const router = useRouter();
   const { lang, t } = useLang();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [openMenu, setOpenMenu] = useState<{ id: string; type: "edit" | "view" } | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
 
@@ -36,8 +33,7 @@ export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => {
-            const expanded = expandedId === row.id;
+          {rows.map((row) => {
             return (
               <Fragment key={row.id}>
                 <tr className="border-b border-gray-50 hover:bg-gray-50/50">
@@ -110,22 +106,9 @@ export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows
                     )}
                   </td>
                   <td className="py-3 px-2">
-                    <button
-                      onClick={() => setExpandedId(expanded ? null : row.id)}
-                      className="micro-hint w-7 h-7 rounded-full text-gray-400 flex items-center justify-center hover:bg-gray-100"
-                      aria-label={t(expanded ? "hint.collapse" : "hint.expand")}
-                    >
-                      {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
+                    <span aria-hidden="true" />
                   </td>
                 </tr>
-                {expanded && (
-                  <tr>
-                    <td colSpan={HEADERS.length} className="p-2">
-                      <CampaignDetailPanel detail={getAdminCampaignDetail(i)} />
-                    </td>
-                  </tr>
-                )}
               </Fragment>
             );
           })}

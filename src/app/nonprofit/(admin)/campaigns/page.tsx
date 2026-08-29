@@ -48,6 +48,7 @@ export default function CampaignsGridPage() {
             </p>
           </div>
         ))}
+        {(data?.adminCampaignCards ?? []).length === 0 && <p className="col-span-full rounded-2xl bg-white p-10 text-center text-gray-500">{lang === "en" ? "No campaigns yet." : "אין קמפיינים עדיין."}</p>}
       </div>
     </div>
   );
