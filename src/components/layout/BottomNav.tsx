@@ -16,14 +16,14 @@ const nonprofitTabs = [
   { label: "ראשי", href: "/nonprofit", Icon: LayoutDashboard },
   { label: "קמפיינים", href: "/nonprofit/campaigns", Icon: FileText },
   { label: "תרומות", href: "/nonprofit/donations", Icon: Activity },
-  { label: "פרופיל", href: "/nonprofit", Icon: User },
+  { label: "פרופיל", href: "/nonprofit/profile", Icon: User },
 ];
 
 const communityTabs = [
   { label: "ראשי", href: "/community", Icon: LayoutDashboard },
   { label: "קהילה", href: "/community", Icon: Users },
   { label: "פעילות", href: "/community", Icon: Activity },
-  { label: "פרופיל", href: "/community", Icon: User },
+  { label: "פרופיל", href: "/profile", Icon: User },
 ];
 
 export default function BottomNav({ variant = "donor" }: { variant?: NavVariant }) {
@@ -34,7 +34,8 @@ export default function BottomNav({ variant = "donor" }: { variant?: NavVariant 
   return (
     <nav className="sticky bottom-0 bg-white border-t border-gray-200 flex z-40 mt-auto md:hidden">
       {tabs.map(({ label, href, Icon }) => {
-        const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+        const isDashboardRoot = href === "/nonprofit" || href === "/community";
+        const isActive = pathname === href || (!isDashboardRoot && href !== "/" && pathname.startsWith(href));
         return (
           <Link
             key={label}

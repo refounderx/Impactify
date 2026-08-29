@@ -14,7 +14,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 
 **Organization goals live (2026-08-25):** migration `20260825130000` adds structured bilingual goals to every organization row, requires 1–10 goals for new NGO signup, and exposes an owner-scoped update RPC used from `/nonprofit/profile`. Existing organizations retain an empty list until their owner supplies real goals; no content was invented during migration.
 
-**NGO-owner profile live (2026-08-29):** `/nonprofit/profile` now uses the shared NGO admin shell and provides editable personal details, saved payment-method display metadata, organization goals, and persistent special days. Migration `20260829120000` was applied through the Dashboard SQL Editor. Independent verification passed for its ledger entry, table existence, RLS, authenticated grants, anonymous denial, four ownership policies, and `auth.uid()` predicates.
+**Unified role profiles live (2026-08-29):** donor, NGO-owner, community-owner, and admin profiles now compose the same `UnifiedProfileContent` design. Shared sections provide editable personal details, saved payment-method display metadata, and persistent special days; donor activity and NGO organization goals remain role-specific. `/nonprofit/profile` retains the NGO admin shell, while `/profile` and the embedded `/my-donations` profile use the same content system. Migration `20260829120000` was applied through the Dashboard SQL Editor. Independent verification passed for its ledger entry, table existence, RLS, authenticated grants, anonymous denial, four ownership policies, and `auth.uid()` predicates.
 
 **Donation anonymization fix live (2026-08-25):** migration `20260825140000` replaces the donation UPDATE rewrite rule with a trigger that blocks ordinary ledger edits while allowing foreign-key `SET NULL` anonymization of donor/product references. Catalog checks passed, a donor-reference update succeeded inside a rolled-back transaction, and an amount update was rejected. This resolves the referential-integrity failure encountered when an admin deletes a user while retaining immutable donation history.
 
@@ -32,7 +32,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - `/nonprofit/create-campaign` — 6-step wizard (basics→story→media→products→communities→publish)
 - `/nonprofit/profile` — NGO-owner personal details, payment methods, special days, and organization goals inside the admin shell
 - `/community` — Two-column: stats/leaderboard left, styled export card right (sticky)
-- `/profile` — Two-column: history/settings left, impact summary right; links to הוראות קבע
+- `/profile` — Unified profile for donor, community-owner, and admin: personal details, payment methods, special days, plus donor-only activity
 - `/recurring` — הוראות קבע (standing orders): monthly summary, per-order pause/resume/cancel with inline confirmation
 
 ### Navigation

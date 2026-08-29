@@ -129,6 +129,8 @@ src/
 
 **`community/` admin tree (added 2026-08-11):** mirrors the `nonprofit/(admin)/` pattern one level down. Its layout requires `community_owner`, and its data provider derives `community_id` from the signed-in profile before making RLS-filtered normalized queries. Request-to-join and updates remain UI-only where no normalized persistence contract exists.
 
+**Unified authenticated profile UI (2026-08-29):** `UnifiedProfileContent` owns the common visual and interaction structure for donor, NGO-owner, community-owner, and admin profiles. `/profile`, the embedded `/my-donations` profile view, and `/nonprofit/profile` all compose this component. Shared sections cover personal details, payment-method display metadata, and special days; donor donation activity and NGO organization goals remain role-specific children.
+
 ## Database Schema
 
 | Table | Purpose | RLS |
@@ -185,7 +187,7 @@ Admin           → profile directory, audited role/tenant changes, guarded acco
 | `/nonprofit/[id]` | Supabase organizations and campaigns; extended profile fields and goals are normalized organization columns |
 | `/community` and `/community/*` admin pages | Authenticated community tenant queries over normalized Supabase tables |
 | `/admin/users` | Admin-only Supabase profile/tenant directory plus role-change and account-deletion RPCs |
-| `/profile` | Donor/general auth-scoped Supabase reads; logged-out demo presentation data comes from `site_datasets` |
+| `/profile` | Shared donor/community-owner/admin profile UI with auth-scoped personal details, payment methods, special days, and donor-only activity; signed-out users receive a sign-in prompt |
 | `/recurring` | Auth-scoped Supabase reads; no local fallback |
 
 No active page silently falls back to local fixture arrays. The fixture files are migration inputs and shared type sources only.
