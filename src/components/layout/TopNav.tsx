@@ -6,6 +6,7 @@ import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminMode } from "@/contexts/AdminModeContext";
 import EditableText from "@/components/admin/EditableText";
+import { profilePathForRole } from "@/lib/profile-routes";
 
 export default function TopNav() {
   const pathname = usePathname();
@@ -24,7 +25,7 @@ export default function TopNav() {
   const shortName = lang === "en"
     ? (profile?.full_name_en ?? profile?.full_name ?? "")
     : (profile?.full_name ?? "");
-  const profileHref = profile?.app_role === "ngo_owner" ? "/nonprofit/profile" : "/profile";
+  const profileHref = profilePathForRole(profile?.app_role);
 
   const donorLinks = [
     { key: "nav.home", href: "/" },
@@ -37,11 +38,11 @@ export default function TopNav() {
   ];
   const communityLinks = [
     { key: "nav.dashboard", href: "/community" },
-    { key: "nav.profile", href: "/profile" },
+    { key: "nav.profile", href: "/community/profile" },
   ];
   const adminLinks = [
     { key: "nav.users", href: "/admin/users" },
-    { key: "nav.profile", href: "/profile" },
+    { key: "nav.profile", href: "/admin/profile" },
   ];
   const profileRoleLinks = profile?.app_role === "admin" ? adminLinks
     : profile?.app_role === "community_owner" ? communityLinks

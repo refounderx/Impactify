@@ -2,10 +2,11 @@
 import Link from "next/link";
 import EditableText from "@/components/admin/EditableText";
 import { useAuth } from "@/contexts/AuthContext";
+import { profilePathForRole } from "@/lib/profile-routes";
 
 export default function ContactCTA() {
   const { profile } = useAuth();
-  const profileHref = profile?.app_role === "ngo_owner" ? "/nonprofit/profile" : "/profile";
+  const profileHref = profilePathForRole(profile?.app_role);
 
   return (
     <section id="contact" className="max-w-6xl mx-auto px-6 py-10">

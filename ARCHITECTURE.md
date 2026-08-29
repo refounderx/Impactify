@@ -127,9 +127,9 @@ src/
 
 **Root route `/` (changed 2026-08-23):** `app/page.tsx` now renders the marketing landing page (same content as `app/landing/page.tsx` — duplicated for now, not deduplicated). The previous donor-home screen (teal header, featured campaign, active-campaigns grid) was moved to `app/_archive/old-home/page.tsx`, a Next.js private folder (`_` prefix excludes it from routing) — code preserved, not deleted, pending a decision on where donor-home should live going forward. Several other pages still link/redirect to `/` expecting the old donor-home behavior (`my-donations`, `auth`, `nonprofit/[id]`, `campaign/[id]`, `TopNav.tsx`, `recurring`, `donate/[id]/thanks`) — not yet updated; see `TASKS.md`.
 
-**`community/` admin tree (added 2026-08-11):** mirrors the `nonprofit/(admin)/` pattern one level down. Its layout requires `community_owner`, and its data provider derives `community_id` from the signed-in profile before making RLS-filtered normalized queries. Request-to-join and updates remain UI-only where no normalized persistence contract exists.
+**`community/` admin tree (added 2026-08-11):** mirrors the `nonprofit/(admin)/` pattern one level down. Its layout requires `community_owner`, and its data provider derives `community_id` from the signed-in profile before making RLS-filtered normalized queries. The community profile lives at `/community/profile`, so it inherits the same side panel. Request-to-join and updates remain UI-only where no normalized persistence contract exists.
 
-**Authenticated profile UI (updated 2026-08-29):** `UnifiedProfileContent` owns the common personal-profile structure for donor, community-owner, and admin views at `/profile` and the embedded `/my-donations` profile. NGO owners use a dedicated organization editor at `/nonprofit/profile`, matching the admin-shell reference design and persisting name, description, activity area, address, phone, contact, founding year, and logo URL through a tenant-derived RPC; organization goals remain a separate editor below it.
+**Authenticated profile UI (updated 2026-08-29):** every role has a profile route inside a role-appropriate side-panel shell: donor `/profile`, community owner `/community/profile`, NGO owner `/nonprofit/profile`, and platform admin `/admin/profile`. The root `/profile` route resolves the authenticated role on the server and redirects non-donors to their protected role route, while landing/header links use the same shared role-to-profile mapping. `UnifiedProfileContent` owns the common personal-profile structure for donor, community-owner, and admin views and the embedded `/my-donations` profile. NGO owners use a dedicated organization editor matching the admin-shell reference design and persisting name, description, activity area, address, phone, contact, founding year, and logo URL through a tenant-derived RPC; organization goals remain a separate editor below it.
 
 ## Database Schema
 
@@ -185,9 +185,9 @@ Admin           → profile directory, audited role/tenant changes, guarded acco
 | `/donate/[id]/amount` | Supabase campaign lookup |
 | `/nonprofit` and `/nonprofit/*` admin pages | Authenticated NGO tenant queries over normalized Supabase tables; `/nonprofit/profile` reads/writes the current organization profile and goals through tenant-derived RPCs |
 | `/nonprofit/[id]` | Supabase organizations and campaigns; extended profile fields and goals are normalized organization columns |
-| `/community` and `/community/*` admin pages | Authenticated community tenant queries over normalized Supabase tables |
-| `/admin/users` | Admin-only Supabase profile/tenant directory plus role-change and account-deletion RPCs |
-| `/profile` | Shared donor/community-owner/admin profile UI with auth-scoped personal details, payment methods, special days, and donor-only activity; signed-out users receive a sign-in prompt |
+| `/community` and `/community/*` admin pages | Authenticated community tenant queries over normalized Supabase tables; `/community/profile` reuses the protected community shell |
+| `/admin/users`, `/admin/profile` | Admin-only user management and profile routes; the profile route uses an admin side panel |
+| `/profile` | Donor profile UI with auth-scoped personal details, payment methods, special days, and activity; authenticated non-donors are redirected to their role-specific profile route and signed-out users receive a sign-in prompt |
 | `/recurring` | Auth-scoped Supabase reads; no local fallback |
 
 No active page silently falls back to local fixture arrays. The fixture files are migration inputs and shared type sources only.

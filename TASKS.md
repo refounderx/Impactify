@@ -32,7 +32,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - `/nonprofit/create-campaign` — 6-step wizard (basics→story→media→products→communities→publish)
 - `/nonprofit/profile` — NGO organization details, logo URL, activity area, and organization goals inside the admin shell
 - `/community` — Two-column: stats/leaderboard left, styled export card right (sticky)
-- `/profile` — Unified profile for donor, community-owner, and admin: personal details, payment methods, special days, plus donor-only activity
+- Role-specific profile routes keep every authenticated profile inside a side-panel shell: `/profile` for donors, `/community/profile` for community owners, `/nonprofit/profile` for NGO owners, and `/admin/profile` for platform admins. The shared personal-profile content remains unified where the role does not require the NGO organization editor.
 - `/recurring` — הוראות קבע (standing orders): monthly summary, per-order pause/resume/cancel with inline confirmation
 
 ### Navigation

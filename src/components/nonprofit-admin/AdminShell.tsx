@@ -42,7 +42,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
 
   const campaignsGroupActive = pathname === CAMPAIGNS_GRID || pathname === CAMPAIGNS_DASHBOARD;
   const productsGroupActive = variant === "nonprofit" && pathname.startsWith(PRODUCTS_DASHBOARD);
-  const profileHref = variant === "nonprofit" ? "/nonprofit/profile" : "/profile";
+  const profileHref = variant === "nonprofit" ? "/nonprofit/profile" : "/community/profile";
 
   const greeting = lang === "en" ? (profile?.full_name_en ?? profile?.full_name) : profile?.full_name;
 

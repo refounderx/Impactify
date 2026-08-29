@@ -67,7 +67,10 @@ Runtime data queries Supabase directly; missing data or query failures surface e
 | `/nonprofit` | Org dashboard |
 | `/nonprofit/create-campaign` | 6-step campaign creation wizard |
 | `/community` | Community manager dashboard |
-| `/profile` | Donor profile & history |
+| `/profile` | Donor profile inside the donor side panel |
+| `/nonprofit/profile` | NGO organization profile inside the NGO admin shell |
+| `/community/profile` | Community-owner profile inside the community admin shell |
+| `/admin/profile` | Platform-admin profile inside the admin profile shell |
 | `/recurring` | Standing orders (הוראות קבע) |
 
 ## Demo Mode

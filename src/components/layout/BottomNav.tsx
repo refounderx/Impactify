@@ -23,7 +23,7 @@ const communityTabs = [
   { label: "ראשי", href: "/community", Icon: LayoutDashboard },
   { label: "קהילה", href: "/community", Icon: Users },
   { label: "פעילות", href: "/community", Icon: Activity },
-  { label: "פרופיל", href: "/profile", Icon: User },
+  { label: "פרופיל", href: "/community/profile", Icon: User },
 ];
 
 export default function BottomNav({ variant = "donor" }: { variant?: NavVariant }) {

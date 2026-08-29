@@ -21,7 +21,7 @@ The `site_datasets` and organization-profile migrations were applied to the live
 
 Four-role auth, one-time onboarding RPCs, admin role management, tenant RLS, and atomic campaign publishing from migrations `20260823160000`–`20260823162000` are live. The sole existing profile was bootstrapped as the initial admin after an exact one-profile/zero-admin precondition check. REST and SQL probes verified tenant consistency, blocked bank fields, blocked anonymous RPC execution, and rejected a simulated non-admin role change.
 
-Structured NGO goals are live from migration `20260825130000`. New NGO owners must provide 1–10 goals during onboarding; existing NGO owners can add or revise them from `/profile`, and public NGO profiles display the persisted list.
+Structured NGO goals are live from migration `20260825130000`. New NGO owners must provide 1–10 goals during onboarding; existing NGO owners can add or revise them from `/nonprofit/profile`, and public NGO profiles display the persisted list.
 
 ### Screens Built
 - Donor home feed (featured campaign hero + category chips + grid)
