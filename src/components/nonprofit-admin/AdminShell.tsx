@@ -25,8 +25,8 @@ const COMMUNITY_ROUTES = {
   lastNavHref: "/community/nonprofits",
 };
 
-const PRODUCTS_GRID = "/nonprofit/products";
-const PRODUCTS_DASHBOARD = "/nonprofit/products/dashboard";
+const PRODUCTS_DASHBOARD = "/nonprofit/products";
+const PRODUCTS_MANAGEMENT = "/nonprofit/products/dashboard";
 
 export default function AdminShell({ children, variant = "nonprofit" }: { children: React.ReactNode; variant?: "nonprofit" | "community" }) {
   const pathname = usePathname();
@@ -41,7 +41,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
   const LAST_NAV = routes.lastNavHref;
 
   const campaignsGroupActive = pathname === CAMPAIGNS_GRID || pathname === CAMPAIGNS_DASHBOARD;
-  const productsGroupActive = variant === "nonprofit" && pathname.startsWith(PRODUCTS_GRID);
+  const productsGroupActive = variant === "nonprofit" && pathname.startsWith(PRODUCTS_DASHBOARD);
   const profileHref = variant === "nonprofit" ? "/nonprofit/profile" : "/profile";
 
   const greeting = lang === "en" ? (profile?.full_name_en ?? profile?.full_name) : profile?.full_name;
@@ -83,12 +83,12 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
           {variant === "nonprofit" && (
             <div>
               <Link
-                href={PRODUCTS_GRID}
+                href={PRODUCTS_MANAGEMENT}
                 className={`w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl font-medium transition-colors ${
-                  pathname === PRODUCTS_GRID ? "bg-white/20 text-white" : productsGroupActive ? "bg-white/10 text-white" : "text-teal-100 hover:bg-white/10"
+                  pathname === PRODUCTS_MANAGEMENT ? "bg-white/20 text-white" : productsGroupActive ? "bg-white/10 text-white" : "text-teal-100 hover:bg-white/10"
                 }`}
               >
-                <span className="flex items-center gap-2.5"><Package size={17} className="flex-shrink-0" /><EditableText tKey="adm.navProductsDashboard" /></span>
+                <span className="flex items-center gap-2.5"><Package size={17} className="flex-shrink-0" /><EditableText tKey="adm.navProducts" /></span>
                 {productsGroupActive ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
               </Link>
               {productsGroupActive && (
@@ -98,7 +98,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
                     pathname === PRODUCTS_DASHBOARD ? "bg-white/20 text-white font-bold" : "text-teal-100 hover:bg-white/10"
                   }`}
                 >
-                  <EditableText tKey="adm.navProducts" />
+                  <EditableText tKey="adm.navProductsDashboard" />
                 </Link>
               )}
             </div>
