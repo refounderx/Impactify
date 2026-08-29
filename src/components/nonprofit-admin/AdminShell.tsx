@@ -42,6 +42,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
 
   const campaignsGroupActive = pathname === CAMPAIGNS_GRID || pathname === CAMPAIGNS_DASHBOARD;
   const productsGroupActive = variant === "nonprofit" && pathname.startsWith(PRODUCTS_GRID);
+  const profileHref = variant === "nonprofit" ? "/nonprofit/profile" : "/profile";
 
   const greeting = lang === "en" ? (profile?.full_name_en ?? profile?.full_name) : profile?.full_name;
 
@@ -127,6 +128,14 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
           >
             <Users size={17} className="flex-shrink-0" /><EditableText tKey={routes.lastNavKey} />
           </Link>
+          <Link
+            href={profileHref}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium transition-colors ${
+              pathname === profileHref ? "bg-white/20 text-white" : "text-teal-100 hover:bg-white/10"
+            }`}
+          >
+            <User size={17} className="flex-shrink-0" />{lang === "en" ? "My profile" : "הפרופיל שלי"}
+          </Link>
         </nav>
 
         <div className="p-3 border-t border-teal-400/30">
@@ -147,9 +156,9 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
               <LogOut size={13} />
               <EditableText tKey="adm.logout" />
             </button>
-            <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
+            <Link href={profileHref} aria-label={lang === "en" ? "Open profile" : "פתיחת הפרופיל"} className="micro-hint w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
               <User size={16} />
-            </button>
+            </Link>
           </div>
           <div className="text-end">
             <p className="text-sm">

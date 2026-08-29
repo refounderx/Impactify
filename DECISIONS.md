@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-08-29 — Keep NGO-owner special days private to the owning profile
+
+**Decision:** Persist special days in a dedicated `profile_special_days` table keyed to `profiles.id`, with authenticated-only grants and per-operation RLS requiring `profile_id = auth.uid()`. Keep organization goals in the existing organization-owned contract rather than mixing the two concepts.
+
+**Context:** The supplied NGO-owner profile design includes a personal “special days” area alongside personal details and payment methods, while organization goals already have a separate tenant-scoped persistence model.
+
+**Rationale:** A profile-owned table gives each user an independently secured list without adding repeated date columns to `profiles` or weakening the organization-goals boundary.
+
+**Consequences:** `/nonprofit/profile` is the NGO-owner profile destination and can create/list/delete the current user's special days. Account deletion cascades these rows. Anonymous users have no table privileges, and the migration must be deployed through the required SQL Editor workflow.
+
+---
+
 ## 2026-08-29 — Preserve browser sessions across transient auth failures
 
 **Decision:** Reuse one browser Supabase client, restore its persisted session before making a network validation request, and retain that session when validation fails transiently. Reconcile the session after network recovery and when the tab becomes visible, while displaying distinct notices for offline state, temporary verification failure, and confirmed sign-out.

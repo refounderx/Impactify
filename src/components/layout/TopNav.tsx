@@ -106,7 +106,7 @@ export default function TopNav() {
           <span className="absolute -top-0.5 -start-0.5 w-2 h-2 bg-red-400 rounded-full" />
         </button>
         {user ? (
-          <Link href={profile?.app_role === "admin" ? "/admin/users" : "/profile"} className="flex items-center gap-2 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-50">
+          <Link href={profile?.app_role === "admin" ? "/admin/users" : profile?.app_role === "ngo_owner" ? "/nonprofit/profile" : "/profile"} className="flex items-center gap-2 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-50">
             <div className="w-7 h-7 rounded-full bg-raz-teal flex items-center justify-center text-white text-xs font-bold">
               {(user.email ?? shortName).slice(0, 2).toUpperCase()}
             </div>

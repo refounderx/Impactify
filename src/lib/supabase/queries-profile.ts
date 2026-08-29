@@ -12,7 +12,7 @@ export type DonorProfile = {
 };
 
 const EMPTY_PROFILE: DonorProfile = { fullName: "", phone: "", email: "", idNumber: "", joinDate: "" };
-type PaymentMethod = SharedSiteData["savedPaymentMethods"][number];
+export type PaymentMethod = SharedSiteData["savedPaymentMethods"][number];
 type SystemUpdate = SharedSiteData["systemUpdates"][number];
 
 type ProfileRow = {
@@ -97,6 +97,33 @@ export async function removePaymentMethod(userId: string, id: string): Promise<b
     .delete()
     .eq("id", id)
     .eq("donor_id", userId);
+  return !error;
+}
+
+// ── Profile special days ─────────────────────────────────────
+
+export type ProfileSpecialDay = { id: string; title: string; eventDate: string; emoji: string };
+
+export async function getProfileSpecialDays(userId: string): Promise<ProfileSpecialDay[]> {
+  const sb = createClient();
+  const { data, error } = await sb.from("profile_special_days")
+    .select("id, title, event_date, emoji").eq("profile_id", userId).order("event_date");
+  if (error || !data) return [];
+  return data.map((row) => ({ id: row.id, title: row.title, eventDate: row.event_date, emoji: row.emoji }));
+}
+
+export async function addProfileSpecialDay(userId: string, title: string, eventDate: string, emoji: string) {
+  const sb = createClient();
+  const { data, error } = await sb.from("profile_special_days")
+    .insert({ profile_id: userId, title: title.trim(), event_date: eventDate, emoji })
+    .select("id, title, event_date, emoji").single();
+  if (error || !data) return null;
+  return { id: data.id, title: data.title, eventDate: data.event_date, emoji: data.emoji } satisfies ProfileSpecialDay;
+}
+
+export async function removeProfileSpecialDay(userId: string, id: string): Promise<boolean> {
+  const sb = createClient();
+  const { error } = await sb.from("profile_special_days").delete().eq("id", id).eq("profile_id", userId);
   return !error;
 }
 

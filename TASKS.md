@@ -12,7 +12,9 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 
 **Campaign editing live (2026-08-28):** the NGO campaigns screen opens the existing six-step wizard with the selected campaign prefilled, and migration `20260828120000` adds a tenant-derived atomic update RPC. The migration was applied through the authenticated Supabase SQL editor after the linked CLI could not obtain its temporary database login role. SQL verification confirmed the migration ledger entry, security-definer function with fixed `search_path`, authenticated-only execution, and campaign/product tenant checks.
 
-**Organization goals live (2026-08-25):** migration `20260825130000` adds structured bilingual goals to every organization row, requires 1–10 goals for new NGO signup, and exposes an owner-scoped update RPC used from `/profile`. Existing organizations retain an empty list until their owner supplies real goals; no content was invented during migration.
+**Organization goals live (2026-08-25):** migration `20260825130000` adds structured bilingual goals to every organization row, requires 1–10 goals for new NGO signup, and exposes an owner-scoped update RPC used from `/nonprofit/profile`. Existing organizations retain an empty list until their owner supplies real goals; no content was invented during migration.
+
+**NGO-owner profile live (2026-08-29):** `/nonprofit/profile` now uses the shared NGO admin shell and provides editable personal details, saved payment-method display metadata, organization goals, and persistent special days. Migration `20260829120000` was applied through the Dashboard SQL Editor. Independent verification passed for its ledger entry, table existence, RLS, authenticated grants, anonymous denial, four ownership policies, and `auth.uid()` predicates.
 
 **Donation anonymization fix live (2026-08-25):** migration `20260825140000` replaces the donation UPDATE rewrite rule with a trigger that blocks ordinary ledger edits while allowing foreign-key `SET NULL` anonymization of donor/product references. Catalog checks passed, a donor-reference update succeeded inside a rolled-back transaction, and an amount update was rejected. This resolves the referential-integrity failure encountered when an admin deletes a user while retaining immutable donation history.
 
@@ -28,6 +30,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - `/donate/[id]/thanks` — Centered success with receipt + share
 - `/nonprofit` — Dark header, 4-column metrics, campaign list with progress
 - `/nonprofit/create-campaign` — 6-step wizard (basics→story→media→products→communities→publish)
+- `/nonprofit/profile` — NGO-owner personal details, payment methods, special days, and organization goals inside the admin shell
 - `/community` — Two-column: stats/leaderboard left, styled export card right (sticky)
 - `/profile` — Two-column: history/settings left, impact summary right; links to הוראות קבע
 - `/recurring` — הוראות קבע (standing orders): monthly summary, per-order pause/resume/cancel with inline confirmation
@@ -78,7 +81,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - [x] `/auth/callback` — exchanges `?code=`, then redirects by persisted role or incomplete onboarding
 - [x] Supabase URL Config: production Site URL plus local and production `/auth/callback` URLs are allowlisted
 - [x] `/auth/setup` — one-time donor/NGO-owner/community-owner onboarding through atomic RPCs
-- [x] NGO signup requires 1–10 bilingual organization goals; NGO owners can update them from `/profile`
+- [x] NGO signup requires 1–10 bilingual organization goals; NGO owners can update them from `/nonprofit/profile`
 - [x] Four exact roles: `donor`, `ngo_owner`, `community_owner`, `admin`
 - [x] `/admin/users` — admin-only promotion, demotion, role/tenant assignment, and guarded user deletion with audit logs
 - [x] Server layout guards enforce NGO-owner, community-owner, and admin routes

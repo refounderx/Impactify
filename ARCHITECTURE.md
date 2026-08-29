@@ -123,7 +123,7 @@ src/
     └── seed.sql             Demo data INSERT statements
 ```
 
-**`nonprofit/(admin)/` route group:** all pages inside share `AdminShell` (teal sidebar + top bar) via `nonprofit/(admin)/layout.tsx` — campaigns dashboard at `/nonprofit` (table) + grid at `/nonprofit/campaigns`, a searchable/filterable products-management table with expandable analytics and a shared create/edit modal at `/nonprofit/products/dashboard` + grid at `/nonprofit/products`, plus `/nonprofit/donations`, `/nonprofit/updates`, `/nonprofit/communities` (stub). Product creation and editing call security-definer RPCs that derive `org_id` from the authenticated NGO-owner profile. The sibling `nonprofit/[id]/page.tsx` (public org profile) and `nonprofit/create-campaign/page.tsx` (creation/editing wizard) live outside the group so they render without the admin sidebar. Next.js resolves static segments (`campaigns`, `products`, …) before the `[id]` dynamic segment, so there's no routing collision.
+**`nonprofit/(admin)/` route group:** all pages inside share `AdminShell` (teal sidebar + top bar) via `nonprofit/(admin)/layout.tsx` — campaigns dashboard at `/nonprofit` (table) + grid at `/nonprofit/campaigns`, a searchable/filterable products-management table with expandable analytics and a shared create/edit modal at `/nonprofit/products/dashboard` + grid at `/nonprofit/products`, plus `/nonprofit/donations`, `/nonprofit/updates`, `/nonprofit/communities` (stub), and the NGO-owner details/payment-methods/special-days/goals screen at `/nonprofit/profile`. Product creation and editing call security-definer RPCs that derive `org_id` from the authenticated NGO-owner profile. The sibling `nonprofit/[id]/page.tsx` (public org profile) and `nonprofit/create-campaign/page.tsx` (creation/editing wizard) live outside the group so they render without the admin sidebar. Next.js resolves static segments (`campaigns`, `products`, …) before the `[id]` dynamic segment, so there's no routing collision.
 
 **Root route `/` (changed 2026-08-23):** `app/page.tsx` now renders the marketing landing page (same content as `app/landing/page.tsx` — duplicated for now, not deduplicated). The previous donor-home screen (teal header, featured campaign, active-campaigns grid) was moved to `app/_archive/old-home/page.tsx`, a Next.js private folder (`_` prefix excludes it from routing) — code preserved, not deleted, pending a decision on where donor-home should live going forward. Several other pages still link/redirect to `/` expecting the old donor-home behavior (`my-donations`, `auth`, `nonprofit/[id]`, `campaign/[id]`, `TopNav.tsx`, `recurring`, `donate/[id]/thanks`) — not yet updated; see `TASKS.md`.
 
@@ -144,6 +144,7 @@ src/
 | `recurring_donations` | Standing orders (הוראות קבע) | Own only |
 | `communities` | Community groups | Public read |
 | `payment_methods` | Saved brand + last-4 (no raw card data) | Own only |
+| `profile_special_days` | User-defined dated occasions shown in the NGO-owner profile | Own only; anonymous has no privileges |
 | `system_updates` | Broadcast/per-donor update feed | Own or broadcast (`donor_id is null`) |
 | `hero_cards` | Landing hero image+caption pairs | Public read |
 | `site_content` | Admin text-override table (key → he/en) | Public read; authenticated admin writes |
@@ -180,11 +181,11 @@ Admin           → profile directory, audited role/tenant changes, guarded acco
 | `/search` | Supabase — real-time search with 300ms debounce |
 | `/campaign/[id]` | Supabase normalized tables plus shared donor/community presentation records from `site_datasets` |
 | `/donate/[id]/amount` | Supabase campaign lookup |
-| `/nonprofit` and `/nonprofit/*` admin pages | Authenticated NGO tenant queries over normalized Supabase tables |
+| `/nonprofit` and `/nonprofit/*` admin pages | Authenticated NGO tenant queries over normalized Supabase tables; `/nonprofit/profile` also reads/writes the current user's profile, payment methods, and special days |
 | `/nonprofit/[id]` | Supabase organizations and campaigns; extended profile fields and goals are normalized organization columns |
 | `/community` and `/community/*` admin pages | Authenticated community tenant queries over normalized Supabase tables |
 | `/admin/users` | Admin-only Supabase profile/tenant directory plus role-change and account-deletion RPCs |
-| `/profile` | Auth-scoped Supabase reads; NGO owners can update only their assigned organization's goals through a guarded RPC; logged-out demo presentation data comes from `site_datasets` |
+| `/profile` | Donor/general auth-scoped Supabase reads; logged-out demo presentation data comes from `site_datasets` |
 | `/recurring` | Auth-scoped Supabase reads; no local fallback |
 
 No active page silently falls back to local fixture arrays. The fixture files are migration inputs and shared type sources only.

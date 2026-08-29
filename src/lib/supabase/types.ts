@@ -189,6 +189,12 @@ export interface Database {
           { foreignKeyName: "profiles_community_id_fkey"; columns: ["community_id"]; isOneToOne: false; referencedRelation: "communities"; referencedColumns: ["id"] },
         ];
       };
+      profile_special_days: {
+        Row: { id: string; profile_id: string; title: string; event_date: string; emoji: string; created_at: string };
+        Insert: { id?: string; profile_id: string; title: string; event_date: string; emoji?: string; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["profile_special_days"]["Row"]>;
+        Relationships: [{ foreignKeyName: "profile_special_days_profile_id_fkey"; columns: ["profile_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }];
+      };
       system_updates: {
         Row: { id: string; donor_id: string | null; org_id: string | null; title: string; title_en: string | null; detail: string | null; detail_en: string | null; status: string; action_label: string | null; action_label_en: string | null; created_at: string };
         Insert: Partial<Database["public"]["Tables"]["system_updates"]["Row"]> & { title: string };

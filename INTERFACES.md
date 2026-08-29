@@ -145,6 +145,18 @@ Auto-created by trigger on `auth.users` insert. Ordinary users may update person
 
 RLS: donor can only read/insert/delete their own rows.
 
+### `profile_special_days`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `profile_id` | uuid | Required FK → `profiles.id`; cascades on account deletion |
+| `title` | text | Trimmed display label, 1–120 characters |
+| `event_date` | date | Date of the occasion |
+| `emoji` | text | Short visual marker; defaults to `🎉` |
+| `created_at` | timestamptz | Creation timestamp |
+
+RLS and grants: only `authenticated` receives table privileges, and every select/insert/update/delete policy requires `profile_id = auth.uid()`. The NGO-owner profile at `/nonprofit/profile` currently exposes create, list, and delete operations.
+
 ### `system_updates`
 | Column | Type | Notes |
 |---|---|---|
