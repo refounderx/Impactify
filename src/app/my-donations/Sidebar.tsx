@@ -31,14 +31,14 @@ export default function Sidebar({ view, onNav }: Props) {
   const { lang } = useLang();
 
   return (
-    <aside className="hidden md:flex flex-col w-52 bg-raz-teal flex-shrink-0 self-start sticky top-20 min-h-[calc(100vh-5rem)]">
+    <aside className="hidden md:flex h-dvh max-h-dvh min-h-0 flex-col w-52 bg-raz-teal flex-shrink-0 sticky top-0 overflow-hidden">
       {/* Logo */}
       <div className="flex items-center justify-center py-6 border-b border-teal-400/30">
         <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">🤝</div>
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 flex flex-col gap-0.5 p-3 pt-4">
+      <nav className="flex-1 min-h-0 flex flex-col gap-0.5 overflow-hidden p-3 pt-4">
         {NAV_ITEMS.map(({ key, icon: Icon, view: navView, sub }) => {
           const active = navView === view;
           return (
@@ -59,7 +59,7 @@ export default function Sidebar({ view, onNav }: Props) {
       </nav>
 
       {/* Bottom actions */}
-      <div className="p-3 flex flex-col gap-2 border-t border-teal-400/30">
+      <div className="absolute inset-x-0 bottom-0 z-10 p-3 flex flex-col gap-2 border-t border-teal-400/30 bg-raz-teal">
         <button className="w-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium py-2.5 rounded-xl flex items-center justify-center gap-2 transition-colors">
           <Megaphone size={14} />
           {lang === "en" ? "Start Campaign" : "הקמת קמפיין"}

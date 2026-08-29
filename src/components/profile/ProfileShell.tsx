@@ -26,13 +26,13 @@ export default function ProfileShell({ children, variant }: { children: React.Re
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
-      <aside className="sticky top-16 hidden min-h-[calc(100vh-4rem)] w-56 flex-shrink-0 self-start flex-col bg-raz-teal md:flex">
+      <aside className="sticky top-0 hidden h-dvh max-h-dvh min-h-0 w-56 flex-shrink-0 self-start flex-col overflow-hidden bg-raz-teal md:flex">
         <div className="flex items-center justify-center border-b border-teal-400/30 py-6">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">
             {variant === "admin" ? <ShieldCheck className="text-white" size={23} /> : <Heart className="text-white" fill="white" size={22} />}
           </div>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 p-3 pt-4 text-sm">
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden p-3 pt-4 text-sm">
           {links.map(({ href, Icon, he, en }) => {
             const active = href.endsWith("/profile");
             return (
