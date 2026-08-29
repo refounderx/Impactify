@@ -73,14 +73,17 @@ export default function NgoGoalsEditor({ orgId }: { orgId: string }) {
           </div>
         ))}
       </div>
-      {goals.length < 10 && <button type="button" onClick={() => setGoals((current) => [...current, { ...EMPTY_GOAL }])}
-        className="mt-4 text-sm font-bold text-raz-teal">+ {lang === "en" ? "Add goal" : "הוסף מטרה"}</button>}
+      <div className="mt-5 flex flex-col gap-4 border-t border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
+        {goals.length < 10 ? <button type="button" onClick={() => { setGoals((current) => [...current, { ...EMPTY_GOAL }]); setMessage(""); }}
+          className="micro-hint inline-flex min-h-11 items-center self-start text-sm font-bold text-raz-teal">+ {lang === "en" ? "Add goal" : "הוסף מטרה"}</button> : <span />}
+        <button type="button" onClick={save} disabled={saving}
+          className="micro-hint inline-flex min-h-11 items-center justify-center rounded-xl bg-raz-teal px-6 py-3 font-bold text-white transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal disabled:cursor-wait disabled:opacity-50"
+          aria-busy={saving}>
+          {saving ? (lang === "en" ? "Saving…" : "שומר…") : (lang === "en" ? "Save goals" : "שמירת מטרות")}
+        </button>
+      </div>
       {error && <p className="mt-3 text-sm text-red-600" role="alert">{error}</p>}
       {message && <p className="mt-3 text-sm text-green-700" role="status">{message}</p>}
-      <button type="button" onClick={save} disabled={saving}
-        className="mt-4 rounded-xl bg-raz-teal px-5 py-3 font-bold text-white disabled:opacity-50">
-        {saving ? (lang === "en" ? "Saving…" : "שומר…") : (lang === "en" ? "Save goals" : "שמירת מטרות")}
-      </button>
     </section>
   );
 }
