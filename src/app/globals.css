@@ -25,6 +25,12 @@ body {
   direction: rtl;
 }
 
+/* Keep every screen and the global header within the same 80% site frame. */
+.site-frame {
+  width: 80%;
+  margin-inline: auto;
+}
+
 /* LTR override: when html[dir=ltr], inputs should align start (left) not force-right */
 html[dir="ltr"] input,
 html[dir="ltr"] textarea {

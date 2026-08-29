@@ -26,11 +26,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SiteDataProvider>
             <AuthProvider>
               <AdminModeProvider>
-                <div className="sticky top-0 z-50">
+                <div className="site-frame sticky top-0 z-50">
                   {process.env.NODE_ENV === "development" && <DemoBar />}
                   <TopNav />
                 </div>
-                <div id="main-content" tabIndex={-1}>{children}</div>
+                <div id="main-content" className="site-frame" tabIndex={-1}>{children}</div>
                 <AccessibilityMenu />
               </AdminModeProvider>
             </AuthProvider>
