@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-08-29 — Preserve browser sessions across transient auth failures
+
+**Decision:** Reuse one browser Supabase client, restore its persisted session before making a network validation request, and retain that session when validation fails transiently. Reconcile the session after network recovery and when the tab becomes visible, while displaying distinct notices for offline state, temporary verification failure, and confirmed sign-out.
+
+**Context:** Initial UI state depended on the network-backed `getUser()` call. A short network or auth-service failure therefore appeared as a logout even when the browser still held a refreshable session, and the UI gave no explanation when a real `SIGNED_OUT` event occurred.
+
+**Rationale:** Supabase already persists and auto-refreshes browser sessions. Restoring that state first avoids false disconnects; server middleware, server layouts, and RLS remain the authoritative security checks. Separating transient failure from confirmed sign-out gives the user an accurate recovery path.
+
+**Consequences:** Client UI may temporarily retain the last locally persisted user during a network outage, but protected server routes and database writes still require a valid server-verified token. Profile refresh runs outside the auth event callback, reconnect and tab-focus events trigger reconciliation, and confirmed sign-out clears user/profile state and offers a sign-in action.
+
+---
+
 ## 2026-08-29 — Require the admin role for online text editing
 
 **Decision:** Expose the production inline-text edit toggle only to authenticated `admin` profiles, and make `AdminModeProvider` validate that role before restoring or toggling browser-persisted edit mode. Keep the existing `site_content` admin-only RLS as the authoritative write boundary.

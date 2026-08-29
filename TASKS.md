@@ -73,7 +73,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 ## Phase 3 — Authentication ✅ (email magic link + role authorization)
 
 - [x] `proxy.ts` — session refresh plus coarse protection for setup/admin/owner routes
-- [x] `AuthContext.tsx` — `useAuth()` hook exposes user, profile, refresh, loading, and sign-out
+- [x] `AuthContext.tsx` — restores and refreshes a persistent session, avoids false sign-out on transient network errors, reconciles on reconnect/tab focus, exposes user/profile/refresh/loading/sign-out, and shows global connection/session notices
 - [x] `/auth` — email entry → magic link (Supabase free tier; custom SMTP needed for 6-digit code)
 - [x] `/auth/callback` — exchanges `?code=`, then redirects by persisted role or incomplete onboarding
 - [x] Supabase URL Config: production Site URL plus local and production `/auth/callback` URLs are allowlisted

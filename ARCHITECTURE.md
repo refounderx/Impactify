@@ -34,7 +34,8 @@ Browser
 - Server layouts enforce exact `ngo_owner`, `community_owner`, and `admin` roles
 - Ordinary users cannot write `app_role`, `org_id`, or `community_id`; admins use an audited RPC
 - JWT stored in cookies (HttpOnly via Supabase SSR) — XSS safe
-- `AuthContext` subscribes to `onAuthStateChange` for real-time session sync in client components
+- The browser reuses one Supabase client, restores the persisted session locally before network validation, and leaves a valid local session intact during transient validation failures
+- `AuthContext` subscribes to `onAuthStateChange`, reconciles after reconnect/tab focus, reloads the profile without blocking token events, and surfaces offline, validation-error, and signed-out notices
 - Sign-out: `supabase.auth.signOut()` clears cookies
 
 ## Data Flow
