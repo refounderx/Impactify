@@ -4,18 +4,15 @@ import { X } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import type { AudienceKind } from "@/lib/landing-data";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
-import AudienceIconRow from "./AudienceIconRow";
 import ProductCard from "./ProductCard";
 import CheckoutModal from "./checkout/CheckoutModal";
 import EditableText from "@/components/admin/EditableText";
 
 export default function AudienceFilterOverlay({
   kind,
-  onSelect,
   onClose,
 }: {
   kind: AudienceKind;
-  onSelect: (kind: AudienceKind) => void;
   onClose: () => void;
 }) {
   const { t, lang } = useLang();
@@ -25,17 +22,19 @@ export default function AudienceFilterOverlay({
   const chosenProduct = products.find((p) => p.id === chosenId);
 
   return (
-    <div className="fixed inset-0 z-50 bg-raz-dark/95 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="flex justify-end mb-4">
-          <button onClick={onClose} className="interactive-control flex items-center gap-1 text-sm text-white" aria-label={t("landing.filter.close")}>
+    <>
+      <button
+        type="button"
+        className="fixed inset-0 z-40 cursor-default bg-raz-dark/95"
+        onClick={onClose}
+        aria-label={t("landing.filter.close")}
+      />
+      <div className="relative z-50 mt-8 rounded-2xl bg-white p-8 shadow-2xl">
+        <div className="mb-5 flex justify-end">
+          <button onClick={onClose} className="interactive-control flex items-center gap-1 text-sm text-gray-600" aria-label={t("landing.filter.close")}>
             <X size={20} /> <EditableText tKey="landing.filter.close" />
           </button>
         </div>
-
-        <AudienceIconRow selected={kind} onSelect={onSelect} />
-
-        <div className="bg-white rounded-2xl mt-8 p-8">
           <h2 className="text-2xl font-bold text-raz-teal text-center mb-8">
             <EditableText tKey="landing.filter.heading" /> <EditableText tKey={`landing.aud.${kind}.plural`} />
           </h2>
@@ -51,7 +50,6 @@ export default function AudienceFilterOverlay({
               />
             ))}
           </div>
-        </div>
       </div>
 
       {chosenProduct && (
@@ -61,6 +59,6 @@ export default function AudienceFilterOverlay({
           onClose={() => setChosenId(null)}
         />
       )}
-    </div>
+    </>
   );
 }

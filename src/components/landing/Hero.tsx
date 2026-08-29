@@ -69,12 +69,12 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="mt-14">
+      <div className={`relative mt-14 ${selectedKind ? "z-50" : ""}`}>
         <AudienceIconRow selected={selectedKind} onSelect={setSelectedKind} />
       </div>
 
       {selectedKind && (
-        <AudienceFilterOverlay kind={selectedKind} onSelect={setSelectedKind} onClose={() => setSelectedKind(null)} />
+        <AudienceFilterOverlay kind={selectedKind} onClose={() => setSelectedKind(null)} />
       )}
     </section>
   );
