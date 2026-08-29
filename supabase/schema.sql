@@ -526,10 +526,11 @@ revoke insert, delete, update on public.profiles from anon, authenticated;
 grant update (full_name, full_name_en, phone, avatar_url, id_number) on public.profiles to authenticated;
 
 -- Bank account columns are not part of the public organization contract.
+alter table public.organizations add column if not exists activity_area text;
 revoke select on public.organizations from anon, authenticated;
 grant select (id, name, name_en, initials, color, description, description_en,
   goals, logo_url, registration_number, verified, founded, founded_en, ceo, ceo_en,
-  volunteers, address, address_en, phone, video_gradient, created_at)
+  volunteers, address, address_en, activity_area, phone, video_gradient, created_at)
 on public.organizations to anon, authenticated;
 
 -- Onboarding, admin role management, and atomic campaign publishing RPCs are

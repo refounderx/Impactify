@@ -61,6 +61,7 @@ Server-side donation write. Validates inputs at trust boundary.
 | `create_ngo_product(name, name_en, description, description_en, price, emoji)` | NGO owner only | Validates product fields and creates an active product for the organization derived from `auth.uid()` |
 | `update_ngo_product(product_id, name, name_en, description, description_en, price, emoji, active)` | NGO owner only | Derives the tenant from auth, validates all product fields, and updates only a product owned by that organization |
 | `update_ngo_goals(goals)` | NGO owner only | Validates 1–10 goals and updates the organization derived from `auth.uid()`; no client-supplied organization ID is trusted |
+| `update_ngo_profile(name, description, activity_area, address, phone, ceo, founded, logo_url)` | NGO owner only | Validates editable organization fields and updates the organization derived from `auth.uid()`; no client-supplied organization ID is trusted |
 | `publish_campaign(title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Validates tenant products and HTTPS media URLs, then atomically publishes a campaign |
 | `update_campaign(campaign_id, title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Derives the tenant from auth, verifies campaign/product ownership and HTTPS media, then atomically updates the campaign and product links |
 
@@ -97,8 +98,9 @@ Key columns only — see `supabase/schema.sql` for full definitions.
 | `id` | uuid | PK |
 | `name` / `name_en` | text | Hebrew name required; English nullable |
 | `goals` | jsonb | Array of 1–10 `{ he, en }` objects for new NGOs; legacy rows default to `[]` until their owner updates the profile |
+| `activity_area` | text | Nullable operating region selected in the NGO-owner profile |
 
-Public reads include `goals` but continue to exclude bank-account columns. Writes to `goals` are available only through `update_ngo_goals`, which resolves the target organization from the authenticated NGO-owner profile.
+Public reads include `goals` and `activity_area` but continue to exclude bank-account columns. Goal writes use `update_ngo_goals`; editable profile fields use `update_ngo_profile`. Both RPCs resolve the target organization from the authenticated NGO-owner profile.
 
 ### `campaigns`
 | Column | Type | Notes |

@@ -14,7 +14,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 
 **Organization goals live (2026-08-25):** migration `20260825130000` adds structured bilingual goals to every organization row, requires 1–10 goals for new NGO signup, and exposes an owner-scoped update RPC used from `/nonprofit/profile`. Existing organizations retain an empty list until their owner supplies real goals; no content was invented during migration.
 
-**Unified role profiles live (2026-08-29):** donor, NGO-owner, community-owner, and admin profiles now compose the same `UnifiedProfileContent` design. Shared sections provide editable personal details, saved payment-method display metadata, and persistent special days; donor activity and NGO organization goals remain role-specific. `/nonprofit/profile` retains the NGO admin shell, while `/profile` and the embedded `/my-donations` profile use the same content system. Migration `20260829120000` was applied through the Dashboard SQL Editor. Independent verification passed for its ledger entry, table existence, RLS, authenticated grants, anonymous denial, four ownership policies, and `auth.uid()` predicates.
+**Role profiles live (updated 2026-08-29):** donor, community-owner, and admin profiles compose `UnifiedProfileContent` for editable personal details, saved-payment display metadata, and persistent special days. NGO owners use a dedicated organization editor inside the admin shell, matching the supplied reference layout; organization goals remain editable below it. Migration `20260829120000` provides profile special days, while `20260829130000` adds `organizations.activity_area` and the authenticated, tenant-derived `update_ngo_profile` RPC. Both were applied through the Dashboard SQL Editor. Verification confirms the new ledger entry, column, and function; anonymous execution is denied and authenticated execution is granted.
 
 **Donation anonymization fix live (2026-08-25):** migration `20260825140000` replaces the donation UPDATE rewrite rule with a trigger that blocks ordinary ledger edits while allowing foreign-key `SET NULL` anonymization of donor/product references. Catalog checks passed, a donor-reference update succeeded inside a rolled-back transaction, and an amount update was rejected. This resolves the referential-integrity failure encountered when an admin deletes a user while retaining immutable donation history.
 
@@ -30,7 +30,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - `/donate/[id]/thanks` — Centered success with receipt + share
 - `/nonprofit` — Dark header, 4-column metrics, campaign list with progress
 - `/nonprofit/create-campaign` — 6-step wizard (basics→story→media→products→communities→publish)
-- `/nonprofit/profile` — NGO-owner personal details, payment methods, special days, and organization goals inside the admin shell
+- `/nonprofit/profile` — NGO organization details, logo URL, activity area, and organization goals inside the admin shell
 - `/community` — Two-column: stats/leaderboard left, styled export card right (sticky)
 - `/profile` — Unified profile for donor, community-owner, and admin: personal details, payment methods, special days, plus donor-only activity
 - `/recurring` — הוראות קבע (standing orders): monthly summary, per-order pause/resume/cancel with inline confirmation

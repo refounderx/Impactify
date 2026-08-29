@@ -25,8 +25,44 @@ export type NewNgoProduct = {
 };
 
 export type NgoProductUpdate = NewNgoProduct & { id: string; active: boolean };
+export type NgoProfileDraft = {
+  name: string;
+  description: string;
+  activityArea: string;
+  address: string;
+  phone: string;
+  contact: string;
+  founded: string;
+  logoUrl: string;
+};
 
-const PUBLIC_ORG_COLUMNS = "id,name,name_en,initials,color,description,description_en,goals,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,phone,video_gradient,created_at";
+const PUBLIC_ORG_COLUMNS = "id,name,name_en,initials,color,description,description_en,goals,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,activity_area,phone,video_gradient,created_at";
+
+export async function getNgoProfile(): Promise<Organization> {
+  const sb = createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) throw new Error("Authentication required");
+  const { data: profile, error: profileError } = await sb.from("profiles").select("org_id, app_role").eq("id", user.id).single();
+  if (profileError || profile?.app_role !== "ngo_owner" || !profile.org_id) throw new Error("NGO owner profile required");
+  const { data, error } = await sb.from("organizations").select(PUBLIC_ORG_COLUMNS).eq("id", profile.org_id).single();
+  if (error || !data) throw new Error(error?.message ?? "Organization not found");
+  return data as Organization;
+}
+
+export async function updateNgoProfile(profile: NgoProfileDraft) {
+  const sb = createClient();
+  const { error } = await sb.rpc("update_ngo_profile", {
+    p_name: profile.name,
+    p_description: profile.description || null,
+    p_activity_area: profile.activityArea || null,
+    p_address: profile.address || null,
+    p_phone: profile.phone || null,
+    p_ceo: profile.contact || null,
+    p_founded: profile.founded || null,
+    p_logo_url: profile.logoUrl || null,
+  });
+  if (error) throw new Error(error.message);
+}
 
 export async function getNgoAdminData(): Promise<NgoAdminData> {
   const sb = createClient();

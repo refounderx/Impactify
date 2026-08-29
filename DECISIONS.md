@@ -8,7 +8,7 @@
 
 **Rationale:** A profile-owned table gives each user an independently secured list without adding repeated date columns to `profiles` or weakening the organization-goals boundary.
 
-**Consequences:** `/nonprofit/profile` is the NGO-owner profile destination and can create/list/delete the current user's special days. Account deletion cascades these rows. Anonymous users have no table privileges, and the migration must be deployed through the required SQL Editor workflow.
+**Consequences:** Personal-profile surfaces can create/list/delete the current user's special days. The later NGO-specific reference design moved `/nonprofit/profile` to organization details and goals, so NGO owners no longer manage special days on that route. Account deletion cascades saved special-day rows. Anonymous users have no table privileges, and the migration must be deployed through the required SQL Editor workflow.
 
 ---
 

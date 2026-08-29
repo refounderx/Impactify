@@ -50,6 +50,7 @@ export interface Database {
           volunteers: number;
           address: string | null;
           address_en: string | null;
+          activity_area: string | null;
           phone: string | null;
           video_gradient: string;
           created_at: string;
@@ -289,6 +290,10 @@ export interface Database {
       };
       update_ngo_goals: {
         Args: { p_goals: OrganizationGoal[] };
+        Returns: undefined;
+      };
+      update_ngo_profile: {
+        Args: { p_name: string; p_description: string | null; p_activity_area: string | null; p_address: string | null; p_phone: string | null; p_ceo: string | null; p_founded: string | null; p_logo_url: string | null };
         Returns: undefined;
       };
       publish_campaign: {
