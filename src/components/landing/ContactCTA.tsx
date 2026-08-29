@@ -1,15 +1,19 @@
 "use client";
 import Link from "next/link";
 import EditableText from "@/components/admin/EditableText";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ContactCTA() {
+  const { profile } = useAuth();
+  const profileHref = profile?.app_role === "ngo_owner" ? "/nonprofit/profile" : "/profile";
+
   return (
     <section id="contact" className="max-w-6xl mx-auto px-6 py-10">
       <div className="bg-white border border-gray-100 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 mb-6">
         <p className="text-sm text-gray-600"><EditableText tKey="landing.cta.bar" /></p>
         <div className="flex gap-2 flex-shrink-0">
           <button className="interactive-control bg-raz-teal text-white text-sm font-bold px-4 py-2 rounded-full"><EditableText tKey="landing.cta.donateBtn" /></button>
-          <Link href="/profile" className="interactive-control bg-raz-dark text-white text-sm font-bold px-4 py-2 rounded-full"><EditableText tKey="landing.cta.personalArea" /></Link>
+          <Link href={profileHref} className="interactive-control bg-raz-dark text-white text-sm font-bold px-4 py-2 rounded-full"><EditableText tKey="landing.cta.personalArea" /></Link>
         </div>
       </div>
 
