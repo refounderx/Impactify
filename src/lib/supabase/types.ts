@@ -298,6 +298,8 @@ export interface Database {
       };
       manage_ngo_update: { Args: { p_update_id: string; p_action: string }; Returns: string };
       set_community_campaign: { Args: { p_campaign_id: string; p_action: string }; Returns: string };
+      get_ngo_campaign_requests: { Args: Record<string, never>; Returns: { community_campaign_id: string; campaign_id: string; community_id: string; community_name: string; campaign_title: string; requested_at: string }[] };
+      manage_ngo_campaign_request: { Args: { p_membership_id: string; p_action: string }; Returns: string };
       create_ngo_product: {
         Args: {
           p_name: string;
