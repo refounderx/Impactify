@@ -47,8 +47,8 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
   const greeting = lang === "en" ? (profile?.full_name_en ?? profile?.full_name) : profile?.full_name;
 
   return (
-    <div className="flex h-screen max-h-screen overflow-hidden">
-      <aside className="hidden md:flex h-screen max-h-screen flex-col w-56 overflow-hidden bg-raz-teal flex-shrink-0 sticky top-0">
+    <div className="flex h-dvh max-h-dvh min-h-0 overflow-hidden">
+      <aside className="hidden md:flex h-dvh max-h-dvh min-h-0 flex-col w-56 overflow-hidden bg-raz-teal flex-shrink-0 sticky top-0">
         <div className="flex items-center justify-center py-6 border-b border-teal-400/30">
           <div className="w-11 h-11 bg-white/15 rounded-2xl flex items-center justify-center">
             <Heart size={22} className="text-white" fill="white" />
@@ -138,7 +138,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
           </Link>
         </nav>
 
-        <div className="p-3 border-t border-teal-400/30">
+        <div className="shrink-0 p-3 border-t border-teal-400/30">
           <Link
             href={variant === "community" ? "/community/campaigns/search" : "/nonprofit/create-campaign"}
             className="w-full bg-white text-raz-teal text-sm font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
