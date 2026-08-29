@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-08-29 — Require the admin role for online text editing
+
+**Decision:** Expose the production inline-text edit toggle only to authenticated `admin` profiles, and make `AdminModeProvider` validate that role before restoring or toggling browser-persisted edit mode. Keep the existing `site_content` admin-only RLS as the authoritative write boundary.
+
+**Context:** The edit toggle previously lived only in the development `DemoBar`, while `AdminModeProvider` trusted a localStorage flag without checking the current profile. RLS rejected unauthorized saves, but stale browser state could still expose editing controls to a non-admin.
+
+**Rationale:** Role-checking both the UI state and database write path gives administrators a usable online editor while preventing other profiles from seeing or activating it. The database remains authoritative even if client code is bypassed.
+
+**Consequences:** `AuthProvider` now wraps `AdminModeProvider`; non-admin and signed-out sessions force edit mode off and remove the stale preference. No schema migration is required because the live RLS policies already use `public.is_admin()` for `site_content` insert/update.
+
+---
+
 ## 2026-08-28 — Deploy migrations directly through the Supabase SQL Editor
 
 **Decision:** Keep timestamped files under `supabase/migrations/` as the source of truth, but do not attempt deployment through the linked Supabase CLI. Apply authorized migrations directly through the authenticated Dashboard SQL Editor, reconcile `supabase_migrations.schema_migrations`, and verify the result with a separate read-only query.

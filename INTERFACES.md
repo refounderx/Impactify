@@ -181,9 +181,9 @@ RLS: public read. Consumed by `getHeroCards()` in `src/lib/supabase/queries-land
 | `text_he` / `text_en` | text | Nullable — a row overrides the static `translations.ts` value for that key at runtime |
 | `updated_at` | timestamptz | |
 
-RLS: public read; insert/update require an authenticated `admin` profile. Read via `getSiteContentOverrides()`, written via `upsertSiteContent(key, he, en)`. The edit toggle is rendered only for admins and only in development builds.
+RLS: public read; insert/update require an authenticated `admin` profile. Read via `getSiteContentOverrides()`, written via `upsertSiteContent(key, he, en)`. `AdminModeProvider` independently checks the authenticated profile, clears stale browser edit state for non-admins, and exposes active edit mode only while the role is `admin`. The production `TopNav` renders the edit toggle only for admins; the development `DemoBar` follows the same role check.
 
-**Operable, partial rollout:** `AdminModeProvider` is mounted in `layout.tsx`, the toggle is wired into `DemoBar`, and `Hero.tsx`/`WhyJoinSection.tsx` are converted to `EditableText` — edits there save live and are verified working. Most of the site's ~270 other `t()` call sites are not yet converted. See `TASKS.md`.
+**Operable rollout:** `EditableText` wraps the converted rendered text nodes across the site and saves live overrides to `site_content`. Attribute-position strings such as placeholders and ARIA labels remain outside the inline editor; see `TASKS.md`.
 
 ## SQL Files
 

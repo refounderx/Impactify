@@ -24,16 +24,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-raz-surface">
         <LanguageProvider>
           <SiteDataProvider>
-            <AdminModeProvider>
-              <AuthProvider>
+            <AuthProvider>
+              <AdminModeProvider>
                 <div className="sticky top-0 z-50">
                   {process.env.NODE_ENV === "development" && <DemoBar />}
                   <TopNav />
                 </div>
                 <div id="main-content" tabIndex={-1}>{children}</div>
                 <AccessibilityMenu />
-              </AuthProvider>
-            </AdminModeProvider>
+              </AdminModeProvider>
+            </AuthProvider>
           </SiteDataProvider>
         </LanguageProvider>
       </body>

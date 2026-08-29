@@ -88,7 +88,7 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - [x] `TopNav` — shows real user email when signed in; Sign In button when not
 - [x] `layout.tsx` — wrapped with `AuthProvider`
 - [ ] Switch to phone OTP — add Supabase SMS hook → Inforu/Twilio when SMS provider is ready
-- [x] `DemoBar` is development-only; its content-edit toggle also requires the admin role
+- [x] Online text editing is available from `TopNav` only to authenticated admins; `AdminModeProvider` also enforces the role and clears stale non-admin edit state
 
 ---
 
@@ -294,7 +294,7 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 
 ## Known Tech Debt
 
-- **Admin content-editing mode (2026-08-23, operable — rollout complete for this pass):** `AdminModeProvider` mounted in `layout.tsx`, "עריכה / Admin" toggle added to `DemoBar` (localStorage-persisted, all pages). `EditableText` converted across ~55 files / ~270 real `t()` call sites (corrected count from an initial ~354 grep estimate that included false-positive matches on unrelated `.select("...(...)")`-style calls in Supabase query files) — hover a wrapped text in admin mode to see the pencil icon, click to edit He/En, saves to live `site_content` table. Done via 6 parallel background agents plus manual recovery of 11 files (`ImpactStatsGrid.tsx`, `ContactCTA.tsx`, `AdminShell.tsx`, `profile/page.tsx`, `recurring/page.tsx`, `search/page.tsx`, `CampaignCard.tsx`, and 4 `nonprofit/(admin)/*` dashboard pages) whose conversions were lost to a mid-session `git stash` collision between the parallel agents and manually redone. Verified end-to-end via direct DB upsert (RLS write path confirmed working) and `tsc`/live-server checks; not verified via full manual click-through of every converted screen. Remaining work:
+- **Admin content-editing mode (updated 2026-08-29, operable):** `AdminModeProvider` is nested under `AuthProvider`, accepts the persisted edit preference only for an authenticated `admin`, and clears stale edit state for every other role. The production `TopNav` exposes the online edit toggle only to admins; the development `DemoBar` uses the same role check. `EditableText` is converted across ~55 files / ~270 rendered `t()` call sites; edits save to the live `site_content` table, whose RLS independently restricts insert/update to authenticated admins. Remaining work:
   - Attribute-position text (`placeholder`, `aria-label`, `title`, table-header string arrays, `StatHeader` label props) was intentionally left as plain `t()` calls — `EditableText` only wraps rendered JSX text nodes, not string props. Not in scope for this pass.
   - `site_content` writes are now restricted to authenticated admins; attribute-position strings remain outside the inline editor.
 - **SQL Editor is the required migration path (updated 2026-08-28):** the linked CLI consistently fails while initializing its temporary database login role. Do not retry `db push`; apply timestamped migration files directly through the authenticated Dashboard SQL Editor, reconcile the migration ledger, and run a separate read-only verification query.

@@ -1,15 +1,17 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Search, LogIn } from "lucide-react";
+import { Bell, Search, LogIn, Pencil } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminMode } from "@/contexts/AdminModeContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function TopNav() {
   const pathname = usePathname();
   const { lang, setLang, t } = useLang();
   const { user, profile } = useAuth();
+  const { adminMode, toggleAdminMode } = useAdminMode();
 
   const active = pathname.startsWith("/admin")
     ? "/admin"
@@ -66,6 +68,18 @@ export default function TopNav() {
 
       {/* Right: lang toggle + bell + user */}
       <div className="flex items-center gap-3">
+        {profile?.app_role === "admin" && (
+          <button
+            type="button"
+            onClick={toggleAdminMode}
+            className={`micro-hint flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-bold transition-colors ${adminMode ? "border-amber-500 bg-amber-500 text-white" : "border-gray-200 text-gray-600 hover:border-raz-teal hover:text-raz-teal"}`}
+            aria-pressed={adminMode}
+            aria-label={lang === "en" ? "Toggle online text editing" : "הפעלת עריכת טקסטים אונליין"}
+          >
+            <Pencil size={15} aria-hidden="true" />
+            {lang === "en" ? "Edit text" : "עריכת טקסט"}
+          </button>
+        )}
         {/* Language toggle */}
         <div className="flex items-center bg-gray-100 rounded-full p-0.5 text-xs font-bold">
           <button
