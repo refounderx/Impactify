@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useNgoAdminData } from "@/contexts/NgoAdminDataContext";
-import type { AdminProductDetail } from "@/lib/nonprofit-admin-data";
+import type { AdminCampaignDetail, AdminProductDetail } from "@/lib/nonprofit-admin-data";
 
 const date = (value: string | null) => value ? new Date(value).toLocaleDateString("he-IL") : "—";
 const months: [string, string][] = [["ינואר", "January"], ["פברואר", "February"], ["מרץ", "March"], ["אפריל", "April"], ["מאי", "May"], ["יוני", "June"], ["יולי", "July"], ["אוגוסט", "August"], ["ספטמבר", "September"], ["אוקטובר", "October"], ["נובמבר", "November"], ["דצמבר", "December"]];
@@ -34,6 +34,13 @@ export function useNgoAdminView() {
         id: campaign.id, title: campaign.title, titleEn: campaign.title_en ?? campaign.title,
         emoji: campaign.emoji, raised: Number(campaign.raised), goal: Number(campaign.goal),
         endDate: date(campaign.end_date), ended: ["completed", "archived"].includes(campaign.status),
+      })),
+      adminCampaignDetails: Object.fromEntries(campaigns.map((campaign) => {
+        const linkedProducts = campaignProducts.filter((link) => link.campaign_id === campaign.id).map((link) => products.find((product) => product.id === link.product_id)).filter(Boolean);
+        const campaignDonations = donations.filter((donation) => donation.campaign_id === campaign.id);
+        const productBreakdown = linkedProducts.map((product) => { const donated = campaignDonations.filter((donation) => donation.product_id === product!.id).reduce((sum, donation) => sum + donation.quantity, 0); return { name: product!.name, nameEn: product!.name_en ?? product!.name, donated, total: donated }; });
+        const detail: AdminCampaignDetail = { sku: campaign.id.slice(0, 8).toUpperCase(), monthLabel: "כל החודשים", monthLabelEn: "All months", monthlyTotal: campaignDonations.reduce((sum, donation) => sum + Number(donation.amount), 0), raised: Number(campaign.raised), goal: Number(campaign.goal), productBreakdown, communities: communities.map((community) => community.name) };
+        return [campaign.id, detail];
       })),
       adminCampaignsTotalRaised: campaigns.reduce((sum, campaign) => sum + Number(campaign.raised), 0),
       adminCampaignsActiveCount: campaigns.filter((campaign) => campaign.status === "active").length,
