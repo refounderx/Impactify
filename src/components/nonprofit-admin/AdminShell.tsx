@@ -88,7 +88,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
                   pathname === PRODUCTS_GRID ? "bg-white/20 text-white" : productsGroupActive ? "bg-white/10 text-white" : "text-teal-100 hover:bg-white/10"
                 }`}
               >
-                <span className="flex items-center gap-2.5"><Package size={17} className="flex-shrink-0" /><EditableText tKey="adm.navProducts" /></span>
+                <span className="flex items-center gap-2.5"><Package size={17} className="flex-shrink-0" /><EditableText tKey="adm.navProductsDashboard" /></span>
                 {productsGroupActive ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
               </Link>
               {productsGroupActive && (
@@ -98,7 +98,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
                     pathname === PRODUCTS_DASHBOARD ? "bg-white/20 text-white font-bold" : "text-teal-100 hover:bg-white/10"
                   }`}
                 >
-                  <EditableText tKey="adm.navProductsDashboard" />
+                  <EditableText tKey="adm.navProducts" />
                 </Link>
               )}
             </div>
