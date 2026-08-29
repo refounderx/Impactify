@@ -47,8 +47,8 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
   const greeting = lang === "en" ? (profile?.full_name_en ?? profile?.full_name) : profile?.full_name;
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden md:flex h-screen max-h-screen flex-col w-56 overflow-hidden bg-raz-teal flex-shrink-0 self-start sticky top-0">
+    <div className="flex h-screen max-h-screen overflow-hidden">
+      <aside className="hidden md:flex h-screen max-h-screen flex-col w-56 overflow-hidden bg-raz-teal flex-shrink-0 sticky top-0">
         <div className="flex items-center justify-center py-6 border-b border-teal-400/30">
           <div className="w-11 h-11 bg-white/15 rounded-2xl flex items-center justify-center">
             <Heart size={22} className="text-white" fill="white" />
@@ -149,7 +149,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
         </div>
       </aside>
 
-      <div className="flex-1 bg-raz-surface min-h-screen">
+      <div className="flex-1 min-h-0 overflow-y-auto bg-raz-surface">
         <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={signOut} className="bg-raz-dark text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5 hover:bg-gray-800 transition-colors">
