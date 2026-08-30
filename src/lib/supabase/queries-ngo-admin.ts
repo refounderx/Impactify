@@ -75,26 +75,31 @@ export async function getNgoAdminData(): Promise<NgoAdminData> {
     throw new Error("NGO owner profile required");
   }
   const orgId = profile.org_id;
-  const [organization, campaigns, products, donations, communities, campaignProducts, communityCampaigns] = await Promise.all([
+  const [organization, campaigns, products, donations, campaignProducts, communityLinks] = await Promise.all([
     sb.from("organizations").select(PUBLIC_ORG_COLUMNS).eq("id", orgId).single(),
     sb.from("campaigns").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
     sb.from("products").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
     sb.from("donations").select("*, campaigns(title,title_en), products(name,name_en)")
       .eq("org_id", orgId).order("created_at", { ascending: false }),
-    sb.from("communities").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
     sb.from("campaign_products").select("campaign_id, product_id"),
-    sb.from("community_campaigns").select("community_id,campaign_id,status").in("status", ["active", "paused"]),
+    sb.rpc("get_ngo_community_links"),
   ]);
-  const error = organization.error ?? campaigns.error ?? products.error ?? donations.error ?? communities.error ?? campaignProducts.error ?? communityCampaigns.error;
+  const error = organization.error ?? campaigns.error ?? products.error ?? donations.error ?? campaignProducts.error ?? communityLinks.error;
   if (error || !organization.data) throw new Error(error?.message ?? "Organization not found");
+  const linkedRows = communityLinks.data ?? [];
+  const communities = Array.from(new Map(linkedRows.map((row) => [row.community_id, {
+    id: row.community_id, name: row.community_name, name_en: row.community_name_en,
+    description: null, manager_id: null, org_id: orgId, referral_code: null,
+    total_raised: Number(row.community_total_raised), donors_count: 0, created_at: row.community_created_at,
+  }])).values()) as Community[];
   return {
     organization: organization.data as Organization,
     campaigns: campaigns.data ?? [],
     products: products.data ?? [],
     donations: (donations.data ?? []) as NgoDonation[],
-    communities: communities.data ?? [],
+    communities,
     campaignProducts: campaignProducts.data ?? [],
-    communityCampaigns: (communityCampaigns.data ?? []) as NgoAdminData["communityCampaigns"],
+    communityCampaigns: linkedRows.map((row) => ({ community_id: row.community_id, campaign_id: row.campaign_id, status: row.status as "active" | "paused" })),
   };
 }
 
