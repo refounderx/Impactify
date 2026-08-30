@@ -11,7 +11,6 @@ const YEARS = Array.from({ length: new Date().getFullYear() - 1899 }, (_, index)
 
 export default function NonprofitOrganizationProfile() {
   const { lang } = useLang();
-  const [stored, setStored] = useState(EMPTY);
   const [draft, setDraft] = useState(EMPTY);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,7 +32,7 @@ export default function NonprofitOrganizationProfile() {
         founded: organization.founded ?? "",
         logoUrl: organization.logo_url ?? "",
       };
-      setStored(next); setDraft(next);
+      setDraft(next);
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : "Unable to load organization profile");
     }).finally(() => { if (active) setLoading(false); });
@@ -53,15 +52,10 @@ export default function NonprofitOrganizationProfile() {
     setSaving(true); setError("");
     try {
       await updateNgoProfile(draft);
-      setStored(draft);
       setMessage(lang === "en" ? "Organization details saved." : "פרטי העמותה נשמרו.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save organization profile");
     } finally { setSaving(false); }
-  }
-
-  function cancel() {
-    setDraft(stored); setLogoEditorOpen(false); setMessage(""); setError("");
   }
 
   if (loading) return <div className="min-h-[34rem] animate-pulse rounded-3xl bg-white/60" aria-label={lang === "en" ? "Loading organization profile" : "טוען פרופיל עמותה"} />;
@@ -104,7 +98,6 @@ export default function NonprofitOrganizationProfile() {
       {message && <p className="mt-7 text-sm font-medium text-green-700" role="status">{message}</p>}
       <div className="mt-12 flex w-full max-w-64 flex-col gap-3 ltr:ms-0 rtl:me-auto">
         <button type="button" onClick={save} disabled={saving} className="min-h-12 rounded-2xl bg-raz-teal px-7 font-bold text-white transition-transform hover:scale-[1.03] disabled:opacity-50">{saving ? (lang === "en" ? "Saving…" : "שומר…") : (lang === "en" ? "Save changes" : "שמירת שינויים")}</button>
-        <button type="button" onClick={cancel} className="min-h-11 font-bold text-raz-dark hover:text-raz-teal">{lang === "en" ? "Cancel" : "ביטול"}</button>
       </div>
     </section>
   );

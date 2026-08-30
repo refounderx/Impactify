@@ -75,7 +75,7 @@ export default function NgoGoalsEditor({ orgId }: { orgId: string }) {
       </div>
       <div className="mt-5 flex flex-col gap-4 border-t border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
         {goals.length < 10 ? <button type="button" onClick={() => { setGoals((current) => [...current, { ...EMPTY_GOAL }]); setMessage(lang === "en" ? "A new goal was added. Fill it in, then save." : "נוספה מטרה חדשה. מלאו אותה ולאחר מכן שמרו."); }}
-          className="interactive-control micro-hint inline-flex min-h-11 items-center self-start rounded-xl border border-raz-teal/30 bg-raz-teal/5 px-4 py-2 text-sm font-bold text-raz-teal hover:bg-raz-teal hover:text-white">+ {lang === "en" ? "Add goal" : "הוסף מטרה"}</button> : <span />}
+          className="interactive-control micro-hint inline-flex min-h-11 items-center self-start rounded-xl border border-raz-teal/30 bg-raz-teal/5 px-4 py-2 text-sm font-bold text-raz-teal hover:!scale-[1.03]">+ {lang === "en" ? "Add goal" : "הוסף מטרה"}</button> : <span />}
         <button type="button" onClick={save} disabled={saving}
           className="micro-hint inline-flex min-h-11 items-center justify-center rounded-xl bg-raz-teal px-6 py-3 font-bold text-white transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal disabled:cursor-wait disabled:opacity-50"
           aria-busy={saving}>
