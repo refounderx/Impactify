@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 type Props = {
   title: string;
@@ -10,7 +11,7 @@ export default function LegalPage({ title, updated, children }: Props) {
   return (
     <main className="min-h-screen bg-raz-surface px-6 py-12" dir="rtl">
       <article className="mx-auto max-w-3xl rounded-3xl bg-white p-7 shadow-sm md:p-10">
-        <Link href="/landing" className="text-sm font-bold text-raz-teal hover:underline">← חזרה לדף הבית</Link>
+        <Link href="/landing" className="inline-flex items-center gap-1 text-sm font-bold text-raz-teal hover:underline"><ArrowRight size={16} />חזרה לדף הבית</Link>
         <h1 className="mt-6 text-3xl font-black text-raz-dark md:text-4xl">{title}</h1>
         <p className="mt-2 text-sm text-gray-500">עודכן לאחרונה: {updated}</p>
         <div className="legal-content mt-8 space-y-7 text-[15px] leading-7 text-gray-700">{children}</div>
