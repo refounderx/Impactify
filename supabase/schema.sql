@@ -533,6 +533,6 @@ grant select (id, name, name_en, initials, color, description, description_en,
   volunteers, address, address_en, activity_area, phone, video_gradient, created_at)
 on public.organizations to anon, authenticated;
 
--- Onboarding, admin role management, and atomic campaign publishing RPCs are
--- defined in migrations 20260823161000 and 20260823162000. Migrations are the
--- executable source of truth; this file remains the readable base schema.
+-- Onboarding, tenant mutation RPCs, and final privilege hardening are defined in
+-- later migrations, including 20260830170000_security_hardening.sql. Migrations
+-- are the executable source of truth; this file remains the readable base schema.

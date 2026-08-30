@@ -15,7 +15,7 @@
 
 ## Current Build Status
 
-**Supabase-backed demo application** — public, donor, NGO-owner, community-owner, admin, and landing-page data flow through Supabase. The two admin dashboards now derive their tenant from the authenticated profile and query normalized tables; only shared/landing presentation fixtures remain in public-read-only `site_datasets` rows. Query errors and empty results are surfaced instead of silently falling back to bundled mock values. Authentication and donation persistence exist; a real payment-service-provider integration does not.
+**Supabase-backed demo application** — public, donor, NGO-owner, community-owner, admin, and landing-page data flow through Supabase. The two admin dashboards derive their tenant from the authenticated profile and query normalized tables; only shared/landing presentation fixtures remain in public-read-only `site_datasets` rows. Query errors and empty results are surfaced instead of silently falling back to bundled mock values. Authentication and development-only donation simulation exist; production payment submission is disabled until a PSP-hosted checkout and signed callback are implemented.
 
 The `site_datasets` and organization-profile migrations were applied to the live project through the Dashboard SQL Editor on 2026-08-23. The later auth migration removed obsolete admin snapshots; REST verification confirms the two required shared/landing dataset rows and all five extended organization profiles.
 
@@ -28,7 +28,7 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 - Campaign search with live text filter + category filter
 - Campaign detail (video/image hero, progress, donate-amount popup, 3 quick-donate products, donors/communities/story/org tabs)
 - Public non-profit profile (`/nonprofit/[id]`) — org video, verification/founding/CEO/volunteer/address info, product quantity picker with running total, one-click donate that skips straight to payment
-- Donation flow: amount selection → payment form → thank you
+- Donation flow: amount selection → hosted-payment readiness screen; completed-payment simulation and thank-you confirmation are development-only until the PSP is connected
 - Non-Profit admin panel (`/nonprofit/*`, teal sidebar shell) — campaigns dashboard (table) + campaigns grid (donut-chart cards), searchable/filterable products-management table with tenant-scoped creation/editing + products grid (donut-chart cards), donations table, updates/alerts table with trigger/schedule tabs; replaces the old single-page NP dashboard
 - 6-step campaign creation/editing wizard (basics → story → media → products → communities → publish/save)
 - Community manager dashboard (stats, leaderboard, styled social card export preview)

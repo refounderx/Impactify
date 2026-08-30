@@ -149,7 +149,7 @@ function StandingOrderPopup({ pd, paymentMethods, onAddPaymentMethod, onClose, t
   async function savePaymentMethod() {
     if (!userId) { setStatus(lang === "en" ? "Sign in to save a payment method." : "יש להתחבר כדי לשמור אמצעי תשלום."); return; }
     if (!/^\d{4}$/.test(last4)) { setStatus(lang === "en" ? "Enter exactly four digits." : "יש להזין ארבע ספרות בדיוק."); return; }
-    const saved = await addPaymentMethod(userId, brand.trim() || "Card", last4);
+    const saved = await addPaymentMethod(brand.trim() || "Card", last4);
     if (!saved) { setStatus(lang === "en" ? "Could not save the payment method." : "לא ניתן לשמור את אמצעי התשלום."); return; }
     onAddPaymentMethod(saved);
     setSelectedPm(saved.id);

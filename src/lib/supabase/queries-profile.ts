@@ -74,30 +74,24 @@ export async function getPaymentMethods(userId: string): Promise<PaymentMethod[]
 }
 
 export async function addPaymentMethod(
-  userId: string,
   brand: string,
   last4: string
 ): Promise<{ id: string; brand: string; last4: string } | null> {
   const sb = createClient();
-  const { data, error } = await sb
-    .from("payment_methods")
-    .insert({ donor_id: userId, brand, last_four: last4 })
-    .select("id, brand, last_four")
-    .single();
+  const { data, error } = await sb.rpc("add_my_payment_method", {
+    p_brand: brand,
+    p_last_four: last4,
+  });
 
-  if (error || !data) return null;
-  const row = data as PaymentMethodRow;
+  const row = data?.[0] as PaymentMethodRow | undefined;
+  if (error || !row) return null;
   return { id: row.id, brand: row.brand, last4: row.last_four };
 }
 
-export async function removePaymentMethod(userId: string, id: string): Promise<boolean> {
+export async function removePaymentMethod(id: string): Promise<boolean> {
   const sb = createClient();
-  const { error } = await sb
-    .from("payment_methods")
-    .delete()
-    .eq("id", id)
-    .eq("donor_id", userId);
-  return !error;
+  const { data, error } = await sb.rpc("remove_my_payment_method", { p_payment_method_id: id });
+  return !error && data === true;
 }
 
 // ── Profile special days ─────────────────────────────────────

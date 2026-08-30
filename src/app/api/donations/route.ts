@@ -1,13 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+import { randomBytes } from "node:crypto";
+import { PRIVATE_NO_STORE_HEADERS, readJsonBody, validateSameOriginMutation } from "@/lib/http-security";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const RECEIPT_RE = /^[A-Za-z0-9-]{1,80}$/;
+
+type DonationRequest = {
+  campaign_id?: unknown;
+  org_id?: unknown;
+  amount?: unknown;
+  is_recurring?: unknown;
+  dedication_name?: unknown;
+  product_id?: unknown;
+  quantity?: unknown;
+  simulation?: unknown;
+};
 
 export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id") ?? "";
   const receiptId = request.nextUrl.searchParams.get("receipt") ?? "";
-  if (!UUID_RE.test(id) || !receiptId) {
+  if (!UUID_RE.test(id) || !RECEIPT_RE.test(receiptId)) {
     return NextResponse.json({ error: "Invalid confirmation reference" }, { status: 400 });
   }
 
@@ -20,17 +34,34 @@ export async function GET(request: NextRequest) {
     .single();
   if (error || !data) return NextResponse.json({ error: "Confirmation not found" }, { status: 404 });
 
-  return NextResponse.json({ donation: data });
+  return NextResponse.json({ donation: data }, { headers: PRIVATE_NO_STORE_HEADERS });
 }
 
 export async function POST(request: NextRequest) {
+  if (!validateSameOriginMutation(request)) {
+    return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
+  }
+
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
 
-  const body = await request.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  const parsedBody = await readJsonBody<DonationRequest>(request);
+  if (!parsedBody.data) return NextResponse.json({ error: parsedBody.error }, { status: parsedBody.status });
+  const body = parsedBody.data;
 
-  const { campaign_id, org_id, amount, is_recurring, dedication_name, product_id, quantity } = body;
+  // Until a PSP webhook verifies the transaction, production must never create
+  // a completed ledger entry based only on a browser request.
+  if (process.env.NODE_ENV !== "development" || body.simulation !== true) {
+    return NextResponse.json({ error: "Online payment processing is not configured yet" }, { status: 503 });
+  }
+
+  const campaign_id = typeof body.campaign_id === "string" ? body.campaign_id : "";
+  const org_id = typeof body.org_id === "string" ? body.org_id : "";
+  const amount = body.amount;
+  const is_recurring = body.is_recurring;
+  const dedication_name = body.dedication_name;
+  const product_id = body.product_id;
+  const quantity = body.quantity;
 
   // Validate inputs at trust boundary
   if (!UUID_RE.test(campaign_id ?? "") || !UUID_RE.test(org_id ?? "")) {
@@ -45,7 +76,8 @@ export async function POST(request: NextRequest) {
   if (!productId && (!parsed || parsed <= 0 || parsed > 1_000_000)) {
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
   }
-  if (is_recurring && (!user || productId)) {
+  const recurring = is_recurring === true;
+  if (recurring && (!user || productId)) {
     return NextResponse.json({ error: "Sign in is required for recurring donations" }, { status: 401 });
   }
 
@@ -55,7 +87,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Campaign and organization do not match" }, { status: 400 });
   }
 
-  const receiptId = `R-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+  const receiptId = `R-${new Date().getFullYear()}-${randomBytes(8).toString("hex").toUpperCase()}`;
 
   const admin = createAdminClient();
   let recordedAmount = parsed;
@@ -106,7 +138,7 @@ export async function POST(request: NextRequest) {
       amount: recordedAmount,
       currency: "ILS",
       status: "completed",
-      is_recurring: Boolean(is_recurring),
+      is_recurring: recurring,
       dedication_name: typeof dedication_name === "string" ? dedication_name.trim().slice(0, 120) || null : null,
       dedication_message: null,
       community_id: communityId,
@@ -117,19 +149,19 @@ export async function POST(request: NextRequest) {
       receipt_id: receiptId,
       receipt_url: null,
       product_id: productId,
-      donation_type: productId ? "product" : (Boolean(is_recurring) ? "recurring" : "one_time"),
+      donation_type: productId ? "product" : (recurring ? "recurring" : "one_time"),
       quantity: donationQuantity,
     })
     .select()
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Unable to save donation" }, { status: 500 });
   }
 
   // If recurring, also create a recurring_donations row (requires auth)
-  if (is_recurring && user?.id) {
-    const { error: recurringError } = await sb.from("recurring_donations").insert({
+  if (recurring && user?.id) {
+    const { error: recurringError } = await admin.from("recurring_donations").insert({
       donor_id: user.id,
       campaign_id,
       org_id,

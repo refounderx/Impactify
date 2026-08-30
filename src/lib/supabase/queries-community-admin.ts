@@ -34,12 +34,12 @@ export async function getCommunityAdminData(): Promise<CommunityAdminData> {
     throw new Error("Community owner profile required");
   }
   const { data: community, error: communityError } = await sb.from("communities")
-    .select("*").eq("id", profile.community_id).single();
+    .select("id,name,name_en,description,org_id,total_raised,donors_count,created_at").eq("id", profile.community_id).single();
   if (communityError || !community) throw new Error(communityError?.message ?? "Community not found");
   const [organization, memberships, donations] = await Promise.all([
     community.org_id ? sb.from("organizations").select(ORG_COLUMNS).eq("id", community.org_id).single() : Promise.resolve({ data: null, error: null }),
     sb.from("community_campaigns").select("community_id,campaign_id,status,source").eq("community_id", community.id),
-    sb.from("donations").select("*, campaigns(title,title_en), products(name,name_en)")
+    sb.from("donations").select("id,donor_id,campaign_id,org_id,amount,currency,status,is_recurring,dedication_name,dedication_message,donor_name,community_id,last_four,card_brand,receipt_id,receipt_url,created_at,product_id,donation_type,quantity,campaigns(title,title_en),products(name,name_en)")
       .eq("community_id", community.id).order("created_at", { ascending: false }),
   ]);
   const error = organization.error ?? memberships.error ?? donations.error;
@@ -58,7 +58,7 @@ export async function getCommunityAdminData(): Promise<CommunityAdminData> {
   if (organizationsResult.error) throw new Error(organizationsResult.error.message);
   const membershipByCampaign = new Map(managedMemberships.map((item) => [item.campaign_id, item]));
   return {
-    community,
+    community: { ...community, manager_id: null, referral_code: null } as Community,
     organization: organization.data as Organization | null,
     organizations: (organizationsResult.data ?? []) as Organization[],
     campaigns: campaignRows.map((campaign) => ({

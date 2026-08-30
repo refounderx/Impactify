@@ -62,18 +62,18 @@ export async function getMyRecurring(userId: string) {
 
 export async function updateRecurringStatus(id: string, status: "active" | "paused") {
   const sb = createClient();
-  const { error } = await sb
-    .from("recurring_donations")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id);
+  const { error } = await sb.rpc("set_my_recurring_donation_status", {
+    p_recurring_id: id,
+    p_status: status,
+  });
   return !error;
 }
 
 export async function cancelRecurring(id: string) {
   const sb = createClient();
-  const { error } = await sb
-    .from("recurring_donations")
-    .update({ status: "cancelled", updated_at: new Date().toISOString() })
-    .eq("id", id);
+  const { error } = await sb.rpc("set_my_recurring_donation_status", {
+    p_recurring_id: id,
+    p_status: "cancelled",
+  });
   return !error;
 }

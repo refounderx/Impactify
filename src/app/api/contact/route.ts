@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readJsonBody, validateSameOriginMutation } from "@/lib/http-security";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => null);
+  if (!validateSameOriginMutation(request)) {
+    return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
+  }
+  const parsedBody = await readJsonBody<{ name?: unknown; email?: unknown; phone?: unknown; message?: unknown }>(request, 8_192);
+  if (!parsedBody.data) return NextResponse.json({ error: parsedBody.error }, { status: parsedBody.status });
+  const body = parsedBody.data;
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const phone = typeof body?.phone === "string" ? body.phone.trim() : "";

@@ -79,7 +79,7 @@ export async function getNgoAdminData(): Promise<NgoAdminData> {
     sb.from("organizations").select(PUBLIC_ORG_COLUMNS).eq("id", orgId).single(),
     sb.from("campaigns").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
     sb.from("products").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
-    sb.from("donations").select("*, campaigns(title,title_en), products(name,name_en)")
+    sb.from("donations").select("id,donor_id,campaign_id,org_id,amount,currency,status,is_recurring,dedication_name,dedication_message,donor_name,community_id,last_four,card_brand,receipt_id,receipt_url,created_at,product_id,donation_type,quantity,campaigns(title,title_en),products(name,name_en)")
       .eq("org_id", orgId).order("created_at", { ascending: false }),
     sb.from("campaign_products").select("campaign_id, product_id"),
     sb.rpc("get_ngo_community_links"),

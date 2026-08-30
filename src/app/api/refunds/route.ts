@@ -1,11 +1,17 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { PRIVATE_NO_STORE_HEADERS, readJsonBody, validateSameOriginMutation } from "@/lib/http-security";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => null);
+  if (!validateSameOriginMutation(request)) {
+    return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
+  }
+  const parsedBody = await readJsonBody<{ donation_id?: unknown }>(request, 2_048);
+  if (!parsedBody.data) return NextResponse.json({ error: parsedBody.error }, { status: parsedBody.status });
+  const body = parsedBody.data;
   const donationId = typeof body?.donation_id === "string" ? body.donation_id : "";
   if (!UUID_RE.test(donationId)) return NextResponse.json({ error: "Invalid donation" }, { status: 400 });
 
@@ -30,11 +36,11 @@ export async function POST(request: NextRequest) {
     .upsert({ donation_id: donation.id, org_id: profile.org_id, requested_by: user.id }, { onConflict: "donation_id", ignoreDuplicates: true })
     .select("id,status,created_at")
     .maybeSingle();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Unable to create refund request" }, { status: 500 });
 
-  if (data) return NextResponse.json({ refund: data });
+  if (data) return NextResponse.json({ refund: data }, { headers: PRIVATE_NO_STORE_HEADERS });
   const { data: existing, error: existingError } = await admin.from("refund_requests")
     .select("id,status,created_at").eq("donation_id", donation.id).single();
-  if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500 });
-  return NextResponse.json({ refund: existing });
+  if (existingError) return NextResponse.json({ error: "Unable to load refund request" }, { status: 500 });
+  return NextResponse.json({ refund: existing }, { headers: PRIVATE_NO_STORE_HEADERS });
 }

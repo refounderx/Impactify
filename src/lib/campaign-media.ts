@@ -12,7 +12,13 @@ export function validateCampaignVideoUrl(value: string) {
   if (!value.trim()) return null;
   try {
     const url = new URL(value.trim());
-    return url.protocol === "https:" ? url.toString() : null;
+    if (url.protocol !== "https:") return null;
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+    const externalVideoHost = host === "youtube.com" || host === "m.youtube.com" || host === "youtu.be" || host === "vimeo.com" || host === "player.vimeo.com";
+    let supabaseHost = "";
+    try { supabaseHost = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname; } catch {}
+    const trustedSupabaseMedia = host === supabaseHost && url.pathname.startsWith("/storage/v1/object/");
+    return externalVideoHost || trustedSupabaseMedia ? url.toString() : null;
   } catch {
     return null;
   }

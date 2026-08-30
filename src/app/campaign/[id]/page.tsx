@@ -79,7 +79,7 @@ export default function CampaignDetail() {
         ) : video?.kind === "embed" ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-raz-dark/25 px-6 text-center text-white">
             <p className="max-w-md text-sm font-bold leading-6 drop-shadow-sm">
-              {lang === "en" ? "This video is hosted by YouTube. Approve marketing cookies to load it." : "הסרטון מתארח ב־YouTube. יש לאשר עוגיות שיווק כדי להציג אותו."}
+              {lang === "en" ? "This video is hosted by a third party. Approve marketing cookies to load it." : "הסרטון מתארח אצל ספק צד שלישי. יש לאשר עוגיות שיווק כדי להציג אותו."}
             </p>
             <button type="button" onClick={openPreferences} className="interactive-control rounded-xl bg-white px-4 py-2 text-sm font-bold text-raz-teal shadow-sm">
               {lang === "en" ? "Manage cookie settings" : "ניהול הגדרות עוגיות"}
@@ -163,7 +163,6 @@ export default function CampaignDetail() {
         {/* Tabs: donors / communities invited by the org / campaign story / about the org */}
         <CampaignTabs
           campaignId={campaign.id}
-          donorsCount={campaign.donors}
           story={story}
           orgBio={orgBio ?? ""}
         />

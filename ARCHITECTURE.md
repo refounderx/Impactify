@@ -8,9 +8,9 @@ Browser
         ├── proxy.ts               → refreshes session + coarse protected-route redirects
         ├── Client components      → Supabase JS client (anon key, RLS-filtered)
         ├── AuthContext            → tracks authenticated user + persisted profile
-        ├── /api/donations         → server route: validates + writes donations to DB
+        ├── /api/donations         → development simulator; production awaits verified PSP callback
         └── Server components      → Supabase SSR client (cookie-based session)
-              └── Admin client     → service role for validated server donation writes, never in browser
+              └── Admin client     → service role for validated server operations, never in browser
                     ├── PostgreSQL (Supabase) [Frankfurt eu-central-1]
                           ├── Row Level Security on every table
                           └── Triggers: auto-create profile, update campaign stats
@@ -50,7 +50,7 @@ Normalized campaigns, organizations, products, communities, donations, and profi
 
 NGO update authoring uses `ngo_updates` for durable audience/channel/timing configuration. The tenant-derived `save_ngo_update` RPC creates donor-facing `system_updates` rows for immediate Push deliveries; scheduled/trigger execution and external Email/SMS delivery remain provider/worker work. Community campaign participation is stored in `community_campaigns`; community owners can create pending requests and pause/resume only their own active relationships through `set_community_campaign`.
 
-Binary media is kept out of the application bundle and served from narrowly scoped public Supabase Storage buckets. `VideoSection.tsx` builds the landing-video URL from `NEXT_PUBLIC_SUPABASE_URL`; the `landing-media` bucket restricts uploads to MP4 files no larger than 25 MB. Campaign header images use the separate `campaign-media` bucket, where authenticated NGO owners can write only beneath their own `org_id` folder. Campaign video URLs stay in the `campaigns` row and are rendered only as validated HTTPS YouTube/Vimeo embeds or direct video sources.
+Binary media is kept out of the application bundle and served from narrowly scoped public Supabase Storage buckets. `VideoSection.tsx` builds the landing-video URL from `NEXT_PUBLIC_SUPABASE_URL`; the `landing-media` bucket restricts uploads to MP4 files no larger than 25 MB. Campaign header images use the separate `campaign-media` bucket, where authenticated NGO owners can write only beneath their own `org_id` folder. Campaign video URLs render only from YouTube/Vimeo or the configured Supabase Storage host; third-party embeds also wait for marketing-cookie consent.
 
 **Authenticated reads (profile, recurring):**
 ```
@@ -59,15 +59,16 @@ page.tsx → useAuth() → user.id
   → PostgreSQL (RLS: donor_id = auth.uid()) → only user's own data
 ```
 
-**Donation write (trust boundary):**
+**Payment and donation trust boundary:**
 ```
-payment/page.tsx → POST /api/donations (client fetch)
-  → api/donations/route.ts → session lookup + active campaign/org validation
-  → supabase.auth.getUser() → validates session server-side
-  → server-only admin client inserts with donor_id derived from the session
-  → trigger auto-increments campaigns.raised + donors_count
-  → if is_recurring + user signed in: recurring_donations.insert()
+production payment page → no PAN/CVV collection inside Impactify
+  → hosted Cardcom/Grow checkout + signed webhook (not implemented yet)
+  → only verified server callback may append a completed donation
+
+development payment page → explicit simulation flag → validated server-only insert
 ```
+
+Mutation APIs require same-origin JSON and bounded bodies. Production responses receive CSP, anti-framing, referrer, MIME-sniffing, permissions, opener, and HSTS headers from `next.config.ts`. Migration `20260830170000` removes direct browser insert/update privileges from financial tables and routes recurring/payment-display mutations through caller-derived RPCs.
 
 ## Module Structure
 
@@ -141,13 +142,13 @@ src/
 | `admin_role_audit` | Immutable role/tenant-change record | Admin read; only privileged RPC inserts |
 | `admin_user_deletion_audit` | Non-PII record of privileged account deletions | Admin read; only privileged RPC inserts |
 | `organizations` | Non-profit orgs, including structured bilingual `goals` and `activity_area` | Public read excluding bank fields; profile/goal writes only through owner-scoped RPCs |
-| `campaigns` | Fundraising campaigns | Public read (active); org members read all |
-| `products` | Charitable items (ארוחה חמה etc.) | Public read |
+| `campaigns` | Fundraising campaigns | Public read (active); org members read all; mutations only through tenant RPCs |
+| `products` | Charitable items (ארוחה חמה etc.) | Public read; mutations only through tenant RPCs |
 | `campaign_products` | Campaign ↔ Product junction | Public read |
-| `donations` | Immutable financial ledger; FK deletion anonymizes donor/product references | Own donations; org reads received |
-| `recurring_donations` | Standing orders (הוראות קבע) | Own only |
-| `communities` | Community groups | Public read |
-| `payment_methods` | Saved brand + last-4 (no raw card data) | Own only |
+| `donations` | Immutable financial ledger; FK deletion anonymizes donor/product references | Safe columns only; own/org/community reads; no browser mutations |
+| `recurring_donations` | Standing orders (הוראות קבע) | Safe columns only; own reads; status changes through owner RPC |
+| `communities` | Community groups | Public descriptive/statistical columns; manager/referral fields hidden |
+| `payment_methods` | Saved brand + last-4 (no raw card data) | Own safe columns only; add/remove through owner RPC |
 | `profile_special_days` | User-defined dated occasions shown in the NGO-owner profile | Own only; anonymous has no privileges |
 | `system_updates` | Broadcast/per-donor update feed | Own or broadcast (`donor_id is null`) |
 | `hero_cards` | Landing hero image+caption pairs | Public read |

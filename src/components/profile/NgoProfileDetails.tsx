@@ -33,13 +33,13 @@ export default function NgoProfileDetails({ userId }: { userId: string }) {
 
   async function addCard() {
     if (!/^\d{4}$/.test(last4)) { setMessage(lang === "en" ? "Enter exactly four digits" : "יש להזין ארבע ספרות בדיוק"); return; }
-    const saved = await addPaymentMethod(userId, brand.trim() || "Card", last4);
+    const saved = await addPaymentMethod(brand.trim() || "Card", last4);
     if (saved) { setMethods((current) => [saved, ...current]); setLast4(""); setAddingCard(false); }
     setMessage(saved ? (lang === "en" ? "Payment method added" : "אמצעי התשלום נוסף") : (lang === "en" ? "Could not add payment method" : "לא ניתן להוסיף אמצעי תשלום"));
   }
 
   async function removeCard(id: string) {
-    if (await removePaymentMethod(userId, id)) setMethods((current) => current.filter((item) => item.id !== id));
+    if (await removePaymentMethod(id)) setMethods((current) => current.filter((item) => item.id !== id));
   }
 
   const fields = [

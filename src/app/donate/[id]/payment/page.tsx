@@ -3,7 +3,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCampaignById } from "@/lib/supabase/queries";
 import { formatNIS } from "@/lib/mock-data";
-import { CreditCard, Building2, Shield, Lock, ArrowRight } from "lucide-react";
+import { Shield, Lock, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
 
@@ -17,14 +17,8 @@ export default function PaymentPage({
   const { id } = use(params);
   const { amount: amountParam, product_id: productId, recurring: recurringParam } = use(searchParams);
   const router = useRouter();
-  const { lang, t } = useLang();
+  const { lang } = useLang();
   const [campaignData, setCampaignData] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
-  const [method, setMethod] = useState<"card" | "bank">("card");
-  const [cardNum, setCardNum] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [cardName, setCardName] = useState("");
-  const [saveCard, setSaveCard] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState("");
 
@@ -37,13 +31,11 @@ export default function PaymentPage({
   const org = campaign._org;
   const amount = parseInt(amountParam ?? "100") || 100;
   const isRecurring = recurringParam === "1";
+  const isSimulation = process.env.NODE_ENV === "development";
   const orgName = lang === "en"
     ? (org?.name_en ?? org?.name)
     : org?.name;
   const campaignTitle = lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title;
-
-  function formatCard(v: string) { return v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim(); }
-  function formatExpiry(v: string) { return v.replace(/\D/g, "").slice(0, 4).replace(/^(.{2})/, "$1/"); }
 
   return (
     <div className="flex flex-col min-h-screen bg-raz-surface">
@@ -62,66 +54,24 @@ export default function PaymentPage({
 
           {/* Payment form */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-2xl p-1 flex mb-4">
-              <button onClick={() => setMethod("card")}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-colors ${method === "card" ? "bg-raz-teal text-white" : "text-gray-500"}`}>
-                <CreditCard size={18} /> <EditableText tKey="payment.card" />
-              </button>
-              <button onClick={() => setMethod("bank")}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-colors ${method === "bank" ? "bg-raz-teal text-white" : "text-gray-500"}`}>
-                <Building2 size={18} /> <EditableText tKey="payment.bank" />
-              </button>
+            <div className="rounded-2xl bg-white p-6">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-raz-teal/10 text-raz-teal">
+                <Lock size={26} />
+              </div>
+              <h2 className="mt-4 text-center text-lg font-bold text-raz-dark">
+                {lang === "en" ? "Secure hosted payment" : "סליקה מאובטחת באתר הספק"}
+              </h2>
+              <p className="mx-auto mt-2 max-w-md text-center text-sm leading-6 text-gray-600">
+                {lang === "en"
+                  ? "Impactify does not collect card numbers or CVV. Payment will become available after the nonprofit connects and verifies Cardcom or Grow."
+                  : "Impactify אינה אוספת מספרי כרטיס או CVV. התשלום יהיה זמין לאחר שהעמותה תחבר ותאמת מסוף Cardcom או Grow."}
+              </p>
+              {isSimulation && (
+                <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-center text-sm font-bold text-amber-800">
+                  {lang === "en" ? "Development mode: the button simulates a completed payment." : "מצב פיתוח: הכפתור מדמה תשלום שהושלם."}
+                </p>
+              )}
             </div>
-
-            {method === "card" && (
-              <div className="bg-white rounded-2xl p-5 flex flex-col gap-4">
-                <div>
-                  <label className="text-sm text-gray-500 mb-1.5 block"><EditableText tKey="payment.cardNum" /></label>
-                  <input type="text" placeholder="0000 0000 0000 0000" value={cardNum}
-                    onChange={(e) => setCardNum(formatCard(e.target.value))}
-                    dir="ltr"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-raz-teal font-numeric text-left" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-gray-500 mb-1.5 block"><EditableText tKey="payment.expiry" /></label>
-                    <input type="text" placeholder="MM/YY" value={expiry}
-                      onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-                      dir="ltr"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-raz-teal font-numeric text-center" />
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-500 mb-1.5 block"><EditableText tKey="payment.cvv" /></label>
-                    <input type="text" placeholder="000" value={cvv}
-                      onChange={(e) => setCvv(e.target.value.replace(/\D/g,"").slice(0,3))}
-                      dir="ltr"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-raz-teal font-numeric text-center" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500 mb-1.5 block"><EditableText tKey="payment.holder" /></label>
-                  <input type="text" placeholder={t("payment.holderPH")} value={cardName}
-                    onChange={(e) => setCardName(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-raz-teal" />
-                </div>
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                  <input type="checkbox" checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)} className="accent-raz-teal w-4 h-4" />
-                  <EditableText tKey="payment.saveCard" />
-                </label>
-              </div>
-            )}
-
-            {method === "bank" && (
-              <div className="bg-white rounded-2xl p-5">
-                <p className="text-gray-600 mb-3"><EditableText tKey="payment.bankTitle" /></p>
-                <div className="bg-gray-50 rounded-xl p-4 space-y-2 font-numeric" dir="ltr">
-                  <div className="flex justify-between"><span className="text-gray-500">{lang === "en" ? "Bank:" : "בנק:"}</span><span className="font-medium">Bank Hapoalim (12)</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">{lang === "en" ? "Branch:" : "סניף:"}</span><span className="font-medium">512</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">{lang === "en" ? "Account:" : "חשבון:"}</span><span className="font-medium">123456-78</span></div>
-                </div>
-                <p className="text-sm text-gray-400 mt-3"><EditableText tKey="payment.bankNote" /></p>
-              </div>
-            )}
 
             <div className="flex items-center justify-center gap-6 mt-4 py-3">
               <div className="flex items-center gap-1.5 text-sm text-gray-400"><Shield size={14} /> <EditableText tKey="payment.ssl" /></div>
@@ -150,7 +100,7 @@ export default function PaymentPage({
                     const response = await fetch("/api/donations", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ campaign_id: campaign.id, org_id: orgId, amount, is_recurring: isRecurring, product_id: productId ?? undefined, quantity: productId ? 1 : undefined }),
+                      body: JSON.stringify({ campaign_id: campaign.id, org_id: orgId, amount, is_recurring: isRecurring, product_id: productId ?? undefined, quantity: productId ? 1 : undefined, simulation: isSimulation }),
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.error ?? "Donation could not be saved");
@@ -160,10 +110,10 @@ export default function PaymentPage({
                     setSubmitting(false);
                   }
                 }}
-                disabled={submitting}
-                className="w-full bg-raz-teal text-white rounded-xl py-4 font-bold text-lg hover:bg-raz-teal-dark transition-colors"
+                disabled={submitting || !isSimulation}
+                className="w-full bg-raz-teal text-white rounded-xl py-4 font-bold text-lg hover:bg-raz-teal-dark transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? "..." : <EditableText tKey="payment.confirm" />}
+                {submitting ? "..." : isSimulation ? <EditableText tKey="payment.confirm" /> : (lang === "en" ? "Payment provider not connected" : "ספק הסליקה טרם חובר")}
               </button>
               {paymentError && <p className="text-center text-sm text-red-500 mt-2">{paymentError}</p>}
               <p className="text-center text-xs text-gray-400 mt-3"><EditableText tKey="payment.terms" /></p>

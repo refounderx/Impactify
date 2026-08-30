@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-08-30 — Treat payment completion as a server-verified event
+
+**Decision:** Impactify does not collect PAN/CVV in its own UI and does not accept a browser request as proof of payment. Production donation submission remains disabled until a hosted Cardcom/Grow flow and signed server callback exist; only development may explicitly simulate a completed donation.
+
+**Context:** The previous form collected card fields without sending them to a PSP, while its public API immediately appended a `completed` ledger row. Any visitor could therefore inflate donation totals without a charge.
+
+**Rationale:** Payment-provider verification is the only trustworthy completion signal. Removing direct financial-table mutations, narrowing readable columns, and using caller-derived RPCs for recurring/payment-display actions preserves ledger integrity and keeps PSP tokens outside browser access.
+
+**Consequences:** The production payment button is intentionally unavailable until the PSP contract is implemented. Migration `20260830170000_security_hardening.sql` must be applied through the Supabase SQL Editor. Future webhooks must authenticate signatures, enforce idempotency, and write completed donations through a server-only path.
+
+---
+
 ## 2026-08-30 — Default non-essential browser tracking to off
 
 **Decision:** Impactify stores an explicit, versioned local browser preference for analytics and marketing cookies. The UI offers equally available accept-all, reject-optional, and granular preference controls, and keeps essential service storage available.

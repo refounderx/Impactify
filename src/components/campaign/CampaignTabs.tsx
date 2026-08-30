@@ -10,12 +10,11 @@ type Tab = "donors" | "communities" | "story" | "org";
 
 interface CampaignTabsProps {
   campaignId: string;
-  donorsCount: number;
   story: string;
   orgBio: string;
 }
 
-export default function CampaignTabs({ campaignId, donorsCount, story, orgBio }: CampaignTabsProps) {
+export default function CampaignTabs({ campaignId, story, orgBio }: CampaignTabsProps) {
   const { lang, t } = useLang();
   const [tab, setTab] = useState<Tab>("donors");
   const [donors, setDonors] = useState<Array<{ id: string; name: string; amount: number; date: string; anonymous: boolean }>>([]);

@@ -25,11 +25,11 @@ All three go in `.env.local` (gitignored). Prefix `NEXT_PUBLIC_` vars are bundle
 ## API Routes
 
 ### `POST /api/donations`
-Server-side donation write. Validates inputs at trust boundary.
+Development-only payment simulation. Production returns `503` until a Cardcom/Grow server integration can verify a signed payment result; a browser request alone can never create a completed production ledger entry.
 
 **Request body:**
 ```json
-{ "campaign_id": "uuid", "org_id": "uuid", "amount": 100, "is_recurring": false, "dedication_name": null, "product_id": null, "quantity": 1 }
+{ "campaign_id": "uuid", "org_id": "uuid", "amount": 100, "is_recurring": false, "dedication_name": null, "product_id": null, "quantity": 1, "simulation": true }
 ```
 
 **Response:**
@@ -38,14 +38,14 @@ Server-side donation write. Validates inputs at trust boundary.
 ```
 
 **Security:**
-- Reads session from cookies via Supabase SSR — never trusts client-sent `donor_id`
+- Requires same-origin JSON, enforces a bounded request body, and reads any session through Supabase SSR — never trusts client-sent `donor_id`
 - Validates: `amount > 0`, `amount < 1,000,000`, UUIDs, active campaign, and campaign→organization ownership
 - When `product_id` is supplied, validates that the active product is linked to the campaign and belongs to its organization; the server records `product.price × quantity` rather than trusting the submitted amount
-- `donor_id` is `null` for anonymous donations (allowed by schema)
-- Creates `recurring_donations` row only when `is_recurring=true` AND user is authenticated
+- In development only, `simulation=true` creates a completed fixture entry with a cryptographically random confirmation reference; production refuses the request
+- The live PSP implementation must create completed donations and recurring instructions only after verifying a signed provider callback on the server
 
 ### `POST /api/contact`
-Stores a public landing-page contact request. The route validates bounded name, email, phone, and message fields, then writes with the server-only Supabase admin client. It does not send email; operators read requests through the database until a delivery provider is configured.
+Stores a public landing-page contact request. The route accepts same-origin JSON only, limits the body size, validates bounded name/email/phone/message fields, then writes with the server-only Supabase admin client. It does not send email; operators read requests through the database until a delivery provider is configured.
 
 ### `POST /api/refunds`
 Authenticated NGO owners can create an idempotent refund request for a completed donation in their own organization. The route writes a `pending` row to `refund_requests`; it does **not** claim to execute a card refund until a payment-service-provider integration is configured.
@@ -81,6 +81,9 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | `get_public_impact_stats()` | Anonymous or authenticated | Read-only, platform-wide aggregate counts and completed donation total for the landing page; never returns donation, payment, or donor rows |
 | `get_ngo_payment_connections()` | NGO owner only | Returns only the caller's Cardcom/Grow terminal metadata; never returns provider credentials, card data, or payment tokens |
 | `start_ngo_payment_connection(provider, terminal_id)` | NGO owner only | Registers or updates the caller's Cardcom/Grow terminal identifier and keeps it in setup-required state until server-side verification is implemented |
+| `set_my_recurring_donation_status(recurring_id, status)` | Donor only | Changes only the caller's non-cancelled instruction to active, paused, or permanently cancelled |
+| `add_my_payment_method(brand, last_four)` | Donor only | Stores validated display metadata only; never accepts PAN, CVV, or a PSP token from the browser |
+| `remove_my_payment_method(payment_method_id)` | Donor only | Deletes only a display-metadata row owned by the caller |
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
 
@@ -99,8 +102,8 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `getMyProductDonations(userId)` | Yes | Product-grouped donor donations, including the latest linked `campaignId` for repeat giving | `donations`, `products`, `campaigns`, `organizations` |
 | `getMyTaxDonationRecords(userId)` | Yes | Every completed donor donation with receipt reference, date, amount, and organization for a client-generated tax report | `donations`, `organizations` |
 | `getMyRecurring(userId)` | Yes | recurring rows | `recurring_donations`, `campaigns`, `organizations` |
-| `updateRecurringStatus(id, status)` | Yes (RLS) | `boolean` | `recurring_donations` |
-| `cancelRecurring(id)` | Yes (RLS) | `boolean` | `recurring_donations` |
+| `updateRecurringStatus(id, status)` | Yes (owner-scoped RPC) | `boolean` | `recurring_donations` |
+| `cancelRecurring(id)` | Yes (owner-scoped RPC) | `boolean` | `recurring_donations` |
 | `getSiteDatasets()` | No | typed shared/landing presentation bundle | `site_datasets` |
 | `getNgoUpdates()` / `saveNgoUpdate()` / `manageNgoUpdate()` | NGO owner | Persistent update rows and tenant-safe mutations | `ngo_updates`, `system_updates` |
 | `getCommunityCampaignStatuses()` / `setCommunityCampaign()` | Community owner | Persistent join-request status and participation controls | `community_campaigns` |
@@ -167,9 +170,9 @@ Auto-created by trigger on `auth.users` insert. Ordinary users may update person
 | `donor_id` | uuid | FK → auth.users |
 | `brand` | text | e.g. `Visa`, `Mastercard` |
 | `last_four` | text | Display only — **no raw card number is ever stored** |
-| `psp_token` | text | Nullable — reserved for real PSP tokenization once a provider is chosen (see Phase 4 — Payments in `TASKS.md`); currently unused |
+| `psp_token` | text | Server-only nullable field reserved for a future PSP token; browser roles have no column access |
 
-RLS: donor can only read/insert/delete their own rows.
+RLS and grants: donors read only their own non-token display columns and add/remove metadata through owner-derived RPCs. Browser roles cannot insert a PSP token.
 
 ### `org_payment_connections`
 Each row associates one organization with one configured provider (`cardcom` or `grow`) and its terminal identifier. A setup row is **not** a live processor connection: its `status` remains `setup_required` until a future server-side credential check, hosted checkout/token flow, and verified webhook integration are in place. The table stores neither credentials nor card details nor PSP tokens. Browser roles have no direct table grants; the two authenticated RPCs derive the organization exclusively from `auth.uid()`.
@@ -260,3 +263,4 @@ RLS: public read; insert/update require an authenticated `admin` profile. Read v
 | `supabase/schema.sql` | Creates all tables, enums, RLS policies, triggers, indexes | Once on new project |
 | `supabase/seed.sql` | Inserts demo data (orgs, campaigns, products, communities) | After schema, on fresh DB |
 | `supabase/migrations/20260830143000_org_payment_connections.sql` | Adds NGO-scoped Cardcom/Grow terminal registry and tenant-derived setup RPCs | Apply through Supabase SQL Editor before enabling the profile connection UI |
+| `supabase/migrations/20260830170000_security_hardening.sql` | Removes direct financial/campaign mutations, hides token/referral columns, and adds narrow donor RPCs | Apply through Supabase SQL Editor before deploying this security update |
