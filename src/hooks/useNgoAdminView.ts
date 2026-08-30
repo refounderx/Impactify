@@ -11,7 +11,7 @@ export function useNgoAdminView() {
   const state = useNgoAdminData();
   const data = useMemo(() => {
     if (!state.data) return null;
-    const { organization, campaigns, products, donations, communities, campaignProducts } = state.data;
+    const { organization, campaigns, products, donations, communities, campaignProducts, communityCampaigns } = state.data;
     const productDonationTotals = new Map<string, { amount: number; quantity: number }>();
     for (const donation of donations) {
       if (!donation.product_id) continue;
@@ -27,7 +27,7 @@ export function useNgoAdminView() {
         created: date(campaign.created_at), ended: date(campaign.end_date),
         productsCount: campaignProducts.filter((row) => row.campaign_id === campaign.id).length,
         productsRaisedCount: donations.filter((row) => row.campaign_id === campaign.id).reduce((sum, row) => sum + row.quantity, 0),
-        amountRaised: Number(campaign.raised), communities: 0, ownerInitials: initials,
+        amountRaised: Number(campaign.raised), communities: communityCampaigns.filter((membership) => membership.campaign_id === campaign.id).length, ownerInitials: initials,
         ownerName: organization.name, paused: campaign.status === "paused",
       })),
       adminCampaignCards: campaigns.map((campaign) => ({
@@ -39,7 +39,7 @@ export function useNgoAdminView() {
         const linkedProducts = campaignProducts.filter((link) => link.campaign_id === campaign.id).map((link) => products.find((product) => product.id === link.product_id)).filter(Boolean);
         const campaignDonations = donations.filter((donation) => donation.campaign_id === campaign.id);
         const productBreakdown = linkedProducts.map((product) => { const donated = campaignDonations.filter((donation) => donation.product_id === product!.id).reduce((sum, donation) => sum + donation.quantity, 0); return { name: product!.name, nameEn: product!.name_en ?? product!.name, donated, total: donated }; });
-        const detail: AdminCampaignDetail = { sku: campaign.id.slice(0, 8).toUpperCase(), monthLabel: "כל החודשים", monthLabelEn: "All months", monthlyTotal: campaignDonations.reduce((sum, donation) => sum + Number(donation.amount), 0), raised: Number(campaign.raised), goal: Number(campaign.goal), productBreakdown, communities: communities.map((community) => community.name) };
+        const detail: AdminCampaignDetail = { sku: campaign.id.slice(0, 8).toUpperCase(), monthLabel: "כל החודשים", monthLabelEn: "All months", monthlyTotal: campaignDonations.reduce((sum, donation) => sum + Number(donation.amount), 0), raised: Number(campaign.raised), goal: Number(campaign.goal), productBreakdown, communities: communityCampaigns.filter((membership) => membership.campaign_id === campaign.id).map((membership) => communities.find((community) => community.id === membership.community_id)?.name).filter((name): name is string => Boolean(name)) };
         return [campaign.id, detail];
       })),
       adminCampaignsTotalRaised: campaigns.reduce((sum, campaign) => sum + Number(campaign.raised), 0),

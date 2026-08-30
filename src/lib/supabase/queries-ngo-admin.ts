@@ -13,6 +13,7 @@ export type NgoAdminData = {
   donations: NgoDonation[];
   communities: Community[];
   campaignProducts: { campaign_id: string; product_id: string }[];
+  communityCampaigns: { community_id: string; campaign_id: string; status: "active" | "paused" }[];
 };
 
 export type NewNgoProduct = {
@@ -74,7 +75,7 @@ export async function getNgoAdminData(): Promise<NgoAdminData> {
     throw new Error("NGO owner profile required");
   }
   const orgId = profile.org_id;
-  const [organization, campaigns, products, donations, communities, campaignProducts] = await Promise.all([
+  const [organization, campaigns, products, donations, communities, campaignProducts, communityCampaigns] = await Promise.all([
     sb.from("organizations").select(PUBLIC_ORG_COLUMNS).eq("id", orgId).single(),
     sb.from("campaigns").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
     sb.from("products").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
@@ -82,8 +83,9 @@ export async function getNgoAdminData(): Promise<NgoAdminData> {
       .eq("org_id", orgId).order("created_at", { ascending: false }),
     sb.from("communities").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
     sb.from("campaign_products").select("campaign_id, product_id"),
+    sb.from("community_campaigns").select("community_id,campaign_id,status").in("status", ["active", "paused"]),
   ]);
-  const error = organization.error ?? campaigns.error ?? products.error ?? donations.error ?? communities.error ?? campaignProducts.error;
+  const error = organization.error ?? campaigns.error ?? products.error ?? donations.error ?? communities.error ?? campaignProducts.error ?? communityCampaigns.error;
   if (error || !organization.data) throw new Error(error?.message ?? "Organization not found");
   return {
     organization: organization.data as Organization,
@@ -92,6 +94,7 @@ export async function getNgoAdminData(): Promise<NgoAdminData> {
     donations: (donations.data ?? []) as NgoDonation[],
     communities: communities.data ?? [],
     campaignProducts: campaignProducts.data ?? [],
+    communityCampaigns: (communityCampaigns.data ?? []) as NgoAdminData["communityCampaigns"],
   };
 }
 
