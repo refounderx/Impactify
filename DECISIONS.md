@@ -1,5 +1,15 @@
 # Technical Decisions — Impactify
 
+## 2026-08-30 — Use a breakpoint-aware shared site frame
+
+**Decision:** Keep the shared `site-frame` at 80% of the viewport on desktop, 90% on tablet, and 100% on mobile widths below 640px. Page-level mobile controls must stack or scroll within their own region rather than forcing the document horizontally.
+
+**Context:** The original global 80% frame also applied to phones. Nested two-column cards then became too narrow for Hebrew labels and CTAs, producing the clipped card layout reported from mobile.
+
+**Rationale:** Desktop retains the requested 10% outer margins, while phones use their limited width for readable content. The approach is centralized so all routes inherit the same baseline instead of receiving isolated width overrides.
+
+**Consequences:** Shared pages gain width on mobile without altering desktop composition. Individual data tables may still use their intentional, local horizontal scroll containers; page-level horizontal overflow is clipped as a safeguard.
+
 ## 2026-08-30 — Do not expose historical seed campaigns on public routes
 
 **Decision:** Exclude the six stable UUIDs created by `supabase/seed.sql` from public campaign listing, search, and direct campaign-detail reads. Keep the rows intact for local/demo setup and historical database compatibility.

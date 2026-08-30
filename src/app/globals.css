@@ -23,12 +23,22 @@ body {
   background-color: #1A1A2E;
   color: #333333;
   direction: rtl;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
-/* Keep every screen and the global header within the same 80% site frame. */
+/* Keep desktop composition within the shared frame without constraining phones. */
 .site-frame {
-  width: 80%;
+  width: min(80%, 1920px);
   margin-inline: auto;
+}
+
+@media (max-width: 1023px) {
+  .site-frame { width: 90%; }
+}
+
+@media (max-width: 639px) {
+  .site-frame { width: 100%; }
 }
 
 /* LTR override: when html[dir=ltr], inputs should align start (left) not force-right */

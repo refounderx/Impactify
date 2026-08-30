@@ -39,7 +39,7 @@ export default function SearchPage() {
       <div className="bg-raz-teal px-6 pt-6 pb-10">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-white font-bold text-2xl mb-4"><EditableText tKey="search.title" /></h1>
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <div className="flex-1 bg-white rounded-xl flex items-center px-4 gap-2">
               <Search size={18} className="text-gray-400 flex-shrink-0" />
               <input
@@ -76,8 +76,8 @@ export default function SearchPage() {
         </div>
 
         {/* Sort + count */}
-        <div className="flex items-center justify-between py-3 mt-1">
-          <div className="flex gap-1">
+        <div className="flex flex-col gap-3 py-3 mt-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
             {sortOptions.map((s) => (
               <button key={s} onClick={() => setActiveSort(s)}
                 className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
