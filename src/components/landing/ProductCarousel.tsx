@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { type TransitionEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
@@ -13,11 +13,15 @@ export default function ProductCarousel() {
   const { data } = useSiteDataset("landing");
   const landingProducts = data?.landingProducts ?? [];
   const [desktopStart, setDesktopStart] = useState(0);
-  const [mobileIndex, setMobileIndex] = useState(0);
+  const [mobileIndex, setMobileIndex] = useState(1);
   const [skipMobileTransition, setSkipMobileTransition] = useState(false);
   const maxDesktopStart = Math.max(0, landingProducts.length - 4);
   const desktopVisible = landingProducts.slice(desktopStart, desktopStart + 4);
   const hasMobileCarousel = landingProducts.length > 1;
+  const mobileSlides = hasMobileCarousel
+    ? [landingProducts[landingProducts.length - 1], ...landingProducts, landingProducts[0]]
+    : landingProducts;
+  const mobileOffset = hasMobileCarousel ? mobileIndex : 0;
 
   function previousDesktop() {
     setDesktopStart((current) => maxDesktopStart === 0 ? 0 : current === 0 ? maxDesktopStart : current - 1);
@@ -25,21 +29,23 @@ export default function ProductCarousel() {
   function nextDesktop() {
     setDesktopStart((current) => maxDesktopStart === 0 ? 0 : current === maxDesktopStart ? 0 : current + 1);
   }
-  function skipTransitionForWrap() {
+  function resetMobileLoop(index: number) {
     setSkipMobileTransition(true);
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => setSkipMobileTransition(false));
-    });
+    setMobileIndex(index);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => setSkipMobileTransition(false)));
   }
   function previousMobile() {
     if (!hasMobileCarousel) return;
-    if (mobileIndex === 0) skipTransitionForWrap();
-    setMobileIndex((current) => (current - 1 + landingProducts.length) % landingProducts.length);
+    setMobileIndex((current) => current - 1);
   }
   function nextMobile() {
     if (!hasMobileCarousel) return;
-    if (mobileIndex === landingProducts.length - 1) skipTransitionForWrap();
-    setMobileIndex((current) => (current + 1) % landingProducts.length);
+    setMobileIndex((current) => current + 1);
+  }
+  function handleMobileTransitionEnd(event: TransitionEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget || event.propertyName !== "transform" || !hasMobileCarousel) return;
+    if (mobileIndex === 0) resetMobileLoop(landingProducts.length);
+    if (mobileIndex === landingProducts.length + 1) resetMobileLoop(1);
   }
 
   return (
@@ -53,9 +59,9 @@ export default function ProductCarousel() {
           </button>
 
           <div className="min-w-0 flex-1 overflow-hidden">
-            <div className={`flex ${skipMobileTransition ? "" : "transition-transform duration-300 ease-out"}`} style={{ transform: `translateX(${mobileIndex * 100}%)` }}>
-              {landingProducts.map((p) => (
-                <div className="w-full flex-none" key={p.id}>
+            <div className={`flex ${skipMobileTransition ? "" : "transition-transform duration-300 ease-out"}`} style={{ transform: `translateX(${mobileOffset * 100}%)` }} onTransitionEnd={handleMobileTransitionEnd}>
+              {mobileSlides.map((p, index) => (
+                <div className="w-full flex-none" key={`${p.id}-${index}`}>
                   <ProductCard
                     title={t(p.titleKey)}
                     price={p.price}
