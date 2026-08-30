@@ -120,7 +120,7 @@ export default function SetupPage() {
                 </div>
                 {goals.length > 1 && <button type="button" onClick={() => setGoals((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="mt-2 text-xs text-red-600">{lang === "en" ? "Remove" : "הסר"}</button>}
               </div>)}
-              {goals.length < 10 && <button type="button" onClick={() => setGoals((current) => [...current, { he: "", en: null }])} className="text-sm font-bold text-raz-teal">+ {lang === "en" ? "Add goal" : "הוסף מטרה"}</button>}
+              {goals.length < 10 && <button type="button" onClick={() => setGoals((current) => [...current, { he: "", en: null }])} className="interactive-control inline-flex min-h-11 items-center rounded-xl border border-raz-teal/30 bg-raz-teal/5 px-4 py-2 text-sm font-bold text-raz-teal hover:bg-raz-teal hover:text-white">+ {lang === "en" ? "Add goal" : "הוסף מטרה"}</button>}
             </div>
           )}
           {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
