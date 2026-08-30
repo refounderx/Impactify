@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLang } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import type { AudienceKind } from "@/lib/landing-data";
 import { getHeroCards } from "@/lib/supabase/queries-landing";
 import AudienceIconRow from "./AudienceIconRow";
@@ -37,6 +38,7 @@ function HeroImageCard({ card, lang, className }: { card: HeroCard; lang: string
 
 export default function Hero() {
   const { lang } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const [selectedKind, setSelectedKind] = useState<AudienceKind | null>(null);
   const [cards, setCards] = useState<HeroCard[]>([]);
 
@@ -54,9 +56,11 @@ export default function Hero() {
         <div className="order-1 text-right md:order-2" dir={lang === "he" ? "rtl" : "ltr"}>
           <EditableText tKey="landing.hero.title" as="h1" className="mb-6 block text-4xl font-bold leading-tight text-gray-900 sm:text-5xl" />
           <EditableText tKey="landing.hero.body" as="p" className="text-gray-500 leading-relaxed mb-6 block" />
-          <Link href="/auth" className="interactive-control inline-block border-2 border-raz-teal text-raz-teal font-bold px-8 py-3 rounded-full">
-            <EditableText tKey="landing.hero.cta" />
-          </Link>
+          {!authLoading && !user && (
+            <Link href="/auth" className="interactive-control inline-block border-2 border-raz-teal text-raz-teal font-bold px-8 py-3 rounded-full">
+              <EditableText tKey="landing.hero.cta" />
+            </Link>
+          )}
         </div>
 
         {/* Image+bubble cards — captions use their own reserved space below each image. */}

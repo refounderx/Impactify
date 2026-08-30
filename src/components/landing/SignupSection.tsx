@@ -3,13 +3,17 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SignupSection() {
   const [phone, setPhone] = useState("");
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
   const { data } = useSiteDataset("landing");
+  const { user, loading: authLoading } = useAuth();
   const authProviders = data?.authProviders ?? [];
+
+  if (authLoading || user) return null;
 
   async function signInWithPhone() {
     const normalized = phone.replace(/\D/g, "");
