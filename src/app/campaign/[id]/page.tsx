@@ -12,6 +12,7 @@ import { useLang } from "@/contexts/LanguageContext";
 import { useParams } from "next/navigation";
 import EditableText from "@/components/admin/EditableText";
 import { getCampaignVideoSource } from "@/lib/campaign-media";
+import { sharePage } from "@/lib/share";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +21,7 @@ export default function CampaignDetail() {
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [shareNotice, setShareNotice] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -81,9 +83,10 @@ export default function CampaignDetail() {
         <Link href="/" className="micro-hint absolute top-4 start-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.back")}>
           <ArrowRight size={20} />
         </Link>
-        <button className="micro-hint absolute top-4 end-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.share")}>
+        <button type="button" onClick={() => void sharePage(title).then((result) => setShareNotice(result === "copied" ? (lang === "en" ? "Link copied" : "הקישור הועתק") : ""))} className="micro-hint absolute top-4 end-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.share")}>
           <Share2 size={20} />
         </button>
+        {shareNotice && <span role="status" className="absolute end-4 top-14 rounded-full bg-white px-3 py-1 text-xs font-bold text-raz-dark">{shareNotice}</span>}
         {/* Org logo, set in the org's settings */}
         <div
           className="absolute -bottom-7 start-6 w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center text-white text-lg font-bold border-4 border-white"
@@ -134,7 +137,7 @@ export default function CampaignDetail() {
                 name={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 description={lang === "en" ? (p.descriptionEn ?? p.description) : p.description}
                 price={p.price}
-                chosenCount={257 - i * 12}
+                chosenCount={campaign.donors}
                 onBuy={() => setShowModal(true)}
               />
             ))}

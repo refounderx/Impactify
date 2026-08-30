@@ -27,7 +27,7 @@ export default function ProductCard({
         {priceRange ? `₪${priceRange}` : formatNIS(price!)}
       </p>
       {campaignCta ? (
-        <button className="interactive-control w-full bg-raz-teal text-white font-bold py-2 rounded-full text-sm mb-2">
+        <button type="button" onClick={onChoose} className="interactive-control w-full bg-raz-teal text-white font-bold py-2 rounded-full text-sm mb-2">
           <EditableText tKey="landing.products.ctaCampaign" />
         </button>
       ) : isChosen ? (
@@ -39,7 +39,6 @@ export default function ProductCard({
           <EditableText tKey="landing.products.ctaBuy" />
         </button>
       )}
-      {!campaignCta && <p className="text-xs text-gray-400">257 ❤ <EditableText tKey="landing.products.chosen" /></p>}
     </div>
   );
 }

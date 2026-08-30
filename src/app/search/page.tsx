@@ -12,12 +12,13 @@ export default function SearchPage() {
   const { t } = useLang();
   const { data: sharedData } = useSiteDataset("shared");
   const categories = sharedData?.categories ?? [];
-  const sortOptions = [t("sort.relevance"), t("sort.newest"), t("sort.funded"), t("sort.ending")];
+  const sortOptions = ["relevance", "newest", "funded", "ending"] as const;
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSort, setActiveSort] = useState("");
   const [results, setResults] = useState<Awaited<ReturnType<typeof searchCampaigns>>>([]);
   const [loading, setLoading] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const runSearch = useCallback(async (q: string, cat: string) => {
     setLoading(true);
@@ -50,7 +51,7 @@ export default function SearchPage() {
               />
               {query && <button onClick={() => setQuery("")} className="micro-hint" aria-label={t("hint.clearSearch")}><X size={16} className="text-gray-400" /></button>}
             </div>
-            <button className="bg-white/20 text-white px-4 rounded-xl flex items-center gap-2 text-sm font-medium">
+            <button type="button" onClick={() => setFiltersOpen((value) => !value)} aria-expanded={filtersOpen} className="bg-white/20 text-white px-4 rounded-xl flex items-center gap-2 text-sm font-medium">
               <SlidersHorizontal size={18} /> <EditableText tKey="search.filter" />
             </button>
           </div>
@@ -59,6 +60,7 @@ export default function SearchPage() {
 
       <div className="max-w-5xl mx-auto w-full px-6 -mt-4">
         {/* Category chips */}
+        {filtersOpen && <div className="mt-5 rounded-2xl bg-white p-4 shadow-sm"><p className="mb-3 text-sm font-bold text-raz-dark">{t("search.filter")}</p><div className="flex flex-wrap gap-2">{categories.map((cat) => <button key={cat.id} type="button" onClick={() => { setActiveCategory(cat.id); setFiltersOpen(false); }} className={`rounded-full px-3 py-1.5 text-sm ${activeCategory === cat.id ? "bg-raz-teal text-white" : "bg-raz-surface text-gray-600"}`}>{cat.emoji} {t(`cat.${cat.id}`)}</button>)}</div></div>}
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
           {categories.map((cat) => (
             <button
@@ -68,7 +70,7 @@ export default function SearchPage() {
                 activeCategory === cat.id ? "bg-raz-teal text-white" : "bg-white text-gray-600 border border-gray-200"
               }`}
             >
-              {cat.emoji} <EditableText tKey={`cat.${cat.id}`} />
+              {cat.emoji} {t(`cat.${cat.id}`)}
             </button>
           ))}
         </div>
@@ -81,7 +83,7 @@ export default function SearchPage() {
                 className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
                   activeSort === s ? "bg-white text-raz-teal font-bold shadow-sm" : "text-gray-500 hover:bg-white"
                 }`}
-              >{s}</button>
+              >{t(`sort.${s}`)}</button>
             ))}
           </div>
           <span className="text-sm text-gray-500">
@@ -95,7 +97,7 @@ export default function SearchPage() {
           </div>
         ) : results.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-8">
-            {results.map((c) => <CampaignCard key={c.id} campaign={c} />)}
+            {[...results].sort((a, b) => activeSort === "newest" ? Number(new Date(b.createdAt)) - Number(new Date(a.createdAt)) : activeSort === "funded" ? b.raised - a.raised : activeSort === "ending" ? a.daysLeft - b.daysLeft : 0).map((c) => <CampaignCard key={c.id} campaign={c} />)}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-center">

@@ -206,6 +206,12 @@ export interface Database {
           { foreignKeyName: "profiles_community_id_fkey"; columns: ["community_id"]; isOneToOne: false; referencedRelation: "communities"; referencedColumns: ["id"] },
         ];
       };
+      contact_messages: {
+        Row: { id: string; name: string; email: string; phone: string | null; message: string; created_at: string };
+        Insert: Omit<Database["public"]["Tables"]["contact_messages"]["Row"], "id" | "created_at">;
+        Update: never;
+        Relationships: [];
+      };
       profile_special_days: {
         Row: { id: string; profile_id: string; title: string; event_date: string; emoji: string; created_at: string };
         Insert: { id?: string; profile_id: string; title: string; event_date: string; emoji?: string; created_at?: string };

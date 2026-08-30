@@ -1,18 +1,30 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Search, LogIn, Pencil } from "lucide-react";
+import { Bell, Search, LogIn, Pencil, X } from "lucide-react";
+import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminMode } from "@/contexts/AdminModeContext";
 import EditableText from "@/components/admin/EditableText";
 import { profilePathForRole } from "@/lib/profile-routes";
+import { getDonorUpdates } from "@/lib/supabase/queries-my-donations";
 
 export default function TopNav() {
   const pathname = usePathname();
   const { lang, setLang, t } = useLang();
   const { user, profile } = useAuth();
   const { adminMode, toggleAdminMode } = useAdminMode();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Awaited<ReturnType<typeof getDonorUpdates>>>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  async function toggleNotifications() {
+    const next = !notificationsOpen; setNotificationsOpen(next);
+    if (!next) return;
+    setNotificationsLoading(true);
+    try { setNotifications(await getDonorUpdates(user?.id ?? null)); } finally { setNotificationsLoading(false); }
+  }
 
   const active = pathname.startsWith("/admin")
     ? "/admin"
@@ -112,10 +124,11 @@ export default function TopNav() {
             <Search size={20} />
           </Link>
         )}
-        <button className="micro-hint relative text-gray-500 hover:text-raz-teal" aria-label={t("hint.notifications")}>
+        <button type="button" onClick={() => void toggleNotifications()} className="micro-hint relative text-gray-500 hover:text-raz-teal" aria-expanded={notificationsOpen} aria-label={t("hint.notifications")}>
           <Bell size={20} />
           <span className="absolute -top-0.5 -start-0.5 w-2 h-2 bg-red-400 rounded-full" />
         </button>
+        {notificationsOpen && <div className="absolute end-6 top-14 z-50 w-80 rounded-2xl border border-gray-100 bg-white p-4 shadow-xl"><div className="mb-3 flex items-center justify-between"><p className="font-bold text-raz-dark">{lang === "en" ? "Updates" : "עדכונים"}</p><button type="button" onClick={() => setNotificationsOpen(false)} className="rounded-full p-1 text-gray-400 hover:bg-gray-100" aria-label={lang === "en" ? "Close" : "סגירה"}><X size={16} /></button></div>{notificationsLoading ? <p className="text-sm text-gray-400">…</p> : notifications.length ? <div className="space-y-3">{notifications.map((item) => <div key={item.id} className="border-b border-gray-100 pb-3 last:border-0"><p className="text-sm font-bold text-gray-800">{lang === "en" ? item.productNameEn : item.productName}</p><p className="mt-1 text-xs text-gray-500">{lang === "en" ? item.descriptionEn : item.description}</p></div>)}</div> : <p className="text-sm text-gray-500">{lang === "en" ? "No updates yet" : "אין עדכונים חדשים"}</p>}</div>}
         {user ? (
           <Link href={profileHref} className="flex items-center gap-2 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-50">
             <div className="w-7 h-7 rounded-full bg-raz-teal flex items-center justify-center text-white text-xs font-bold">

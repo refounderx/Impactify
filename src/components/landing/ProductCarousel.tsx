@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
@@ -8,6 +9,7 @@ import EditableText from "@/components/admin/EditableText";
 
 export default function ProductCarousel() {
   const { t } = useLang();
+  const router = useRouter();
   const { data } = useSiteDataset("landing");
   const landingProducts = data?.landingProducts ?? [];
   const [start, setStart] = useState(0);
@@ -39,6 +41,7 @@ export default function ProductCarousel() {
                 priceRange={p.priceRange}
                 emoji={p.emoji}
                 campaignCta={p.cta === "campaign"}
+                onChoose={() => router.push("/search")}
               />
             ))}
           </div>

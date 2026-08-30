@@ -59,6 +59,7 @@ const he = {
   "search.empty": "לא נמצאו קמפיינים",
   "search.emptySub": "נסה מילות חיפוש אחרות",
   "sort.relevance": "רלוונטיות", "sort.newest": "חדשים ביותר",
+  "cat.all": "הכל", "cat.food": "מזון", "cat.education": "חינוך", "cat.health": "בריאות", "cat.elderly": "קשישים", "cat.children": "ילדים", "cat.environment": "סביבה",
   "sort.funded": "ממומן ביותר", "sort.ending": "נגמר בקרוב",
   // Donation amount
   "amount.title": "בחר סכום תרומה", "amount.prompt": "בחר סכום",
@@ -375,6 +376,7 @@ const en: Record<string, string> = {
   "search.empty": "No campaigns found",
   "search.emptySub": "Try different search terms",
   "sort.relevance": "Relevance", "sort.newest": "Newest",
+  "cat.all": "All", "cat.food": "Food", "cat.education": "Education", "cat.health": "Health", "cat.elderly": "Elderly", "cat.children": "Children", "cat.environment": "Environment",
   "sort.funded": "Most Funded", "sort.ending": "Ending Soon",
   "amount.title": "Select Donation Amount", "amount.prompt": "Choose amount",
   "amount.custom": "Other amount:", "amount.placeholder": "Enter amount",

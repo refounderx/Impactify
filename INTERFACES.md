@@ -39,6 +39,9 @@ Server-side donation write. Validates inputs at trust boundary.
 - `donor_id` is `null` for anonymous donations (allowed by schema)
 - Creates `recurring_donations` row only when `is_recurring=true` AND user is authenticated
 
+### `POST /api/contact`
+Stores a public landing-page contact request. The route validates bounded name, email, phone, and message fields, then writes with the server-only Supabase admin client. It does not send email; operators read requests through the database until a delivery provider is configured.
+
 ## Auth Routes
 
 | Route | Purpose |
@@ -151,6 +154,9 @@ Auto-created by trigger on `auth.users` insert. Ordinary users may update person
 | `psp_token` | text | Nullable — reserved for real PSP tokenization once a provider is chosen (see Phase 4 — Payments in `TASKS.md`); currently unused |
 
 RLS: donor can only read/insert/delete their own rows.
+
+### `contact_messages`
+Public contact requests written only through `POST /api/contact`. RLS permits read access only to authenticated administrators; browser clients receive no table write policy.
 
 ### `profile_special_days`
 | Column | Type | Notes |

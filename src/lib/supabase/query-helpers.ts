@@ -24,6 +24,7 @@ export function toUICampaign(row: CampaignWithOrg) {
     storyEn: row.story_en ?? undefined,
     heroImageUrl: row.hero_image_url ?? undefined,
     videoUrl: row.video_url ?? undefined,
+    createdAt: row.created_at,
     productIds: [] as string[],
     _org: row.organizations,
   };

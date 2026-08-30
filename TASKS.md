@@ -263,6 +263,7 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 - [ ] Implement actual charge flow (PCI-compliant, card data never touches our server)
 - [ ] Recurring donation setup + cancellation
 - [ ] PDF receipt generation (Section 46 tax compliance — **open question**)
+- [ ] Do not activate recurring-donation, payment-method, receipt, certificate, or tax-email actions until the PSP and document-delivery contracts are implemented; the current data model has no valid issuer/token flow.
 
 ---
 

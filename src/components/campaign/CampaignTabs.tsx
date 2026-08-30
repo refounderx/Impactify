@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
+import { createClient } from "@/lib/supabase/client";
 import EditableText from "@/components/admin/EditableText";
 import CampaignStory from "@/components/campaign/CampaignStory";
 
@@ -17,21 +17,10 @@ interface CampaignTabsProps {
 
 export default function CampaignTabs({ campaignId, donorsCount, story, orgBio }: CampaignTabsProps) {
   const { lang, t } = useLang();
-  const { data } = useSiteDataset("shared");
   const [tab, setTab] = useState<Tab>("donors");
-  const names = data?.campaignDonorNames ?? [];
-  const count = Math.min(donorsCount, 9) || 9;
-  const donors = names.length === 0 ? [] : Array.from({ length: count }).map((_, i) => ({
-    id: `${campaignId}-donor-${i}`,
-    name: names[i % names.length],
-    amount: [180, 100, 50, 250, 126][i % 5],
-    date: "לפני 2 שעות",
-    dateEn: "2 hours ago",
-    message: "זכות גדולה לתרום ולהיות שותפה עם הארגון",
-    messageEn: "It's a privilege to give and partner with this organization",
-    anonymous: i % 4 === 1,
-  }));
-  const communities = data?.campaignCommunitiesByCampaign[campaignId] ?? [];
+  const [donors, setDonors] = useState<Array<{ id: string; name: string; amount: number; date: string; anonymous: boolean }>>([]);
+  useEffect(() => { let active = true; void createClient().from("donations").select("id,donor_name,dedication_name,amount,created_at").eq("campaign_id", campaignId).eq("status", "completed").order("created_at", { ascending: false }).limit(9).then(({ data }) => { if (active) setDonors((data ?? []).map((item) => ({ id: item.id, name: item.donor_name ?? item.dedication_name ?? "", amount: Number(item.amount), date: new Date(item.created_at).toLocaleDateString("he-IL"), anonymous: !item.donor_name }))); }); return () => { active = false; }; }, [campaignId]);
+  const communities: Array<{ id: string; name: string; nameEn: string; members: number; emoji: string }> = [];
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "donors", label: t("campaign.tabDonors") },
@@ -57,7 +46,7 @@ export default function CampaignTabs({ campaignId, donorsCount, story, orgBio }:
       </div>
 
       {tab === "donors" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        donors.length ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {donors.map((d) => (
             <div key={d.id} className="flex items-start gap-3 bg-gray-50 rounded-xl p-3">
               <div className="w-9 h-9 rounded-full bg-raz-teal/15 flex items-center justify-center text-raz-teal font-bold text-sm flex-shrink-0">
@@ -70,12 +59,11 @@ export default function CampaignTabs({ campaignId, donorsCount, story, orgBio }:
                   </span>
                   <span className="font-bold text-raz-teal text-sm font-numeric">{formatNIS(d.amount)}</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-0.5">{lang === "en" ? d.dateEn : d.date}</p>
-                <p className="text-xs text-gray-500 mt-1 leading-snug">{lang === "en" ? d.messageEn : d.message}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{d.date}</p>
               </div>
             </div>
           ))}
-        </div>
+        </div> : <p className="py-6 text-center text-sm text-gray-400">{lang === "en" ? "No donations yet" : "אין תרומות להצגה עדיין"}</p>
       )}
 
       {tab === "communities" && (
