@@ -11,8 +11,8 @@ import type { OrganizationGoal } from "@/lib/supabase/types";
 type SignupRole = Exclude<AppRole, "admin">;
 const roles: { key: SignupRole; he: string; en: string; descriptionHe: string; descriptionEn: string; emoji: string }[] = [
   { key: "donor", he: "תורם", en: "Donor", descriptionHe: "אני רוצה לתרום לקמפיינים", descriptionEn: "I want to support campaigns", emoji: "💙" },
-  { key: "ngo_owner", he: "בעל עמותה", en: "NGO owner", descriptionHe: "אני מקים או מנהל עמותה", descriptionEn: "I own or manage an NGO", emoji: "🏛️" },
-  { key: "community_owner", he: "בעל קהילה", en: "Community owner", descriptionHe: "אני מנהל קהילת גיוס", descriptionEn: "I manage a fundraising community", emoji: "👥" },
+  { key: "ngo_owner", he: "מנהל עמותה", en: "NGO manager", descriptionHe: "אני מקים או מנהל עמותה", descriptionEn: "I own or manage an NGO", emoji: "🏛️" },
+  { key: "community_owner", he: "מנהל קהילה", en: "Community manager", descriptionHe: "אני מנהל קהילת גיוס", descriptionEn: "I manage a fundraising community", emoji: "👥" },
 ];
 
 function homeForRole(role: AppRole) {
