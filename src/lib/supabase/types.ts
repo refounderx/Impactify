@@ -385,6 +385,18 @@ export interface Database {
         };
         Returns: string;
       };
+      get_public_impact_stats: {
+        Args: Record<string, never>;
+        Returns: {
+          completed_donations: number;
+          completed_amount: number;
+          known_donors: number;
+          active_campaigns: number;
+          partner_organizations: number;
+          communities_count: number;
+          active_recurring_donations: number;
+        }[];
+      };
     };
     Enums: {
       app_role: AppRole;

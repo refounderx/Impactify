@@ -74,6 +74,7 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | `save_ngo_update(update_id?, audience, target_ids, channels, timing, scheduled_at, trigger_type, title, body, cta, image_name)` | NGO owner only | Persists an update in the NGO tenant; a new immediate Push update also creates donor-facing `system_updates` rows for matching donors |
 | `manage_ngo_update(update_id, action)` | NGO owner only | Duplicates, pauses/resumes, or deletes only an update owned by the caller's organization |
 | `set_community_campaign(campaign_id, action)` | Community owner only | Creates/cancels a pending join request or pauses/resumes the caller's own active campaign relationship |
+| `get_public_impact_stats()` | Anonymous or authenticated | Read-only, platform-wide aggregate counts and completed donation total for the landing page; never returns donation, payment, or donor rows |
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
 
@@ -97,6 +98,7 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `getSiteDatasets()` | No | typed shared/landing presentation bundle | `site_datasets` |
 | `getNgoUpdates()` / `saveNgoUpdate()` / `manageNgoUpdate()` | NGO owner | Persistent update rows and tenant-safe mutations | `ngo_updates`, `system_updates` |
 | `getCommunityCampaignStatuses()` / `setCommunityCampaign()` | Community owner | Persistent join-request status and participation controls | `community_campaigns` |
+| `getPublicImpactStats()` | No | Landing-page aggregate impact metrics plus up to six public organization names | `get_public_impact_stats`, `organizations` |
 
 ### `site_datasets`
 

@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-08-30 — Expose landing impact through an aggregate-only RPC
+
+**Decision:** Replace the landing page's hard-coded impact figures with `get_public_impact_stats()`, a public read-only Supabase RPC that returns only platform-wide counts and the completed donation sum. The browser may also read public organization names for the accompanying labels, but it does not receive donation, payment, or donor rows.
+
+**Context:** The landing impact grid displayed fabricated figures despite the platform already storing donations, campaigns, organizations, communities, and recurring donations in Supabase. Direct browser queries to `donations` must remain RLS-protected.
+
+**Rationale:** A narrowly scoped `SECURITY DEFINER` function provides factual public metrics without weakening tenant isolation or publishing personally identifiable donor/payment information. An unavailable RPC is rendered as an unavailable state, never as a local mock fallback.
+
+**Consequences:** The SQL migration must be applied through the Supabase SQL Editor before production displays live values. New landing metrics must be added explicitly to the aggregate function rather than querying protected tables from the client.
+
+---
+
 ## 2026-08-30 — Use a breakpoint-aware shared site frame
 
 **Decision:** Keep the shared `site-frame` at 80% of the viewport on desktop, 90% on tablet, and 100% on mobile widths below 640px. Page-level mobile controls must stack or scroll within their own region rather than forcing the document horizontally.
