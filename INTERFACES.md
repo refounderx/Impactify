@@ -89,6 +89,8 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `getNgoAdminData()` | NGO owner | Own tenant's campaigns, products, donations, communities | normalized tenant tables |
 | `getCommunityAdminData()` | Community owner | Own community and attributed campaigns/donations | normalized tenant tables |
 | `getMyDonations(userId)` | Yes | donation rows | `donations`, `campaigns`, `organizations` |
+| `getMyProductDonations(userId)` | Yes | Product-grouped donor donations, including the latest linked `campaignId` for repeat giving | `donations`, `products`, `campaigns`, `organizations` |
+| `getMyTaxDonationRecords(userId)` | Yes | Every completed donor donation with receipt reference, date, amount, and organization for a client-generated tax report | `donations`, `organizations` |
 | `getMyRecurring(userId)` | Yes | recurring rows | `recurring_donations`, `campaigns`, `organizations` |
 | `updateRecurringStatus(id, status)` | Yes (RLS) | `boolean` | `recurring_donations` |
 | `cancelRecurring(id)` | Yes (RLS) | `boolean` | `recurring_donations` |

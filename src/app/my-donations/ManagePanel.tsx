@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Search, Printer, Copy, ChevronDown, ArrowDown } from "lucide-react";
 import { formatNIS, type ProductDonation } from "@/lib/mock-data";
+import { downloadDonationReceipt } from "@/lib/donation-documents";
 import type { SharedSiteData } from "@/lib/site-dataset-types";
 import QuarterlyView from "./QuarterlyView";
 
@@ -25,6 +26,7 @@ export default function ManagePanel({ lang, t, onTaxRefund, productDonations, qu
   const allRows = donations.flatMap((pd) =>
     pd.receipts.map((r) => ({
       ...r,
+      product: pd,
       productName: pd.productName,
       productNameEn: pd.productNameEn,
       org: "לחיות בכבוד",
@@ -150,7 +152,7 @@ export default function ManagePanel({ lang, t, onTaxRefund, productDonations, qu
                         </div>
                       </td>
                       <td className="py-3.5 px-2">
-                        <button className="micro-hint w-8 h-8 bg-raz-teal rounded-full flex items-center justify-center text-white hover:bg-teal-500 transition-colors" aria-label={t("hint.downloadReceipt")}>
+                        <button type="button" onClick={() => downloadDonationReceipt(r.product, r)} className="micro-hint w-8 h-8 bg-raz-teal rounded-full flex items-center justify-center text-white hover:bg-teal-500 transition-colors" aria-label={t("hint.downloadReceipt")}>
                           <ArrowDown size={14} />
                         </button>
                       </td>

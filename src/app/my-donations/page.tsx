@@ -13,7 +13,8 @@ import Sidebar from "./Sidebar";
 import type { ProductDonation } from "@/lib/mock-data";
 import type { SharedSiteData } from "@/lib/site-dataset-types";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
-import { getMyProductDonations, getDonorUpdates, getQuarterlyStats } from "@/lib/supabase/queries-my-donations";
+import { getMyProductDonations, getDonorUpdates, getMyTaxDonationRecords, getQuarterlyStats } from "@/lib/supabase/queries-my-donations";
+import type { TaxDonationRecord } from "@/lib/donation-documents";
 import { Plus, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,18 +32,21 @@ export default function MyDonationsPage() {
   const [remoteProductDonations, setRemoteProductDonations] = useState<ProductDonation[]>([]);
   const [remoteUpdates, setRemoteUpdates] = useState<SharedSiteData["donorUpdates"]>([]);
   const [remoteQuarterly, setRemoteQuarterly] = useState<SharedSiteData["quarterlyDonationData"]>({ total: 0, period: "", months: [] });
+  const [remoteTaxDonations, setRemoteTaxDonations] = useState<TaxDonationRecord[]>([]);
 
   useEffect(() => {
     if (user) {
       getDonorUpdates(user.id).then(setRemoteUpdates);
       getMyProductDonations(user.id).then(setRemoteProductDonations);
       getQuarterlyStats(user.id).then(setRemoteQuarterly);
+      getMyTaxDonationRecords(user.id).then(setRemoteTaxDonations);
     }
   }, [user]);
 
   const updates = user ? remoteUpdates : (data?.donorUpdates ?? []);
   const productDonations = user ? remoteProductDonations : (data?.myProductDonations ?? []);
   const quarterly = user ? remoteQuarterly : (data?.quarterlyDonationData ?? { total: 0, period: "", months: [] });
+  const taxDonations = user ? remoteTaxDonations : productDonations.flatMap((product) => product.receipts.map((receipt) => ({ id: receipt.id, date: receipt.date, amount: receipt.amount, receiptId: receipt.id, organization: product.orgName })));
 
   const donorName = lang === "en" ? (data?.DONOR_NAME_EN ?? "") : (data?.DONOR_NAME ?? "");
   const displayName = user?.email ?? donorName;
@@ -173,7 +177,7 @@ export default function MyDonationsPage() {
             />
           )}
 
-          {view === "tax-refund" && <TaxRefundView lang={lang} />}
+          {view === "tax-refund" && <TaxRefundView lang={lang} donations={taxDonations} />}
 
           {view === "updates" && <UpdatesPanel lang={lang} t={t} updates={updates} />}
 

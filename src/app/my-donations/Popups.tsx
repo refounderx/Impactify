@@ -1,9 +1,12 @@
 "use client";
 import { X, Download, CreditCard, Plus } from "lucide-react";
 import { formatNIS, type ProductDonation } from "@/lib/mock-data";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
-import { useState } from "react";
+import { downloadDonationCertificate, downloadDonationReceipt, downloadDonationReceipts } from "@/lib/donation-documents";
+import { addPaymentMethod, getPaymentMethods, type PaymentMethod } from "@/lib/supabase/queries-profile";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export type PopupName =
   | "certificate"
@@ -36,14 +39,14 @@ function Backdrop({ onClose, children }: { onClose: () => void; children: React.
   );
 }
 
-function CertificatePopup({ onClose, t }: { pd: ProductDonation; onClose: () => void; t: (k: string) => string }) {
+function CertificatePopup({ pd, onClose, t }: { pd: ProductDonation; onClose: () => void; t: (k: string) => string }) {
   return (
     <Backdrop onClose={onClose}>
       <div className="p-6 text-center relative">
         <button onClick={onClose} className="micro-hint micro-hint-below absolute top-4 end-4 text-gray-400 hover:text-gray-600" aria-label={t("hint.close")}><X size={20} /></button>
         <div className="text-6xl mb-4">🏅</div>
         <p className="text-gray-500 text-sm mb-1">{t("myDon.certSub")}</p>
-        <button className="mt-4 bg-raz-teal text-white rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 mx-auto">
+        <button type="button" onClick={() => downloadDonationCertificate(pd)} className="mt-4 bg-raz-teal text-white rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 mx-auto">
           <Download size={16} />
           {t("myDon.certDownload")}
         </button>
@@ -63,7 +66,7 @@ function ReceiptsPopup({ pd, onClose, t, lang }: { pd: ProductDonation; onClose:
         <button onClick={onClose} className="micro-hint micro-hint-below absolute top-4 end-4 text-gray-400 hover:text-gray-600" aria-label={t("hint.close")}><X size={20} /></button>
         <h3 className="font-bold text-gray-800 text-base mb-1">{name}</h3>
         <p className="text-xs text-gray-400 mb-4">{pd.orgCode} · {pd.orgName}</p>
-        <button className="flex items-center gap-2 text-sm text-raz-teal font-medium mb-4">
+        <button type="button" onClick={() => downloadDonationReceipts(pd)} className="flex items-center gap-2 text-sm text-raz-teal font-medium mb-4">
           <Download size={15} />
           {t("myDon.downloadAllReceipts")}
         </button>
@@ -82,7 +85,7 @@ function ReceiptsPopup({ pd, onClose, t, lang }: { pd: ProductDonation; onClose:
                 <td className="py-2 font-bold font-numeric">{formatNIS(r.amount)}</td>
                 <td className="py-2 text-gray-500">{r.type}</td>
                 <td className="py-2 text-gray-500">••••{r.paymentLast4}</td>
-                <td className="py-2"><button className="micro-hint text-raz-teal" aria-label={t("hint.downloadReceipt")}><Download size={14} /></button></td>
+                <td className="py-2"><button type="button" onClick={() => downloadDonationReceipt(pd, r)} className="micro-hint text-raz-teal" aria-label={t("hint.downloadReceipt")}><Download size={14} /></button></td>
               </tr>
             ))}
           </tbody>
@@ -105,7 +108,7 @@ function DonateMorePopup({ pd, onClose, onActivateRecurring, t, lang }: { pd: Pr
         <p className="text-sm text-gray-500 text-center mb-5">{name}</p>
         <div className="flex flex-col gap-3">
           <Link
-            href={`/donate/1/amount`}
+            href={pd.campaignId ? `/donate/${encodeURIComponent(pd.campaignId)}/amount?amount=${pd.lastDonationAmount}` : "/search"}
             className="flex items-center justify-between border-2 border-gray-200 rounded-xl p-4 hover:border-raz-teal transition-colors group"
           >
             <div>
@@ -134,9 +137,32 @@ function DonateMorePopup({ pd, onClose, onActivateRecurring, t, lang }: { pd: Pr
   );
 }
 
-function StandingOrderPopup({ pd, paymentMethods, onClose, t, lang }: { pd: ProductDonation; paymentMethods: Array<{id: string; brand: string; last4: string}>; onClose: () => void; t: (k: string) => string; lang: string }) {
+function StandingOrderPopup({ pd, paymentMethods, onAddPaymentMethod, onClose, t, lang, userId }: { pd: ProductDonation; paymentMethods: PaymentMethod[]; onAddPaymentMethod: (method: PaymentMethod) => void; onClose: () => void; t: (k: string) => string; lang: string; userId?: string }) {
+  const router = useRouter();
   const [selectedPm, setSelectedPm] = useState<string | null>(null);
+  const [addingPayment, setAddingPayment] = useState(false);
+  const [brand, setBrand] = useState("Visa");
+  const [last4, setLast4] = useState("");
+  const [status, setStatus] = useState("");
   const name = lang === "en" ? pd.productNameEn : pd.productName;
+
+  async function savePaymentMethod() {
+    if (!userId) { setStatus(lang === "en" ? "Sign in to save a payment method." : "יש להתחבר כדי לשמור אמצעי תשלום."); return; }
+    if (!/^\d{4}$/.test(last4)) { setStatus(lang === "en" ? "Enter exactly four digits." : "יש להזין ארבע ספרות בדיוק."); return; }
+    const saved = await addPaymentMethod(userId, brand.trim() || "Card", last4);
+    if (!saved) { setStatus(lang === "en" ? "Could not save the payment method." : "לא ניתן לשמור את אמצעי התשלום."); return; }
+    onAddPaymentMethod(saved);
+    setSelectedPm(saved.id);
+    setAddingPayment(false);
+    setLast4("");
+    setStatus(lang === "en" ? "Payment method saved." : "אמצעי התשלום נשמר.");
+  }
+
+  function activateRecurring() {
+    if (!pd.campaignId) { setStatus(lang === "en" ? "This donation is not linked to an active campaign." : "התרומה הזו אינה מקושרת לקמפיין פעיל."); return; }
+    if (!selectedPm) return;
+    router.push(`/donate/${encodeURIComponent(pd.campaignId)}/amount?amount=${pd.lastDonationAmount}&recurring=1`);
+  }
   return (
     <Backdrop onClose={onClose}>
       <div className="p-5 relative">
@@ -164,12 +190,15 @@ function StandingOrderPopup({ pd, paymentMethods, onClose, t, lang }: { pd: Prod
             </button>
           ))}
         </div>
-        <button className="w-full border border-dashed border-gray-300 rounded-xl py-2.5 text-sm text-gray-500 hover:border-raz-teal hover:text-raz-teal flex items-center justify-center gap-2 mb-5 transition-colors">
+        <button type="button" onClick={() => setAddingPayment((current) => !current)} className="w-full border border-dashed border-gray-300 rounded-xl py-2.5 text-sm text-gray-500 hover:border-raz-teal hover:text-raz-teal flex items-center justify-center gap-2 mb-3 transition-colors">
           <Plus size={15} />
           {t("myDon.addPayment")}
         </button>
+        {addingPayment && <div className="mb-4 grid grid-cols-[1fr_auto] gap-2 rounded-xl bg-gray-50 p-3"><input value={brand} onChange={(event) => setBrand(event.target.value)} placeholder={lang === "en" ? "Card brand" : "סוג כרטיס"} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-raz-teal focus:outline-none" /><input value={last4} onChange={(event) => setLast4(event.target.value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" dir="ltr" placeholder="1234" className="w-20 rounded-lg border border-gray-200 bg-white px-3 py-2 text-center text-sm focus:border-raz-teal focus:outline-none" /><button type="button" onClick={savePaymentMethod} className="col-span-2 rounded-lg bg-raz-teal px-3 py-2 text-sm font-bold text-white">{lang === "en" ? "Save payment method" : "שמירת אמצעי תשלום"}</button></div>}
 
         <button
+          type="button"
+          onClick={activateRecurring}
           disabled={!selectedPm}
           className="w-full bg-raz-dark text-white rounded-xl py-3 text-sm font-bold disabled:opacity-40 hover:opacity-90 transition-opacity"
         >
@@ -178,6 +207,7 @@ function StandingOrderPopup({ pd, paymentMethods, onClose, t, lang }: { pd: Prod
         <p className="text-xs text-gray-400 text-center mt-3 leading-relaxed">
           * {t("myDon.cancelAnytime")}
         </p>
+        {status && <p className="mt-3 text-center text-xs text-gray-600" role="status">{status}</p>}
       </div>
     </Backdrop>
   );
@@ -193,7 +223,7 @@ function TaxRefundPopup({ onClose, t, lang }: { onClose: () => void; t: (k: stri
         <p className="text-sm text-gray-600 leading-relaxed mb-4" dir={lang === "en" ? "ltr" : "rtl"}>
           {t("myDon.taxInfo")}
         </p>
-        <a href="#" className="text-raz-teal text-sm underline block text-center mb-4">
+        <a href="https://www.gov.il/he/service/confirmation-of-donations" target="_blank" rel="noreferrer" className="text-raz-teal text-sm underline block text-center mb-4">
           {t("myDon.taxInfoLink")}
         </a>
         <button
@@ -215,15 +245,20 @@ interface PopupsProps extends BaseProps {
 }
 
 export function Popups({ popup, productId, donations, onClose, onActivateRecurring, lang, t }: PopupsProps) {
-  const { data } = useSiteDataset("shared");
+  const { user } = useAuth();
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const pd = donations.find((d) => d.id === productId) ?? donations[0];
+
+  useEffect(() => {
+    if (user) getPaymentMethods(user.id).then(setPaymentMethods);
+  }, [user]);
 
   if (!pd) return null;
 
   if (popup === "certificate") return <CertificatePopup pd={pd} onClose={onClose} t={t} />;
   if (popup === "receipts") return <ReceiptsPopup pd={pd} onClose={onClose} t={t} lang={lang} />;
   if (popup === "donate-more") return <DonateMorePopup pd={pd} onClose={onClose} onActivateRecurring={onActivateRecurring} t={t} lang={lang} />;
-  if (popup === "standing-order") return <StandingOrderPopup pd={pd} paymentMethods={data?.savedPaymentMethods ?? []} onClose={onClose} t={t} lang={lang} />;
+  if (popup === "standing-order") return <StandingOrderPopup pd={pd} paymentMethods={paymentMethods} onAddPaymentMethod={(method) => setPaymentMethods((current) => [method, ...current])} onClose={onClose} t={t} lang={lang} userId={user?.id} />;
   if (popup === "tax-refund") return <TaxRefundPopup onClose={onClose} t={t} lang={lang} />;
   return null;
 }

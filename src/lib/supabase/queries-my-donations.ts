@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import type { ProductDonation } from "@/lib/mock-data";
 import type { SharedSiteData } from "@/lib/site-dataset-types";
+import type { TaxDonationRecord } from "@/lib/donation-documents";
 
 type DonorUpdate = SharedSiteData["donorUpdates"][number];
 type QuarterlyDonationData = SharedSiteData["quarterlyDonationData"];
@@ -9,6 +10,7 @@ type QuarterlyDonationData = SharedSiteData["quarterlyDonationData"];
 // the generated types.ts yet (requires supabase gen types after migration runs).
 type DonRow = {
   id: string;
+  campaign_id: string;
   amount: number;
   created_at: string;
   donation_type: string | null;
@@ -37,6 +39,14 @@ type QuarterRow = {
   created_at: string;
 };
 
+type TaxDonationRow = {
+  id: string;
+  amount: number;
+  created_at: string;
+  receipt_id: string | null;
+  organizations: { name: string } | null;
+};
+
 // ── Product-grouped donations ────────────────────────────────
 
 export async function getMyProductDonations(userId: string): Promise<ProductDonation[]> {
@@ -44,7 +54,7 @@ export async function getMyProductDonations(userId: string): Promise<ProductDona
   const { data, error } = await sb
     .from("donations")
     .select(`
-      id, amount, created_at, donation_type, quantity, last_four, card_brand, receipt_id,
+      id, campaign_id, amount, created_at, donation_type, quantity, last_four, card_brand, receipt_id,
       products ( id, name, name_en, description, description_en, emoji ),
       organizations ( name, initials ),
       campaigns ( donors_count )
@@ -71,6 +81,7 @@ export async function getMyProductDonations(userId: string): Promise<ProductDona
     return {
       id: pid,
       productId: pid,
+      campaignId: latest.campaign_id,
       productName:    latest.products?.name        ?? "",
       productNameEn:  latest.products?.name_en     ?? "",
       productDetail:  latest.products?.description ?? "",
@@ -94,6 +105,25 @@ export async function getMyProductDonations(userId: string): Promise<ProductDona
       })),
     };
   });
+}
+
+export async function getMyTaxDonationRecords(userId: string): Promise<TaxDonationRecord[]> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("donations")
+    .select("id, amount, created_at, receipt_id, organizations ( name )")
+    .eq("donor_id", userId)
+    .eq("status", "completed")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(`Unable to load tax donation records: ${error.message}`);
+  return ((data ?? []) as unknown as TaxDonationRow[]).map((donation) => ({
+    id: donation.id,
+    date: new Date(donation.created_at).toLocaleDateString("he-IL"),
+    amount: Number(donation.amount),
+    receiptId: donation.receipt_id ?? donation.id,
+    organization: donation.organizations?.name ?? "",
+  }));
 }
 
 // ── Campaign update posts ────────────────────────────────────

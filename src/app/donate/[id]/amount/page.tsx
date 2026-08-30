@@ -9,14 +9,17 @@ import EditableText from "@/components/admin/EditableText";
 
 const PRESETS = [50, 100, 200, 500];
 
-export default function AmountPage({ params }: { params: Promise<{ id: string }> }) {
+export default function AmountPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ amount?: string; recurring?: string }> }) {
   const { id } = use(params);
+  const { amount: requestedAmount, recurring: requestedRecurring } = use(searchParams);
   const router = useRouter();
   const { lang, t } = useLang();
   const [campaignData, setCampaignData] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
-  const [selected, setSelected] = useState<number | null>(100);
-  const [custom, setCustom] = useState("");
-  const [recurring, setRecurring] = useState(false);
+  const initialAmount = Number(requestedAmount);
+  const isPresetAmount = PRESETS.includes(initialAmount);
+  const [selected, setSelected] = useState<number | null>(isPresetAmount ? initialAmount : 100);
+  const [custom, setCustom] = useState(initialAmount > 0 && !isPresetAmount ? String(initialAmount) : "");
+  const [recurring, setRecurring] = useState(requestedRecurring === "1");
   const [dedication, setDedication] = useState(false);
   const [dedicationName, setDedicationName] = useState("");
 
@@ -150,7 +153,7 @@ export default function AmountPage({ params }: { params: Promise<{ id: string }>
         </div>
 
         <button
-          onClick={() => amount && amount > 0 && router.push(`/donate/${campaign.id}/payment?amount=${amount}`)}
+          onClick={() => amount && amount > 0 && router.push(`/donate/${campaign.id}/payment?amount=${amount}${recurring ? "&recurring=1" : ""}`)}
           disabled={!amount || amount <= 0}
           className={`w-full py-4 rounded-xl font-bold text-lg transition-all mb-6 ${
             amount && amount > 0 ? "bg-raz-teal text-white hover:bg-raz-teal-dark" : "bg-gray-200 text-gray-400 cursor-not-allowed"

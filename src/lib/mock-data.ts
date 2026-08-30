@@ -247,6 +247,7 @@ export const communityStats = {
 export type ProductDonation = {
   id: string;
   productId: string;
+  campaignId?: string;
   productName: string;
   productNameEn: string;
   productDetail: string;
