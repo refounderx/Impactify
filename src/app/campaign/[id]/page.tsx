@@ -9,13 +9,14 @@ import { getCampaignById, getProductsByIds } from "@/lib/supabase/queries";
 import { formatNIS, percent } from "@/lib/mock-data";
 import { Share2, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import EditableText from "@/components/admin/EditableText";
 import { getCampaignVideoSource } from "@/lib/campaign-media";
 import { sharePage } from "@/lib/share";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { lang, t } = useLang();
   const [campaign, setCampaign] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
@@ -81,9 +82,9 @@ export default function CampaignDetail() {
         ) : (
           <span className="text-8xl md:text-9xl opacity-40">{campaign.emoji}</span>
         )}
-        <Link href="/" className="micro-hint micro-hint-below absolute top-4 start-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.back")}>
+        <button type="button" onClick={() => router.back()} className="micro-hint micro-hint-below absolute top-4 start-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.back")}>
           <ArrowRight size={20} />
-        </Link>
+        </button>
         <button type="button" onClick={() => void sharePage(title).then((result) => setShareNotice(result === "copied" ? (lang === "en" ? "Link copied" : "הקישור הועתק") : ""))} className="micro-hint micro-hint-below absolute top-4 end-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.share")}>
           <Share2 size={20} />
         </button>
