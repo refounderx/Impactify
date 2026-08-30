@@ -17,13 +17,13 @@ export default function CampaignCard({ campaign }: { campaign: Campaign }) {
   return (
     <Link
       href={`/campaign/${campaign.id}`}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow block"
+      className="group block overflow-hidden rounded-[1.5rem] bg-white shadow-[0_8px_22px_rgba(15,23,42,0.1)] ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_15px_30px_rgba(15,23,42,0.14)]"
     >
-      <div className={`bg-gradient-to-br ${campaign.gradient} h-32 flex items-center justify-center`}>
-        <span className="text-5xl">{campaign.emoji}</span>
+      <div className={`bg-gradient-to-br ${campaign.gradient} flex h-44 items-center justify-center border-b border-slate-100`}>
+        <span className="text-7xl transition-transform duration-200 group-hover:scale-110">{campaign.emoji}</span>
       </div>
-      <div className="p-3">
-        <div className="flex items-center gap-1.5 mb-1.5">
+      <div className="p-5">
+        <div className="mb-3 flex items-center gap-1.5">
           <div
             className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0"
             style={{ backgroundColor: org?.color }}
@@ -32,16 +32,16 @@ export default function CampaignCard({ campaign }: { campaign: Campaign }) {
           </div>
           <span className="text-xs text-gray-500 truncate">{orgName}</span>
         </div>
-        <h3 className="font-bold text-sm text-gray-800 leading-snug mb-2 line-clamp-2">{title}</h3>
+        <h3 className="mb-5 min-h-12 text-lg font-extrabold leading-snug text-raz-dark line-clamp-2">{title}</h3>
         <ProgressBar raised={campaign.raised} goal={campaign.goal} size="sm" />
-        <div className="flex justify-between mt-2 text-xs">
+        <div className="mt-3 flex justify-between text-sm">
           <span className="text-gray-500">{campaign.donors} <EditableText tKey="donors" /></span>
           <span className="font-bold text-raz-teal">{formatNIS(campaign.raised)}</span>
         </div>
         {campaign.daysLeft > 0 ? (
-          <span className="text-[11px] text-gray-400">{campaign.daysLeft} <EditableText tKey="daysLeft" /></span>
+          <span className="mt-3 block text-xs font-medium text-gray-400">{campaign.daysLeft} <EditableText tKey="daysLeft" /></span>
         ) : (
-          <span className="text-[11px] text-raz-success font-medium"><EditableText tKey="goalReached" /></span>
+          <span className="mt-3 block text-xs font-bold text-raz-success"><EditableText tKey="goalReached" /></span>
         )}
       </div>
     </Link>

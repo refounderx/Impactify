@@ -35,36 +35,32 @@ export default function CommunityCampaignsGridPage() {
       <CampaignSourceTabs active={source} onChange={setSource} />
       {actionError && <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{actionError}</p>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 xl:grid-cols-3">
         <Link
           href="/community"
-          className="bg-raz-dark rounded-2xl p-5 flex flex-col items-center justify-center text-center text-white min-h-[19rem] hover:bg-gray-800 transition-colors"
+          className="flex min-h-[39rem] flex-col items-center justify-center overflow-hidden rounded-[2rem] bg-raz-dark p-8 text-center text-white shadow-[0_12px_28px_rgba(15,23,42,0.2)] transition-all duration-200 hover:-translate-y-1 hover:bg-slate-800 hover:shadow-[0_18px_34px_rgba(15,23,42,0.25)]"
         >
           <p className="font-bold text-lg leading-snug mb-2"><EditableText tKey="adm.backToDashboard" /></p>
         </Link>
         {(data?.communityCampaignCards ?? []).filter((campaign) => campaign.source === source).map((c) => (
-          <div key={c.id} className="bg-white rounded-2xl p-4 relative">
-            <div className="absolute top-4 end-4 flex flex-col gap-2">
-              <button disabled={savingId === c.id} onClick={() => void changeStatus(c.id, c.paused)} className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20 disabled:opacity-50" aria-label={c.paused ? (lang === "en" ? "Reactivate campaign" : "הפעלת קמפיין") : (lang === "en" ? "Pause campaign" : "השהיית קמפיין")}>
-                {c.paused ? <Play size={13} /> : <Pause size={13} />}
+          <article key={c.id} className="relative flex min-h-[39rem] flex-col overflow-hidden rounded-[2rem] bg-white px-8 pb-7 pt-7 shadow-[0_12px_28px_rgba(15,23,42,0.12)] ring-1 ring-slate-100 transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_18px_34px_rgba(15,23,42,0.14)]">
+            <div className="absolute end-6 top-8 z-10 flex flex-col gap-3">
+              <button disabled={savingId === c.id} onClick={() => void changeStatus(c.id, c.paused)} className="micro-hint flex h-11 w-11 items-center justify-center rounded-full bg-raz-teal text-white transition-transform hover:scale-110 disabled:opacity-50" aria-label={c.paused ? (lang === "en" ? "Reactivate campaign" : "הפעלת קמפיין") : (lang === "en" ? "Pause campaign" : "השהיית קמפיין")}>
+                {c.paused ? <Play size={17} /> : <Pause size={17} />}
               </button>
-              <button onClick={() => router.push(`/campaign/${c.id}`)} className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.view")}>
-                <Eye size={13} />
+              <button onClick={() => router.push(`/campaign/${c.id}`)} className="micro-hint flex h-11 w-11 items-center justify-center rounded-full bg-raz-teal text-white transition-transform hover:scale-110" aria-label={t("hint.view")}>
+                <Eye size={18} />
               </button>
             </div>
-            <div className="w-24 h-24 rounded-xl bg-gray-50 flex items-center justify-center text-5xl mb-3">
+            <div className="flex h-52 items-center justify-center border-b border-slate-200 pe-12 text-8xl" aria-hidden="true">
               {c.emoji}
             </div>
-            <h3 className="font-bold text-gray-800 mb-1">{lang === "en" ? c.titleEn : c.title}</h3>
-            <p className="text-xs text-gray-500 mb-1">{lang === "en" ? "Total donations to this campaign:" : "סה\"כ תרומות לקמפיין זה:"}</p>
-            <DonutChart
-              filled={c.raised}
-              total={c.goal}
-              centerValue={formatNIS(c.goal)}
-              filledLabel={formatNIS(c.raised)}
-              remainingLabel={formatNIS(c.goal - c.raised)}
-            />
-          </div>
+            <div className="flex flex-1 flex-col items-center pt-7 text-center">
+              <h2 className="text-3xl font-extrabold leading-tight text-raz-dark">{lang === "en" ? c.titleEn : c.title}</h2>
+              <p className="mt-7 text-xl font-bold text-raz-dark">{lang === "en" ? "Total donations to this campaign:" : "סה\"כ תרומות לקמפיין זה:"}</p>
+              <DonutChart filled={c.raised} total={c.goal} centerValue={formatNIS(c.goal)} filledLabel={formatNIS(c.raised)} remainingLabel={formatNIS(c.goal - c.raised)} />
+            </div>
+          </article>
         ))}
       </div>
     </div>

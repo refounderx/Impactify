@@ -15,8 +15,8 @@ import { type AdminProductCard, type AdminProductRow } from "@/lib/nonprofit-adm
 function ProductCard({ card, onEdit, onView }: { card: AdminProductCard; onEdit: () => void; onView: () => void }) {
   const { lang, t } = useLang();
   return (
-    <article className="relative flex min-h-[31rem] flex-col overflow-hidden rounded-[20px] bg-white px-7 pb-6 pt-5 shadow-[0_8px_24px_rgba(15,23,42,0.08)] ring-1 ring-gray-100">
-      <div className="absolute end-4 top-4 z-10 flex flex-col gap-2">
+    <article className="relative flex min-h-[39rem] flex-col overflow-hidden rounded-[2rem] bg-white px-8 pb-7 pt-7 shadow-[0_12px_28px_rgba(15,23,42,0.12)] ring-1 ring-slate-100 transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_18px_34px_rgba(15,23,42,0.14)]">
+      <div className="absolute end-6 top-8 z-10 flex flex-col gap-3">
         <button type="button" onClick={onEdit} className="micro-hint flex h-11 w-11 items-center justify-center rounded-full bg-raz-teal text-white transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal" aria-label={t("hint.edit")}>
           <Pencil size={17} />
         </button>
@@ -24,13 +24,13 @@ function ProductCard({ card, onEdit, onView }: { card: AdminProductCard; onEdit:
           <Eye size={18} />
         </button>
       </div>
-      <div className="flex h-36 items-center justify-center border-b border-gray-200 text-7xl" aria-hidden="true">{card.emoji}</div>
-      <div className="flex flex-1 flex-col items-center pt-5 text-center">
-        <h2 className="text-2xl font-extrabold text-raz-dark">{lang === "en" ? card.nameEn : card.name}</h2>
-        <p className="mt-5 text-base text-gray-500">
+      <div className="flex h-52 items-center justify-center border-b border-slate-200 pe-12 text-8xl" aria-hidden="true">{card.emoji}</div>
+      <div className="flex flex-1 flex-col items-center pt-7 text-center">
+        <h2 className="text-3xl font-extrabold leading-tight text-raz-dark">{lang === "en" ? card.nameEn : card.name}</h2>
+        <p className="mt-6 text-base text-gray-500">
           {lang === "en" ? `Featured in ${card.campaignsCount} campaigns` : `מופיע ב־${card.campaignsCount} קמפיינים`}
         </p>
-        <p className="mt-6 text-base font-bold text-raz-dark">{lang === "en" ? "Total products donated:" : "סה״כ מוצרים שנתרמו:"}</p>
+        <p className="mt-7 text-xl font-bold text-raz-dark">{lang === "en" ? "Total products donated:" : "סה״כ מוצרים שנתרמו:"}</p>
         <DonutChart filled={card.donated} total={card.goal} centerValue={card.goal.toLocaleString("he-IL")} filledLabel={card.donated.toLocaleString("he-IL")} remainingLabel={Math.max(0, card.goal - card.donated).toLocaleString("he-IL")} />
       </div>
     </article>
@@ -39,7 +39,7 @@ function ProductCard({ card, onEdit, onView }: { card: AdminProductCard; onEdit:
 
 function ManagementCard({ preview }: { preview?: AdminProductCard }) {
   return (
-    <Link href="/nonprofit/products/dashboard" className="group relative flex min-h-[31rem] overflow-hidden rounded-[20px] bg-raz-dark text-white shadow-[0_8px_24px_rgba(15,23,42,0.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-raz-teal">
+    <Link href="/nonprofit/products/dashboard" className="group relative flex min-h-[39rem] overflow-hidden rounded-[2rem] bg-raz-dark text-white shadow-[0_12px_28px_rgba(15,23,42,0.2)] transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_18px_34px_rgba(15,23,42,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-raz-teal">
       <div className="absolute inset-0 flex flex-col items-center opacity-15 transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transform-none">
         <div className="flex h-44 w-full items-center justify-center border-b border-white/30 text-7xl" aria-hidden="true">{preview?.emoji ?? "💙"}</div>
         <div className="mt-20 h-40 w-40 rounded-full border-[30px] border-raz-teal" />

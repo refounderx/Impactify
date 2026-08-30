@@ -20,10 +20,10 @@ export default function ProductCard({
   onChoose?: () => void;
 }) {
   return (
-    <div className={`bg-white rounded-2xl p-4 text-center border-2 ${isChosen ? "border-raz-teal" : "border-transparent"}`}>
-      <div className="h-28 flex items-center justify-center text-5xl mb-3">{emoji}</div>
-      <p className="text-sm text-gray-700 font-medium mb-2 leading-snug">{title}</p>
-      <p className="text-2xl font-bold text-raz-teal font-numeric mb-3">
+    <div className={`rounded-[1.5rem] bg-white p-5 text-center shadow-[0_8px_22px_rgba(15,23,42,0.1)] ring-1 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_15px_30px_rgba(15,23,42,0.14)] ${isChosen ? "ring-2 ring-raz-teal" : "ring-slate-100"}`}>
+      <div className="mb-4 flex h-36 items-center justify-center border-b border-slate-200 text-6xl">{emoji}</div>
+      <p className="mb-3 text-lg font-extrabold leading-snug text-raz-dark">{title}</p>
+      <p className="mb-5 text-2xl font-bold text-raz-teal font-numeric">
         {priceRange ? `₪${priceRange}` : formatNIS(price!)}
       </p>
       {campaignCta ? (
