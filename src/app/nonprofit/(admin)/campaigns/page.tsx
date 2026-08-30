@@ -1,7 +1,9 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
-import { Pencil, Eye } from "lucide-react";
+import { Pencil, Eye, X } from "lucide-react";
 import DonutChart from "@/components/nonprofit-admin/DonutChart";
+import CampaignDetailPanel from "@/components/nonprofit-admin/CampaignDetailPanel";
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS } from "@/lib/mock-data";
 import { useNgoAdminView } from "@/hooks/useNgoAdminView";
@@ -11,6 +13,7 @@ import EditableText from "@/components/admin/EditableText";
 export default function CampaignsGridPage() {
   const { lang } = useLang();
   const { data, loading, error, reload } = useNgoAdminView();
+  const [viewingCampaignId, setViewingCampaignId] = useState<string | null>(null);
 
   if (loading || error) return <AdminDataStatus loading={loading} error={error} reload={reload} />;
 
@@ -24,9 +27,9 @@ export default function CampaignsGridPage() {
               <Link href={`/nonprofit/create-campaign?edit=${c.id}`} className="micro-hint flex h-11 w-11 items-center justify-center rounded-full bg-raz-teal text-white transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal" aria-label={lang === "en" ? `Edit ${c.titleEn}` : `עריכת ${c.title}`}>
                 <Pencil size={17} aria-hidden="true" />
               </Link>
-              <Link href={`/campaign/${c.id}`} className="micro-hint flex h-11 w-11 items-center justify-center rounded-full bg-raz-teal text-white transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal" aria-label={lang === "en" ? `View ${c.titleEn}` : `צפייה ב${c.title}`}>
+              <button type="button" onClick={() => setViewingCampaignId(c.id)} className="micro-hint flex h-11 w-11 items-center justify-center rounded-full bg-raz-teal text-white transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal" aria-label={lang === "en" ? `View details for ${c.titleEn}` : `פרטי ${c.title}`}>
                 <Eye size={18} aria-hidden="true" />
-              </Link>
+              </button>
             </div>
             <div className="flex h-52 items-center justify-center border-b border-slate-200 pe-12 text-8xl" aria-hidden="true">
               {c.emoji}
@@ -52,6 +55,15 @@ export default function CampaignsGridPage() {
         ))}
         {(data?.adminCampaignCards ?? []).length === 0 && <p className="col-span-full rounded-2xl bg-white p-10 text-center text-gray-500">{lang === "en" ? "No campaigns yet." : "אין קמפיינים עדיין."}</p>}
       </div>
+      {viewingCampaignId && data?.adminCampaignDetails[viewingCampaignId] && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={lang === "en" ? "Campaign details" : "פרטי קמפיין"}>
+          <button type="button" className="absolute inset-0 bg-black/45" onClick={() => setViewingCampaignId(null)} aria-label={lang === "en" ? "Close" : "סגירה"} />
+          <div className="relative z-10 max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-7">
+            <button type="button" onClick={() => setViewingCampaignId(null)} className="micro-hint mb-3 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100" aria-label={lang === "en" ? "Close window" : "סגירת החלון"}><X size={20} /></button>
+            <CampaignDetailPanel detail={data.adminCampaignDetails[viewingCampaignId]} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
