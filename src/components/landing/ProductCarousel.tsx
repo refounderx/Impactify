@@ -8,7 +8,7 @@ import ProductCard from "./ProductCard";
 import EditableText from "@/components/admin/EditableText";
 
 export default function ProductCarousel() {
-  const { t } = useLang();
+  const { t, dir } = useLang();
   const router = useRouter();
   const { data } = useSiteDataset("landing");
   const landingProducts = data?.landingProducts ?? [];
@@ -80,12 +80,12 @@ export default function ProductCarousel() {
           </button>
         </div>
 
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-4 md:flex" dir="ltr">
           <button type="button" onClick={previousDesktop} disabled={maxDesktopStart === 0} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.previous")}>
             <ChevronLeft size={28} />
           </button>
 
-          <div className="grid min-w-0 flex-1 grid-cols-4 gap-5">
+          <div className="grid min-w-0 flex-1 grid-cols-4 gap-5" dir={dir}>
             {desktopVisible.map((p) => (
               <ProductCard
                 key={p.id}
