@@ -25,6 +25,4 @@ create policy "community_campaigns_ngo_read"
 on public.community_campaigns
 for select
 to authenticated
-using (
-  public.can_read_ngo_community_campaign(campaign_id)
-);
+using (public.can_read_ngo_community_campaign(campaign_id));
