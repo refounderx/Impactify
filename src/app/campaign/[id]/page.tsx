@@ -64,7 +64,7 @@ export default function CampaignDetail() {
   return (
     <div className="flex flex-col min-h-screen bg-raz-surface">
       {/* Hero: campaign video/image selected in the campaign wizard */}
-      <div className={`bg-gradient-to-br ${campaign.gradient} h-64 md:h-80 flex items-center justify-center relative overflow-hidden`}>
+      <div className={`bg-gradient-to-br ${campaign.gradient} h-64 md:h-80 flex items-center justify-center relative overflow-visible`}>
         {video?.kind === "embed" ? (
           <iframe
             src={video.url}
@@ -81,19 +81,22 @@ export default function CampaignDetail() {
         ) : (
           <span className="text-8xl md:text-9xl opacity-40">{campaign.emoji}</span>
         )}
-        <Link href="/" className="micro-hint absolute top-4 start-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.back")}>
+        <Link href="/" className="micro-hint micro-hint-below absolute top-4 start-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.back")}>
           <ArrowRight size={20} />
         </Link>
-        <button type="button" onClick={() => void sharePage(title).then((result) => setShareNotice(result === "copied" ? (lang === "en" ? "Link copied" : "הקישור הועתק") : ""))} className="micro-hint absolute top-4 end-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.share")}>
+        <button type="button" onClick={() => void sharePage(title).then((result) => setShareNotice(result === "copied" ? (lang === "en" ? "Link copied" : "הקישור הועתק") : ""))} className="micro-hint micro-hint-below absolute top-4 end-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.share")}>
           <Share2 size={20} />
         </button>
         {shareNotice && <span role="status" className="absolute end-4 top-14 rounded-full bg-white px-3 py-1 text-xs font-bold text-raz-dark">{shareNotice}</span>}
-        {/* Org logo, set in the org's settings */}
+        {/* Organization logo, or initials only when no logo has been uploaded. */}
         <div
-          className="absolute -bottom-7 start-6 w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center text-white text-lg font-bold border-4 border-white"
+          className="absolute -bottom-7 start-6 z-10 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white text-lg font-bold text-white shadow-md"
           style={{ backgroundColor: org?.color ?? "#00B5AD" }}
         >
-          {org?.initials}
+          {org?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- public Supabase logo URL is configured by the NGO.
+            <img src={org.logo_url} alt={orgName ?? ""} className="h-full w-full object-cover" />
+          ) : org?.initials}
         </div>
       </div>
 
