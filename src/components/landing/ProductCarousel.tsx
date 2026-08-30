@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
@@ -12,25 +12,23 @@ export default function ProductCarousel() {
   const router = useRouter();
   const { data } = useSiteDataset("landing");
   const landingProducts = data?.landingProducts ?? [];
-  const [start, setStart] = useState(0);
-  const [cardsPerView, setCardsPerView] = useState(4);
-  const maxStart = Math.max(0, landingProducts.length - cardsPerView);
-  const activeStart = Math.min(start, maxStart);
-  const visible = landingProducts.slice(activeStart, activeStart + cardsPerView);
+  const [desktopStart, setDesktopStart] = useState(0);
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const maxDesktopStart = Math.max(0, landingProducts.length - 4);
+  const desktopVisible = landingProducts.slice(desktopStart, desktopStart + 4);
+  const hasMobileCarousel = landingProducts.length > 1;
 
-  useEffect(() => {
-    const media = window.matchMedia("(min-width: 768px)");
-    const updateCardsPerView = () => setCardsPerView(media.matches ? 4 : 1);
-    updateCardsPerView();
-    media.addEventListener("change", updateCardsPerView);
-    return () => media.removeEventListener("change", updateCardsPerView);
-  }, []);
-
-  function prev() {
-    setStart((s) => Math.max(0, s - 1));
+  function previousDesktop() {
+    setDesktopStart((current) => maxDesktopStart === 0 ? 0 : current === 0 ? maxDesktopStart : current - 1);
   }
-  function next() {
-    setStart((s) => Math.min(maxStart, s + 1));
+  function nextDesktop() {
+    setDesktopStart((current) => maxDesktopStart === 0 ? 0 : current === maxDesktopStart ? 0 : current + 1);
+  }
+  function previousMobile() {
+    setMobileIndex((current) => landingProducts.length === 0 ? 0 : (current - 1 + landingProducts.length) % landingProducts.length);
+  }
+  function nextMobile() {
+    setMobileIndex((current) => landingProducts.length === 0 ? 0 : (current + 1) % landingProducts.length);
   }
 
   return (
@@ -38,13 +36,40 @@ export default function ProductCarousel() {
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-8"><EditableText tKey="landing.products.heading" /></h2>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <button type="button" onClick={prev} disabled={activeStart === 0} className="micro-hint interactive-control text-gray-400 hover:text-gray-700 flex-shrink-0 disabled:opacity-35" aria-label={t("hint.previous")}>
+        <div className="flex items-center gap-3 md:hidden" dir="rtl" aria-roledescription="carousel">
+          <button type="button" onClick={nextMobile} disabled={!hasMobileCarousel} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.next")}>
+            <ChevronRight size={28} />
+          </button>
+
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="flex transition-transform duration-300 ease-out" style={{ transform: `translateX(${mobileIndex * 100}%)` }}>
+              {landingProducts.map((p) => (
+                <div className="w-full flex-none" key={p.id}>
+                  <ProductCard
+                    title={t(p.titleKey)}
+                    price={p.price}
+                    priceRange={p.priceRange}
+                    emoji={p.emoji}
+                    campaignCta={p.cta === "campaign"}
+                    onChoose={() => router.push("/search")}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button type="button" onClick={previousMobile} disabled={!hasMobileCarousel} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.previous")}>
+            <ChevronLeft size={28} />
+          </button>
+        </div>
+
+        <div className="hidden items-center gap-4 md:flex">
+          <button type="button" onClick={previousDesktop} disabled={maxDesktopStart === 0} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.previous")}>
             <ChevronLeft size={28} />
           </button>
 
-          <div className="grid min-w-0 flex-1 grid-cols-1 gap-5 md:grid-cols-4">
-            {visible.map((p) => (
+          <div className="grid min-w-0 flex-1 grid-cols-4 gap-5">
+            {desktopVisible.map((p) => (
               <ProductCard
                 key={p.id}
                 title={t(p.titleKey)}
@@ -57,7 +82,7 @@ export default function ProductCarousel() {
             ))}
           </div>
 
-          <button type="button" onClick={next} disabled={activeStart >= maxStart} className="micro-hint interactive-control text-gray-400 hover:text-gray-700 flex-shrink-0 disabled:opacity-35" aria-label={t("hint.next")}>
+          <button type="button" onClick={nextDesktop} disabled={maxDesktopStart === 0} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.next")}>
             <ChevronRight size={28} />
           </button>
         </div>
