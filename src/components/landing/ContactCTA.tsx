@@ -6,9 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { profilePathForRole } from "@/lib/profile-routes";
 
 export default function ContactCTA() {
-  const { profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
   const profileHref = profilePathForRole(profile?.app_role);
+
+  if (authLoading || user) return null;
 
   return (
     <section id="contact" className="max-w-6xl mx-auto px-6 py-10">

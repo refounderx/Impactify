@@ -2,13 +2,17 @@
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function MascotDonationForm() {
   const { t } = useLang();
+  const { user, loading: authLoading } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+
+  if (authLoading || user) return null;
 
   return (
     <section className="max-w-lg mx-auto px-6 py-16 text-center">
