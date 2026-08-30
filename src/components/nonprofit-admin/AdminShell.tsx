@@ -156,7 +156,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
               <LogOut size={13} />
               <EditableText tKey="adm.logout" />
             </button>
-            <Link href={profileHref} aria-label={lang === "en" ? "Open profile" : "פתיחת הפרופיל"} className="micro-hint w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
+            <Link href={profileHref} aria-label={lang === "en" ? "Open profile" : "פתיחת הפרופיל"} className="micro-hint micro-hint-below w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
               <User size={16} />
             </Link>
           </div>
