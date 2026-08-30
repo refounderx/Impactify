@@ -27,7 +27,7 @@ export default function SignupSection() {
       <h2 className="text-2xl font-bold text-gray-900 mb-8"><EditableText tKey="landing.signup.heading" /></h2>
 
       <label className="block text-sm text-gray-500 mb-2 text-start"><EditableText tKey="landing.signup.phoneLabel" /></label>
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6" dir="ltr">
         <select className="interactive-field border border-gray-200 rounded-xl px-3 py-3 text-sm" defaultValue="054">
           <option value="054">054</option>
           <option value="050">050</option>
