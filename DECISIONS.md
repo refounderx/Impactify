@@ -1,5 +1,15 @@
 # Technical Decisions — Impactify
 
+## 2026-08-30 — Do not expose historical seed campaigns on public routes
+
+**Decision:** Exclude the six stable UUIDs created by `supabase/seed.sql` from public campaign listing, search, and direct campaign-detail reads. Keep the rows intact for local/demo setup and historical database compatibility.
+
+**Context:** The live project contains the original fixture campaigns alongside user-created campaigns. Presenting them as live fundraising opportunities contradicts the product rule that public pages must show only real platform data.
+
+**Rationale:** Filtering the known seed identifiers at the public query boundary removes them consistently without deleting production records or changing the schema. It remains safe for existing local demo setups.
+
+**Consequences:** New public queries never render those fixture campaigns, and direct navigation to one returns the normal missing-campaign state. If the initial seed is redesigned, this allowlist must be revised or a dedicated database-level `is_demo` flag should replace it.
+
 ## 2026-08-29 — Keep NGO-owner special days private to the owning profile
 
 **Decision:** Persist special days in a dedicated `profile_special_days` table keyed to `profiles.id`, with authenticated-only grants and per-operation RLS requiring `profile_id = auth.uid()`. Keep organization goals in the existing organization-owned contract rather than mixing the two concepts.

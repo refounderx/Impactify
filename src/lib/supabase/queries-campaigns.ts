@@ -3,6 +3,16 @@ import { toUICampaign, toUIProduct, attachProductIds } from "@/lib/supabase/quer
 import type { CampaignWithOrg } from "@/lib/supabase/types";
 
 const CAMPAIGN_WITH_ORG = "*, organizations(id,name,name_en,initials,color,description,description_en,goals,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,activity_area,phone,video_gradient,created_at)";
+const DEMO_CAMPAIGN_IDS = new Set([
+  "c1111111-1111-1111-1111-111111111111",
+  "c2222222-2222-2222-2222-222222222222",
+  "c3333333-3333-3333-3333-333333333333",
+  "c4444444-4444-4444-4444-444444444444",
+  "c5555555-5555-5555-5555-555555555555",
+  "c6666666-6666-6666-6666-666666666666",
+]);
+
+const withoutDemoCampaigns = <T extends { id: string }>(rows: T[] | null) => (rows ?? []).filter((row) => !DEMO_CAMPAIGN_IDS.has(row.id));
 
 export async function getCampaigns(category?: string) {
   try {
@@ -18,8 +28,9 @@ export async function getCampaigns(category?: string) {
     const { data, error } = await query;
     if (error) throw error;
 
-    const productMap = await attachProductIds(sb, data.map((c) => c.id));
-    return data.map((row) => {
+    const campaigns = withoutDemoCampaigns(data);
+    const productMap = await attachProductIds(sb, campaigns.map((c) => c.id));
+    return campaigns.map((row) => {
       const c = toUICampaign(row as CampaignWithOrg);
       c.productIds = productMap[row.id] ?? [];
       return c;
@@ -31,6 +42,7 @@ export async function getCampaigns(category?: string) {
 }
 
 export async function getCampaignById(id: string) {
+  if (DEMO_CAMPAIGN_IDS.has(id)) return null;
   try {
     const sb = createClient();
     const { data, error } = await sb
@@ -67,8 +79,9 @@ export async function searchCampaigns(query: string, category?: string) {
     const { data, error } = await q.order("donors_count", { ascending: false });
     if (error) throw error;
 
-    const productMap = await attachProductIds(sb, data.map((c) => c.id));
-    return data.map((row) => {
+    const campaigns = withoutDemoCampaigns(data);
+    const productMap = await attachProductIds(sb, campaigns.map((c) => c.id));
+    return campaigns.map((row) => {
       const c = toUICampaign(row as CampaignWithOrg);
       c.productIds = productMap[row.id] ?? [];
       return c;
