@@ -9,7 +9,7 @@ import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
 
 export default function SearchPage() {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const { data: sharedData } = useSiteDataset("shared");
   const categories = sharedData?.categories ?? [];
   const sortOptions = ["relevance", "newest", "funded", "ending"] as const;
@@ -51,7 +51,7 @@ export default function SearchPage() {
               />
               {query && <button onClick={() => setQuery("")} className="micro-hint" aria-label={t("hint.clearSearch")}><X size={16} className="text-gray-400" /></button>}
             </div>
-            <button type="button" onClick={() => setFiltersOpen((value) => !value)} aria-expanded={filtersOpen} className="bg-white/20 text-white px-4 rounded-xl flex items-center gap-2 text-sm font-medium">
+            <button type="button" onClick={() => setFiltersOpen((value) => !value)} aria-expanded={filtersOpen} aria-controls="search-filters" className="bg-white/20 text-white px-4 rounded-xl flex items-center gap-2 text-sm font-medium">
               <SlidersHorizontal size={18} /> <EditableText tKey="search.filter" />
             </button>
           </div>
@@ -60,7 +60,7 @@ export default function SearchPage() {
 
       <div className="max-w-5xl mx-auto w-full px-6 -mt-4">
         {/* Category chips */}
-        {filtersOpen && <div className="mt-5 rounded-2xl bg-white p-4 shadow-sm"><p className="mb-3 text-sm font-bold text-raz-dark">{t("search.filter")}</p><div className="flex flex-wrap gap-2">{categories.map((cat) => <button key={cat.id} type="button" onClick={() => { setActiveCategory(cat.id); setFiltersOpen(false); }} className={`rounded-full px-3 py-1.5 text-sm ${activeCategory === cat.id ? "bg-raz-teal text-white" : "bg-raz-surface text-gray-600"}`}>{cat.emoji} {t(`cat.${cat.id}`)}</button>)}</div></div>}
+        {filtersOpen && <section id="search-filters" aria-label={t("search.filter")} className="mt-5 rounded-2xl bg-white p-4 shadow-sm"><div className="flex items-center justify-between gap-3"><p className="text-sm font-bold text-raz-dark">{t("search.filter")}</p><button type="button" onClick={() => { setActiveCategory("all"); setActiveSort(""); }} className="text-xs font-bold text-raz-teal hover:underline">{t("all")}</button></div><p className="mb-2 mt-4 text-xs font-bold text-gray-500">{lang === "en" ? "Category" : "קטגוריה"}</p><div className="flex flex-wrap gap-2">{categories.map((cat) => <button key={cat.id} type="button" onClick={() => { setActiveCategory(cat.id); setFiltersOpen(false); }} className={`rounded-full px-3 py-1.5 text-sm ${activeCategory === cat.id ? "bg-raz-teal text-white" : "bg-raz-surface text-gray-600"}`}>{cat.emoji} {t(`cat.${cat.id}`)}</button>)}</div><p className="mb-2 mt-4 text-xs font-bold text-gray-500">{lang === "en" ? "Order results by" : "מיון תוצאות לפי"}</p><div className="flex flex-wrap gap-2">{sortOptions.map((sort) => <button key={sort} type="button" onClick={() => { setActiveSort(sort); setFiltersOpen(false); }} className={`rounded-full px-3 py-1.5 text-sm ${activeSort === sort ? "bg-raz-teal text-white" : "bg-raz-surface text-gray-600"}`}>{t(`sort.${sort}`)}</button>)}</div></section>}
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
           {categories.map((cat) => (
             <button

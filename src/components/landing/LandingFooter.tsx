@@ -23,16 +23,16 @@ export default function LandingFooter() {
 
         <div className="flex flex-col gap-2 text-gray-300">
           <a href="#contact" className="interactive-control"><EditableText tKey="landing.footer.contact" /></a>
-          <a href="#why" className="interactive-control"><EditableText tKey="landing.footer.aboutIsrael" /></a>
-          <a href="#" className="interactive-control"><EditableText tKey="landing.footer.terms" /></a>
-          <a href="#" className="interactive-control"><EditableText tKey="landing.footer.app" /></a>
+          <Link href="/terms" className="interactive-control"><EditableText tKey="landing.footer.terms" /></Link>
+          <Link href="/privacy" className="interactive-control"><EditableText tKey="landing.footer.privacy" /></Link>
+          <Link href="/accessibility" className="interactive-control"><EditableText tKey="landing.footer.accessibility" /></Link>
         </div>
 
         <div className="flex flex-col gap-2 text-gray-300">
-          <a href="#why" className="interactive-control"><EditableText tKey="landing.footer.about" /></a>
+          <Link href="/about" className="interactive-control"><EditableText tKey="landing.footer.about" /></Link>
           <Link href="/nonprofit" className="interactive-control"><EditableText tKey="landing.footer.haveOrg" /></Link>
           <a href="/recurring" className="interactive-control"><EditableText tKey="landing.footer.recurring" /></a>
-          <a href="#" className="interactive-control"><EditableText tKey="landing.footer.doGood" /></a>
+          <Link href="/cancellations" className="interactive-control"><EditableText tKey="landing.footer.cancellations" /></Link>
         </div>
       </div>
     </footer>

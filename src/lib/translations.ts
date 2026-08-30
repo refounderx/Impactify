@@ -320,6 +320,7 @@ const he = {
   "landing.footer.recurring": "מעקב הוראות קבע", "landing.footer.doGood": "טוב לעשות טוב",
   "landing.footer.contact": "צור קשר", "landing.footer.aboutIsrael": "אודות נתינה ישראלית",
   "landing.footer.terms": "תקנון", "landing.footer.app": "האפליקציה",
+  "landing.footer.privacy": "מדיניות פרטיות", "landing.footer.accessibility": "הצהרת נגישות", "landing.footer.cancellations": "ביטול תרומה והחזרים",
   "landing.footer.lorem": "לורם איפסום דולר סיט אמט קונסקטוטיר אדיפיסינג אלית קהורם",
 };
 
@@ -634,6 +635,7 @@ const en: Record<string, string> = {
   "landing.footer.recurring": "Manage Standing Orders", "landing.footer.doGood": "Doing Good, Well",
   "landing.footer.contact": "Contact Us", "landing.footer.aboutIsrael": "About Israeli Giving",
   "landing.footer.terms": "Terms", "landing.footer.app": "The App",
+  "landing.footer.privacy": "Privacy Policy", "landing.footer.accessibility": "Accessibility", "landing.footer.cancellations": "Cancellations & refunds",
   "landing.footer.lorem": "Lorem ipsum dolor sit amet consectetur adipiscing elit",
 };
 
