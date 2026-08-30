@@ -53,6 +53,31 @@ export async function POST(request: NextRequest) {
   const receiptId = `R-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
   const admin = createAdminClient();
+  let communityId: string | null = null;
+  let donorName: string | null = null;
+
+  if (user) {
+    const { data: donorProfile, error: donorProfileError } = await admin
+      .from("profiles")
+      .select("community_id,full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (donorProfileError) return NextResponse.json({ error: "Unable to identify donor community" }, { status: 500 });
+
+    donorName = donorProfile?.full_name?.trim() || null;
+    if (donorProfile?.community_id) {
+      const { data: membership, error: membershipError } = await admin
+        .from("community_campaigns")
+        .select("community_id")
+        .eq("community_id", donorProfile.community_id)
+        .eq("campaign_id", campaign_id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (membershipError) return NextResponse.json({ error: "Unable to validate community campaign" }, { status: 500 });
+      communityId = membership?.community_id ?? null;
+    }
+  }
+
   const { data, error } = await admin
     .from("donations")
     .insert({
@@ -65,7 +90,8 @@ export async function POST(request: NextRequest) {
       is_recurring: Boolean(is_recurring),
       dedication_name: typeof dedication_name === "string" ? dedication_name.trim().slice(0, 120) || null : null,
       dedication_message: null,
-      community_id: null,
+      community_id: communityId,
+      donor_name: donorName,
       psp_token: null,
       last_four: null,
       card_brand: null,

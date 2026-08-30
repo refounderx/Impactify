@@ -124,6 +124,7 @@ export interface Database {
           is_recurring: boolean;
           dedication_name: string | null;
           dedication_message: string | null;
+          donor_name: string | null;
           community_id: string | null;
           psp_token: string | null;
           last_four: string | null;

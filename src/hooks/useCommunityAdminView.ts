@@ -33,7 +33,7 @@ export function useCommunityAdminView() {
       communityCampaignsTotalRaised: donations.reduce((sum, item) => sum + Number(item.amount), 0),
       communityCampaignsActiveCount: campaigns.filter((campaign) => campaign.membershipStatus === "active").length,
       communityDonationRows: donations.map((item) => ({ id: item.id, date: date(item.created_at),
-        donorName: item.dedication_name || "Anonymous donor", campaign: item.campaigns?.title ?? "",
+        donorName: item.donor_name || item.dedication_name || "Anonymous donor", campaign: item.campaigns?.title ?? "",
         product: item.products?.name ?? "—", quantity: item.quantity, amount: Number(item.amount),
         frequency: item.is_recurring ? "חודשי" : "חד פעמי", frequencyEn: item.is_recurring ? "Monthly" : "One-time" })),
       communityDonationsTotal: donations.reduce((sum, item) => sum + Number(item.amount), 0),

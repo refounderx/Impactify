@@ -71,7 +71,7 @@ export function useNgoAdminView() {
       adminProductsTotalUnits: donations.reduce((sum, donation) => sum + donation.quantity, 0),
       adminProductsActiveCount: products.filter((product) => product.active).length,
       adminDonationRows: donations.map((donation) => ({
-        id: donation.id, date: date(donation.created_at), donorName: donation.dedication_name || "Anonymous donor",
+        id: donation.id, date: date(donation.created_at), donorName: donation.donor_name || donation.dedication_name || "Anonymous donor",
         campaign: donation.campaigns?.title ?? "", product: donation.products?.name ?? "—",
         quantity: donation.quantity, amount: Number(donation.amount),
         frequency: donation.is_recurring ? "חודשי" : "חד פעמי",
