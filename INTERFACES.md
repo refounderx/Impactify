@@ -10,6 +10,10 @@
 
 All three go in `.env.local` (gitignored). Prefix `NEXT_PUBLIC_` vars are bundled into client JS.
 
+## Browser consent contract
+
+`CookieConsentProvider` persists the visitor's explicit analytics/marketing choices in browser local storage under `impactify-cookie-consent`, together with the policy version and timestamp. Essential authentication, security, language, accessibility, and consent-preference storage remain available. The provider emits the browser event `impactify:cookie-consent` after a choice is saved; any future analytics or advertising integration must load only after checking the relevant preference or responding to this event. No analytics or marketing SDK is currently loaded by the application. YouTube campaign embeds are also withheld until the marketing preference is positive.
+
 ## Supabase Client Modules
 
 | File | Client type | Use in |

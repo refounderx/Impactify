@@ -3,9 +3,13 @@ import Link from "next/link";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
 import EditableText from "@/components/admin/EditableText";
 import { getSocialLinkLabel } from "@/lib/social-link-labels";
+import { useCookieConsent } from "@/contexts/CookieConsentContext";
+import { useLang } from "@/contexts/LanguageContext";
 
 export default function LandingFooter() {
   const { data } = useSiteDataset("landing");
+  const { openPreferences } = useCookieConsent();
+  const { lang } = useLang();
   const socialLinks = data?.socialLinks ?? [];
   return (
     <footer className="bg-raz-dark text-white">
@@ -25,6 +29,7 @@ export default function LandingFooter() {
           <a href="#contact" className="interactive-control"><EditableText tKey="landing.footer.contact" /></a>
           <Link href="/terms" className="interactive-control"><EditableText tKey="landing.footer.terms" /></Link>
           <Link href="/privacy" className="interactive-control"><EditableText tKey="landing.footer.privacy" /></Link>
+          <button type="button" onClick={openPreferences} className="interactive-control text-start">{lang === "en" ? "Cookie settings" : "הגדרות עוגיות"}</button>
           <Link href="/accessibility" className="interactive-control"><EditableText tKey="landing.footer.accessibility" /></Link>
         </div>
 

@@ -299,6 +299,8 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 
 ## Known Tech Debt
 
+- **Cookie-consent integration boundary (2026-08-30):** the browser consent UI persists analytics/marketing choices; no optional tracking SDK is loaded, and YouTube campaign embeds wait for marketing approval. Before adding Google Analytics, Meta Pixel, session replay, A/B testing, or another non-essential third party, gate its load behind `CookieConsentProvider` and complete legal/vendor review for data processing and any transfer outside Israel.
+
 - **Admin content-editing mode (updated 2026-08-29, operable):** `AdminModeProvider` is nested under `AuthProvider`, accepts the persisted edit preference only for an authenticated `admin`, and clears stale edit state for every other role. The production `TopNav` exposes the online edit toggle only to admins; the development `DemoBar` uses the same role check. `EditableText` is converted across ~55 files / ~270 rendered `t()` call sites; edits save to the live `site_content` table, whose RLS independently restricts insert/update to authenticated admins. Remaining work:
   - Attribute-position text (`placeholder`, `aria-label`, `title`, table-header string arrays, `StatHeader` label props) was intentionally left as plain `t()` calls — `EditableText` only wraps rendered JSX text nodes, not string props. Not in scope for this pass.
   - `site_content` writes are now restricted to authenticated admins; attribute-position strings remain outside the inline editor.

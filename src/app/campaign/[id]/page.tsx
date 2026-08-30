@@ -13,11 +13,13 @@ import { useParams, useRouter } from "next/navigation";
 import EditableText from "@/components/admin/EditableText";
 import { getCampaignVideoSource } from "@/lib/campaign-media";
 import { sharePage } from "@/lib/share";
+import { useCookieConsent } from "@/contexts/CookieConsentContext";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { lang, t } = useLang();
+  const { preferences, openPreferences } = useCookieConsent();
   const [campaign, setCampaign] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export default function CampaignDetail() {
     <div className="flex flex-col min-h-screen bg-raz-surface">
       {/* Hero: campaign video/image selected in the campaign wizard */}
       <div className={`bg-gradient-to-br ${campaign.gradient} h-64 md:h-80 flex items-center justify-center relative overflow-visible`}>
-        {video?.kind === "embed" ? (
+        {video?.kind === "embed" && preferences.marketing ? (
           <iframe
             src={video.url}
             title={title}
@@ -74,6 +76,15 @@ export default function CampaignDetail() {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
           />
+        ) : video?.kind === "embed" ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-raz-dark/25 px-6 text-center text-white">
+            <p className="max-w-md text-sm font-bold leading-6 drop-shadow-sm">
+              {lang === "en" ? "This video is hosted by YouTube. Approve marketing cookies to load it." : "הסרטון מתארח ב־YouTube. יש לאשר עוגיות שיווק כדי להציג אותו."}
+            </p>
+            <button type="button" onClick={openPreferences} className="interactive-control rounded-xl bg-white px-4 py-2 text-sm font-bold text-raz-teal shadow-sm">
+              {lang === "en" ? "Manage cookie settings" : "ניהול הגדרות עוגיות"}
+            </button>
+          </div>
         ) : video?.kind === "video" ? (
           <video src={video.url} controls playsInline className="absolute inset-0 w-full h-full object-cover bg-black" />
         ) : campaign.heroImageUrl ? (
@@ -135,7 +146,7 @@ export default function CampaignDetail() {
         {/* 3 products chosen by the org admin when creating the campaign */}
         {products.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            {products.slice(0, 3).map((p, i) => (
+            {products.slice(0, 3).map((p) => (
               <ProductBuyCard
                 key={p.id}
                 emoji={p.emoji}

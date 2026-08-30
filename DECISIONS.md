@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-08-30 — Default non-essential browser tracking to off
+
+**Decision:** Impactify stores an explicit, versioned local browser preference for analytics and marketing cookies. The UI offers equally available accept-all, reject-optional, and granular preference controls, and keeps essential service storage available.
+
+**Context:** Browser tracking identifiers can reveal user activity. The platform needs a usable consent mechanism before adding analytics pixels or advertising SDKs, while preserving authentication, security, language, accessibility, and core donation flows.
+
+**Rationale:** A small client-side provider creates one consent boundary for the app and a documented event that future third-party integrations must respect. This avoids loading optional tracking by default and keeps the consent decision reversible from the landing-page footer.
+
+**Consequences:** No analytics or marketing SDK may be introduced without consulting `CookieConsentProvider`; it must load only after the corresponding positive preference. The stored choice is local to the device and is not a substitute for an organization-wide legal review of a future provider's data-processing and cross-border-transfer terms.
+
+---
+
 ## 2026-08-30 — Use per-NGO payment terminals with a staged Cardcom/Grow connection
 
 **Decision:** Impactify begins payment onboarding by recording a Cardcom or Grow terminal identifier per NGO. Funds are intended to settle directly to that NGO's provider account; the platform does not hold provider credentials, card numbers, CVV values, or payment tokens in this registry.

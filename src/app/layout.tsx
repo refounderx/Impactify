@@ -7,6 +7,8 @@ import { SiteDataProvider } from "@/contexts/SiteDataContext";
 import DemoBar from "@/components/layout/DemoBar";
 import TopNav from "@/components/layout/TopNav";
 import AccessibilityMenu from "@/components/layout/AccessibilityMenu";
+import CookieConsentBanner from "@/components/layout/CookieConsentBanner";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import "./globals.css";
 
 const heebo = Heebo({ subsets: ["hebrew", "latin"], variable: "--font-heebo", display: "swap" });
@@ -23,18 +25,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="he" dir="rtl" className={`${heebo.variable} ${assistant.variable} ${roboto.variable}`}>
       <body className="min-h-screen bg-raz-surface">
         <LanguageProvider>
-          <SiteDataProvider>
-            <AuthProvider>
-              <AdminModeProvider>
-                <div className="site-frame sticky top-0 z-50">
-                  {process.env.NODE_ENV === "development" && <DemoBar />}
-                  <TopNav />
-                </div>
-                <div id="main-content" className="site-frame" tabIndex={-1}>{children}</div>
-                <AccessibilityMenu />
-              </AdminModeProvider>
-            </AuthProvider>
-          </SiteDataProvider>
+          <CookieConsentProvider>
+            <SiteDataProvider>
+              <AuthProvider>
+                <AdminModeProvider>
+                  <div className="site-frame sticky top-0 z-50">
+                    {process.env.NODE_ENV === "development" && <DemoBar />}
+                    <TopNav />
+                  </div>
+                  <div id="main-content" className="site-frame" tabIndex={-1}>{children}</div>
+                  <AccessibilityMenu />
+                  <CookieConsentBanner />
+                </AdminModeProvider>
+              </AuthProvider>
+            </SiteDataProvider>
+          </CookieConsentProvider>
         </LanguageProvider>
       </body>
     </html>
