@@ -258,10 +258,11 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 
 ## Phase 4 — Payments
 
-- [ ] Decide Israeli PSP (Tranzilla, Cardcom, or PayMe) — **open question**
+- [x] Initial provider onboarding for Cardcom and Grow: NGO owners can register their own terminal identifier through tenant-derived RPCs; no provider credentials or card data are stored in the browser database. Migration `20260830143000` must be applied through the Supabase SQL Editor.
+- [ ] Add secure server-only provider credential onboarding and terminal verification for Cardcom and Grow; registered terminals remain `setup_required` until this exists.
 - [ ] Integrate PSP SDK for credit card tokenization
 - [ ] Implement actual charge flow (PCI-compliant, card data never touches our server)
-- [ ] Recurring donation setup + cancellation
+- [ ] Implement Impactify-scheduled recurring token charges, provider webhook verification/retries, and donor cancellation. Do not reserve an annual amount in advance; each monthly charge is submitted separately, subject to issuer approval.
 - [ ] PDF receipt generation (Section 46 tax compliance — **open question**)
 - [ ] Do not activate recurring-donation, payment-method, receipt, certificate, or tax-email actions until the PSP and document-delivery contracts are implemented; the current data model has no valid issuer/token flow.
 

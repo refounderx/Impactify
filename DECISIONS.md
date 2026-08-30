@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-08-30 — Use per-NGO payment terminals with a staged Cardcom/Grow connection
+
+**Decision:** Impactify begins payment onboarding by recording a Cardcom or Grow terminal identifier per NGO. Funds are intended to settle directly to that NGO's provider account; the platform does not hold provider credentials, card numbers, CVV values, or payment tokens in this registry.
+
+**Context:** NGOs need to connect their existing clearing terminal while Impactify controls the donation experience and will eventually schedule token-based recurring charges. A browser-visible terminal configuration must not become a path to provider credentials or cross-tenant payment access.
+
+**Rationale:** A tenant-derived `SECURITY DEFINER` RPC allows the authenticated NGO owner to register only their own terminal metadata. The provider setup remains deliberately non-active until secure server-side credential storage, a hosted/iframe checkout, webhook verification, and token-charge scheduling exist.
+
+**Consequences:** The connection screen can now collect a provider and terminal identifier, but it cannot charge cards or claim a verified provider connection. The SQL migration must be applied through the Supabase SQL Editor. A future payment service must verify callbacks independently, enable provider webhooks, and keep all sensitive provider credentials outside browser-accessible tables.
+
+---
+
 ## 2026-08-30 — Expose landing impact through an aggregate-only RPC
 
 **Decision:** Replace the landing page's hard-coded impact figures with `get_public_impact_stats()`, a public read-only Supabase RPC that returns only platform-wide counts and the completed donation sum. The browser may also read public organization names for the accompanying labels, but it does not receive donation, payment, or donor rows.

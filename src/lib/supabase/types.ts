@@ -222,6 +222,12 @@ export interface Database {
           { foreignKeyName: "profiles_community_id_fkey"; columns: ["community_id"]; isOneToOne: false; referencedRelation: "communities"; referencedColumns: ["id"] },
         ];
       };
+      org_payment_connections: {
+        Row: { id: string; org_id: string; provider: "cardcom" | "grow"; terminal_id: string; status: "setup_required" | "pending_verification" | "active" | "disabled" | "failed"; created_by: string | null; last_verified_at: string | null; created_at: string; updated_at: string };
+        Insert: Omit<Database["public"]["Tables"]["org_payment_connections"]["Row"], "id" | "created_at" | "updated_at" | "last_verified_at"> & { id?: string; created_at?: string; updated_at?: string; last_verified_at?: string | null };
+        Update: Partial<Database["public"]["Tables"]["org_payment_connections"]["Insert"]>;
+        Relationships: [{ foreignKeyName: "org_payment_connections_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }];
+      };
       contact_messages: {
         Row: { id: string; name: string; email: string; phone: string | null; message: string; created_at: string };
         Insert: Omit<Database["public"]["Tables"]["contact_messages"]["Row"], "id" | "created_at">;
@@ -397,6 +403,8 @@ export interface Database {
           active_recurring_donations: number;
         }[];
       };
+      get_ngo_payment_connections: { Args: Record<string, never>; Returns: { id: string; provider: "cardcom" | "grow"; terminal_id: string; status: "setup_required" | "pending_verification" | "active" | "disabled" | "failed"; last_verified_at: string | null; created_at: string }[] };
+      start_ngo_payment_connection: { Args: { p_provider: "cardcom" | "grow"; p_terminal_id: string }; Returns: string };
     };
     Enums: {
       app_role: AppRole;

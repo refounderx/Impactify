@@ -75,6 +75,8 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | `manage_ngo_update(update_id, action)` | NGO owner only | Duplicates, pauses/resumes, or deletes only an update owned by the caller's organization |
 | `set_community_campaign(campaign_id, action)` | Community owner only | Creates/cancels a pending join request or pauses/resumes the caller's own active campaign relationship |
 | `get_public_impact_stats()` | Anonymous or authenticated | Read-only, platform-wide aggregate counts and completed donation total for the landing page; never returns donation, payment, or donor rows |
+| `get_ngo_payment_connections()` | NGO owner only | Returns only the caller's Cardcom/Grow terminal metadata; never returns provider credentials, card data, or payment tokens |
+| `start_ngo_payment_connection(provider, terminal_id)` | NGO owner only | Registers or updates the caller's Cardcom/Grow terminal identifier and keeps it in setup-required state until server-side verification is implemented |
 
 ## Data Fetching API (`src/lib/supabase/queries.ts`)
 
@@ -99,6 +101,7 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `getNgoUpdates()` / `saveNgoUpdate()` / `manageNgoUpdate()` | NGO owner | Persistent update rows and tenant-safe mutations | `ngo_updates`, `system_updates` |
 | `getCommunityCampaignStatuses()` / `setCommunityCampaign()` | Community owner | Persistent join-request status and participation controls | `community_campaigns` |
 | `getPublicImpactStats()` | No | Landing-page aggregate impact metrics plus up to six public organization names | `get_public_impact_stats`, `organizations` |
+| `getNgoPaymentConnections()` / `startNgoPaymentConnection()` | NGO owner | Tenant-scoped Cardcom/Grow terminal metadata; no credentials, card data, or tokens | `org_payment_connections` |
 
 ### `site_datasets`
 
@@ -163,6 +166,9 @@ Auto-created by trigger on `auth.users` insert. Ordinary users may update person
 | `psp_token` | text | Nullable — reserved for real PSP tokenization once a provider is chosen (see Phase 4 — Payments in `TASKS.md`); currently unused |
 
 RLS: donor can only read/insert/delete their own rows.
+
+### `org_payment_connections`
+Each row associates one organization with one configured provider (`cardcom` or `grow`) and its terminal identifier. A setup row is **not** a live processor connection: its `status` remains `setup_required` until a future server-side credential check, hosted checkout/token flow, and verified webhook integration are in place. The table stores neither credentials nor card details nor PSP tokens. Browser roles have no direct table grants; the two authenticated RPCs derive the organization exclusively from `auth.uid()`.
 
 ### `contact_messages`
 Public contact requests written only through `POST /api/contact`. RLS permits read access only to authenticated administrators; browser clients receive no table write policy.
@@ -249,3 +255,4 @@ RLS: public read; insert/update require an authenticated `admin` profile. Read v
 |---|---|---|
 | `supabase/schema.sql` | Creates all tables, enums, RLS policies, triggers, indexes | Once on new project |
 | `supabase/seed.sql` | Inserts demo data (orgs, campaigns, products, communities) | After schema, on fresh DB |
+| `supabase/migrations/20260830143000_org_payment_connections.sql` | Adds NGO-scoped Cardcom/Grow terminal registry and tenant-derived setup RPCs | Apply through Supabase SQL Editor before enabling the profile connection UI |
