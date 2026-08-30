@@ -14,6 +14,7 @@ export default function ProductCarousel() {
   const landingProducts = data?.landingProducts ?? [];
   const [desktopStart, setDesktopStart] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
+  const [skipMobileTransition, setSkipMobileTransition] = useState(false);
   const maxDesktopStart = Math.max(0, landingProducts.length - 4);
   const desktopVisible = landingProducts.slice(desktopStart, desktopStart + 4);
   const hasMobileCarousel = landingProducts.length > 1;
@@ -24,11 +25,21 @@ export default function ProductCarousel() {
   function nextDesktop() {
     setDesktopStart((current) => maxDesktopStart === 0 ? 0 : current === maxDesktopStart ? 0 : current + 1);
   }
+  function skipTransitionForWrap() {
+    setSkipMobileTransition(true);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setSkipMobileTransition(false));
+    });
+  }
   function previousMobile() {
-    setMobileIndex((current) => landingProducts.length === 0 ? 0 : (current - 1 + landingProducts.length) % landingProducts.length);
+    if (!hasMobileCarousel) return;
+    if (mobileIndex === 0) skipTransitionForWrap();
+    setMobileIndex((current) => (current - 1 + landingProducts.length) % landingProducts.length);
   }
   function nextMobile() {
-    setMobileIndex((current) => landingProducts.length === 0 ? 0 : (current + 1) % landingProducts.length);
+    if (!hasMobileCarousel) return;
+    if (mobileIndex === landingProducts.length - 1) skipTransitionForWrap();
+    setMobileIndex((current) => (current + 1) % landingProducts.length);
   }
 
   return (
@@ -42,7 +53,7 @@ export default function ProductCarousel() {
           </button>
 
           <div className="min-w-0 flex-1 overflow-hidden">
-            <div className="flex transition-transform duration-300 ease-out" style={{ transform: `translateX(${mobileIndex * 100}%)` }}>
+            <div className={`flex ${skipMobileTransition ? "" : "transition-transform duration-300 ease-out"}`} style={{ transform: `translateX(${mobileIndex * 100}%)` }}>
               {landingProducts.map((p) => (
                 <div className="w-full flex-none" key={p.id}>
                   <ProductCard
