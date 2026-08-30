@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const sb = createAdminClient();
   const { data, error } = await sb
     .from("donations")
-    .select("id, amount, receipt_id, created_at, campaign_id, campaigns(title, title_en, gradient, emoji), organizations(name, name_en)")
+    .select("id, amount, receipt_id, receipt_url, created_at, campaign_id, campaigns(title, title_en, gradient, emoji), organizations(name, name_en)")
     .eq("id", id)
     .eq("receipt_id", receiptId)
     .single();
@@ -30,17 +30,22 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 
-  const { campaign_id, org_id, amount, is_recurring, dedication_name } = body;
+  const { campaign_id, org_id, amount, is_recurring, dedication_name, product_id, quantity } = body;
 
   // Validate inputs at trust boundary
   if (!UUID_RE.test(campaign_id ?? "") || !UUID_RE.test(org_id ?? "")) {
     return NextResponse.json({ error: "campaign_id and org_id required" }, { status: 400 });
   }
+  const productId = typeof product_id === "string" ? product_id : null;
+  const donationQuantity = productId ? Number(quantity ?? 1) : 1;
+  if (productId && (!UUID_RE.test(productId) || !Number.isInteger(donationQuantity) || donationQuantity < 1 || donationQuantity > 1_000)) {
+    return NextResponse.json({ error: "Invalid product donation" }, { status: 400 });
+  }
   const parsed = Number(amount);
-  if (!parsed || parsed <= 0 || parsed > 1_000_000) {
+  if (!productId && (!parsed || parsed <= 0 || parsed > 1_000_000)) {
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
   }
-  if (is_recurring && !user) {
+  if (is_recurring && (!user || productId)) {
     return NextResponse.json({ error: "Sign in is required for recurring donations" }, { status: 401 });
   }
 
@@ -53,6 +58,20 @@ export async function POST(request: NextRequest) {
   const receiptId = `R-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
   const admin = createAdminClient();
+  let recordedAmount = parsed;
+  if (productId) {
+    const [{ data: product, error: productError }, { data: campaignProduct, error: campaignProductError }] = await Promise.all([
+      admin.from("products").select("id,org_id,price,active").eq("id", productId).maybeSingle(),
+      admin.from("campaign_products").select("product_id").eq("campaign_id", campaign_id).eq("product_id", productId).maybeSingle(),
+    ]);
+    if (productError || campaignProductError || !product || !campaignProduct || !product.active || product.org_id !== org_id) {
+      return NextResponse.json({ error: "Product is not available for this campaign" }, { status: 400 });
+    }
+    recordedAmount = Number(product.price) * donationQuantity;
+    if (!Number.isFinite(recordedAmount) || recordedAmount <= 0 || recordedAmount > 1_000_000) {
+      return NextResponse.json({ error: "Invalid product price" }, { status: 400 });
+    }
+  }
   let communityId: string | null = null;
   let donorName: string | null = null;
 
@@ -84,7 +103,7 @@ export async function POST(request: NextRequest) {
       donor_id: user?.id ?? null,
       campaign_id,
       org_id,
-      amount: parsed,
+      amount: recordedAmount,
       currency: "ILS",
       status: "completed",
       is_recurring: Boolean(is_recurring),
@@ -97,6 +116,9 @@ export async function POST(request: NextRequest) {
       card_brand: null,
       receipt_id: receiptId,
       receipt_url: null,
+      product_id: productId,
+      donation_type: productId ? "product" : (Boolean(is_recurring) ? "recurring" : "one_time"),
+      quantity: donationQuantity,
     })
     .select()
     .single();
@@ -111,7 +133,7 @@ export async function POST(request: NextRequest) {
       donor_id: user.id,
       campaign_id,
       org_id,
-      amount: parsed,
+      amount: recordedAmount,
       status: "active",
       start_date: new Date().toISOString().split("T")[0],
       next_charge_date: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],

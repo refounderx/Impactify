@@ -207,6 +207,8 @@ export type AdminDonationRow = {
   frequency: string;
   frequencyEn: string;
   paymentLast4: string;
+  receiptId: string;
+  receiptUrl: string | null;
 };
 
 export const adminDonationRows: AdminDonationRow[] = Array.from({ length: 8 }).map((_, i) => ({
@@ -220,6 +222,8 @@ export const adminDonationRows: AdminDonationRow[] = Array.from({ length: 8 }).m
   frequency: "חד פעמי",
   frequencyEn: "One-time",
   paymentLast4: "4728",
+  receiptId: "R-2026-000000",
+  receiptUrl: null,
 }));
 
 export const adminDonationsTotal = 147912;

@@ -7,12 +7,15 @@ import { useLang } from "@/contexts/LanguageContext";
 import { useSearchParams } from "next/navigation";
 import { formatNIS } from "@/lib/mock-data";
 import EditableText from "@/components/admin/EditableText";
+import { downloadDonationConfirmation } from "@/lib/donation-receipt";
 
 type Confirmation = {
   id: string;
   amount: number;
   receipt_id: string;
+  receipt_url: string | null;
   created_at: string;
+  campaign_id: string;
   campaigns: { title: string; title_en: string | null; gradient: string; emoji: string } | null;
   organizations: { name: string; name_en: string | null } | null;
 };
@@ -44,6 +47,9 @@ export default function ThanksPage() {
   const campaignTitle = lang === "en" ? (donation.campaigns?.title_en ?? donation.campaigns?.title) : donation.campaigns?.title;
   const orgName = lang === "en" ? (donation.organizations?.name_en ?? donation.organizations?.name) : donation.organizations?.name;
   const date = new Date(donation.created_at).toLocaleDateString(lang === "en" ? "en-GB" : "he-IL");
+  const shareText = lang === "en" ? `I donated ${formatNIS(Number(donation.amount))} to ${campaignTitle} through Impactify` : `תרמתי ${formatNIS(Number(donation.amount))} לקמפיין ${campaignTitle} דרך Impactify`;
+  const shareUrl = `/campaign/${donation.campaign_id}`;
+  const openShare = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 
   return (
     <div className="flex flex-col min-h-screen bg-raz-surface">
@@ -75,13 +81,13 @@ export default function ThanksPage() {
           <p className="font-bold text-gray-700 mb-1"><EditableText tKey="thanks.shareTitle" /></p>
           <p className="text-sm text-gray-500 mb-4"><EditableText tKey="thanks.shareSub" /></p>
           <div className="flex gap-3 justify-center">
-            <button className="bg-green-500 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2"><Share2 size={16} /> WhatsApp</button>
-            <button className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2"><Share2 size={16} /> Facebook</button>
+            <button type="button" onClick={() => openShare(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`)} className="bg-green-500 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2"><Share2 size={16} /> WhatsApp</button>
+            <button type="button" onClick={() => openShare(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`)} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2"><Share2 size={16} /> Facebook</button>
           </div>
         </div>
 
         <div className="flex flex-col gap-3 w-full">
-          <button className="flex items-center justify-center gap-2 border border-raz-teal text-raz-teal py-3.5 rounded-xl font-medium"><Download size={18} /> <EditableText tKey="thanks.downloadReceipt" /></button>
+          <button type="button" onClick={() => downloadDonationConfirmation({ receiptId: donation.receipt_id, receiptUrl: donation.receipt_url, amount: Number(donation.amount), date, campaign: campaignTitle ?? "", organization: orgName ?? "" })} className="flex items-center justify-center gap-2 border border-raz-teal text-raz-teal py-3.5 rounded-xl font-medium"><Download size={18} /> <EditableText tKey="thanks.downloadReceipt" /></button>
           <Link href="/" className="bg-raz-teal text-white py-3.5 rounded-xl font-bold text-center block"><EditableText tKey="thanks.backHome" /></Link>
         </div>
       </div>

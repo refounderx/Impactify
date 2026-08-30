@@ -7,6 +7,8 @@ import { formatNIS } from "@/lib/mock-data";
 import { useNgoAdminView } from "@/hooks/useNgoAdminView";
 import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
 import EditableText from "@/components/admin/EditableText";
+import { useState } from "react";
+import { downloadDonationConfirmation } from "@/lib/donation-receipt";
 
 const AS_OF = "12/08/23";
 
@@ -14,6 +16,20 @@ export default function DonationsPage() {
   const { lang, t } = useLang();
   const { data, loading, error, reload } = useNgoAdminView();
   const adminDonationRows = data?.adminDonationRows ?? [];
+  const [refunds, setRefunds] = useState<Record<string, boolean>>({});
+  const [actionError, setActionError] = useState("");
+
+  async function requestRefund(donationId: string) {
+    setActionError("");
+    try {
+      const response = await fetch("/api/refunds", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ donation_id: donationId }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Unable to request refund");
+      setRefunds((current) => ({ ...current, [donationId]: true }));
+    } catch (reason) {
+      setActionError(reason instanceof Error ? reason.message : "Unable to request refund");
+    }
+  }
 
   if (loading || error) return <AdminDataStatus loading={loading} error={error} reload={reload} />;
 
@@ -33,6 +49,7 @@ export default function DonationsPage() {
         </div>
 
         <div className="overflow-x-auto">
+          {actionError && <p role="alert" className="mb-3 text-sm text-red-600">{actionError}</p>}
           <table className="w-full text-sm" dir={lang === "en" ? "ltr" : "rtl"}>
             <thead>
               <tr className="border-b border-gray-100">
@@ -53,12 +70,12 @@ export default function DonationsPage() {
                   <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{lang === "en" ? row.frequencyEn : row.frequency}</td>
                   <td className="py-3 px-2 text-gray-500 font-numeric" dir="ltr">{"*".repeat(6)}{row.paymentLast4}</td>
                   <td className="py-3 px-2">
-                    <button className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.downloadReceipt")}>
+                    <button type="button" onClick={() => downloadDonationConfirmation({ receiptId: row.receiptId, receiptUrl: row.receiptUrl, amount: row.amount, date: row.date, campaign: row.campaign, organization: data?.organization.name ?? "" })} className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20" aria-label={t("hint.downloadReceipt")}>
                       <Download size={14} />
                     </button>
                   </td>
                   <td className="py-3 px-2">
-                    <button className="micro-hint w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200" aria-label={t("hint.refund")}>
+                    <button type="button" disabled={refunds[row.id]} onClick={() => void requestRefund(row.id)} className="micro-hint w-7 h-7 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 disabled:opacity-50" aria-label={refunds[row.id] ? "בקשת ההחזר נרשמה" : t("hint.refund")}>
                       <RotateCcw size={14} />
                     </button>
                   </td>

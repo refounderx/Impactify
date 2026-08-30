@@ -13,17 +13,21 @@ export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows
   const { lang, t } = useLang();
   const [openMenu, setOpenMenu] = useState<{ id: string; type: "edit" | "view" } | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
 
   const closeMenu = () => setOpenMenu(null);
 
   async function changeStatus(row: CommunityCampaignRow) {
     setSavingId(row.id);
+    setActionError("");
     try { await onStatusChange(row.id, row.paused ? "resume" : "pause"); closeMenu(); }
+    catch (error) { setActionError(error instanceof Error ? error.message : "לא ניתן לעדכן את הקמפיין"); }
     finally { setSavingId(null); }
   }
 
   return (
     <div className="overflow-x-auto">
+      {actionError && <p role="alert" className="mb-3 text-sm text-red-600">{actionError}</p>}
       <table className="w-full text-sm" dir={lang === "en" ? "ltr" : "rtl"}>
         <thead>
           <tr className="border-b border-gray-100">
@@ -69,6 +73,7 @@ export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows
                   </td>
                   <td className="py-3 px-2 relative">
                     <button
+                      type="button"
                       onClick={() => setOpenMenu(openMenu?.id === row.id && openMenu.type === "view" ? null : { id: row.id, type: "view" })}
                       className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20"
                       aria-label={t("hint.view")}
@@ -77,11 +82,12 @@ export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows
                     </button>
                     {openMenu?.id === row.id && openMenu.type === "view" && (
                       <div className="absolute z-10 top-9 start-0 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[140px] text-start">
-                        <button onClick={() => router.push(`/campaign/${row.id}`)} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+                        <button type="button" onClick={() => { closeMenu(); router.push(`/campaign/${row.id}`); }} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
                           {lang === "en" ? "View campaign" : "צפייה בקמפיין"}
                         </button>
                         <button
-                          onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/campaign/${row.id}`); closeMenu(); }}
+                          type="button"
+                          onClick={() => { void navigator.clipboard?.writeText(`${window.location.origin}/campaign/${row.id}`); closeMenu(); }}
                           className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
                         >
                           {lang === "en" ? "Copy link" : "העתקת קישור"}
@@ -91,6 +97,7 @@ export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows
                   </td>
                   <td className="py-3 px-2 relative">
                     <button
+                      type="button"
                       onClick={() => setOpenMenu(openMenu?.id === row.id && openMenu.type === "edit" ? null : { id: row.id, type: "edit" })}
                       className="micro-hint w-7 h-7 rounded-full bg-raz-teal/10 text-raz-teal flex items-center justify-center hover:bg-raz-teal/20"
                       aria-label={lang === "en" ? "Manage campaign participation" : "ניהול השתתפות בקמפיין"}
@@ -99,7 +106,7 @@ export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows
                     </button>
                     {openMenu?.id === row.id && openMenu.type === "edit" && (
                       <div className="absolute z-10 top-9 start-0 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[140px] text-start">
-                        <button disabled={savingId === row.id} onClick={() => void changeStatus(row)} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                        <button type="button" disabled={savingId === row.id} onClick={() => void changeStatus(row)} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50">
                           {row.paused ? (lang === "en" ? "Reactivate campaign" : "הפעלת קמפיין") : (lang === "en" ? "Pause campaign" : "הפסקת קמפיין")}
                         </button>
                       </div>

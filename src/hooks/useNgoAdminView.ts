@@ -22,6 +22,7 @@ export function useNgoAdminView() {
     }
     const initials = organization.initials || organization.name.slice(0, 2);
     return {
+      organization,
       adminCampaignRows: campaigns.map((campaign) => ({
         id: campaign.id, name: campaign.title, nameEn: campaign.title_en ?? campaign.title,
         created: date(campaign.created_at), ended: date(campaign.end_date),
@@ -76,6 +77,7 @@ export function useNgoAdminView() {
         quantity: donation.quantity, amount: Number(donation.amount),
         frequency: donation.is_recurring ? "חודשי" : "חד פעמי",
         frequencyEn: donation.is_recurring ? "Monthly" : "One-time", paymentLast4: donation.last_four ?? "----",
+        receiptId: donation.receipt_id ?? donation.id, receiptUrl: donation.receipt_url,
       })),
       adminDonationsTotal: donations.reduce((sum, donation) => sum + Number(donation.amount), 0),
       adminDonationsCount: donations.length,

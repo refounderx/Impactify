@@ -25,7 +25,7 @@ Server-side donation write. Validates inputs at trust boundary.
 
 **Request body:**
 ```json
-{ "campaign_id": "uuid", "org_id": "uuid", "amount": 100, "is_recurring": false, "dedication_name": null }
+{ "campaign_id": "uuid", "org_id": "uuid", "amount": 100, "is_recurring": false, "dedication_name": null, "product_id": null, "quantity": 1 }
 ```
 
 **Response:**
@@ -36,11 +36,15 @@ Server-side donation write. Validates inputs at trust boundary.
 **Security:**
 - Reads session from cookies via Supabase SSR — never trusts client-sent `donor_id`
 - Validates: `amount > 0`, `amount < 1,000,000`, UUIDs, active campaign, and campaign→organization ownership
+- When `product_id` is supplied, validates that the active product is linked to the campaign and belongs to its organization; the server records `product.price × quantity` rather than trusting the submitted amount
 - `donor_id` is `null` for anonymous donations (allowed by schema)
 - Creates `recurring_donations` row only when `is_recurring=true` AND user is authenticated
 
 ### `POST /api/contact`
 Stores a public landing-page contact request. The route validates bounded name, email, phone, and message fields, then writes with the server-only Supabase admin client. It does not send email; operators read requests through the database until a delivery provider is configured.
+
+### `POST /api/refunds`
+Authenticated NGO owners can create an idempotent refund request for a completed donation in their own organization. The route writes a `pending` row to `refund_requests`; it does **not** claim to execute a card refund until a payment-service-provider integration is configured.
 
 ## Auth Routes
 
@@ -127,6 +131,7 @@ Public reads include `goals` and `activity_area` but continue to exclude bank-ac
 | `id` | uuid | PK |
 | `donor_id` | uuid | FK → auth.users (nullable for anonymous) |
 | `amount` | numeric | Positive, ILS |
+| `product_id` / `quantity` | uuid / integer | Optional purchased product and positive unit count; product donations record the server-calculated product price |
 | `psp_token` | text | PSP reference — never store card numbers |
 | `last_four` | text | Display only |
 
@@ -157,6 +162,9 @@ RLS: donor can only read/insert/delete their own rows.
 
 ### `contact_messages`
 Public contact requests written only through `POST /api/contact`. RLS permits read access only to authenticated administrators; browser clients receive no table write policy.
+
+### `refund_requests`
+An immutable donation remains the financial ledger entry. A refund request stores the donation, NGO, requesting owner, pending/processed/rejected status, and time. Browser roles have no direct access; the server route validates the NGO tenant before using its service-role client. A real payment-provider operation is still required to mark an actual settlement refund.
 
 ### `profile_special_days`
 | Column | Type | Notes |

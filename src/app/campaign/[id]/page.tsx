@@ -21,6 +21,7 @@ export default function CampaignDetail() {
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string; price: number } | null>(null);
   const [shareNotice, setShareNotice] = useState("");
 
   useEffect(() => {
@@ -120,7 +121,7 @@ export default function CampaignDetail() {
         {/* Opens the donation-amount popup */}
         <div className="flex justify-center mb-8">
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => { setSelectedProduct(null); setShowModal(true); }}
             className="bg-raz-teal text-white rounded-full px-8 py-3.5 font-bold text-lg hover:bg-raz-teal-dark transition-colors shadow-sm"
           >
             <EditableText tKey="campaign.chooseAmount" />
@@ -138,7 +139,7 @@ export default function CampaignDetail() {
                 description={lang === "en" ? (p.descriptionEn ?? p.description) : p.description}
                 price={p.price}
                 chosenCount={campaign.donors}
-                onBuy={() => setShowModal(true)}
+                onBuy={() => { setSelectedProduct({ id: p.id, name: lang === "en" ? (p.nameEn ?? p.name) : p.name, price: p.price }); setShowModal(true); }}
               />
             ))}
           </div>
@@ -159,7 +160,8 @@ export default function CampaignDetail() {
           title={title}
           gradient={campaign.gradient}
           emoji={campaign.emoji}
-          onClose={() => setShowModal(false)}
+          product={selectedProduct}
+          onClose={() => { setShowModal(false); setSelectedProduct(null); }}
         />
       )}
 

@@ -13,19 +13,22 @@ interface DonateAmountModalProps {
   title: string;
   gradient: string;
   emoji: string;
+  product?: { id: string; name: string; price: number } | null;
   onClose: () => void;
 }
 
-export default function DonateAmountModal({ campaignId, title, gradient, emoji, onClose }: DonateAmountModalProps) {
+export default function DonateAmountModal({ campaignId, title, gradient, emoji, product = null, onClose }: DonateAmountModalProps) {
   const router = useRouter();
   const { t } = useLang();
-  const [selected, setSelected] = useState<number | null>(100);
+  const [selected, setSelected] = useState<number | null>(product?.price ?? 100);
   const [custom, setCustom] = useState("");
-  const amount = custom ? parseInt(custom) : selected;
+  const amount = product ? product.price : (custom ? parseInt(custom) : selected);
 
   function goToDonate() {
     if (!amount || amount <= 0) return;
-    router.push(`/donate/${campaignId}/payment?amount=${amount}`);
+    const params = new URLSearchParams({ amount: String(amount) });
+    if (product) params.set("product_id", product.id);
+    router.push(`/donate/${campaignId}/payment?${params.toString()}`);
   }
 
   return (
@@ -45,6 +48,11 @@ export default function DonateAmountModal({ campaignId, title, gradient, emoji, 
           <p className="font-bold text-gray-800 leading-snug">{title}</p>
         </div>
 
+        {product ? (
+          <div className="mb-5 rounded-xl bg-raz-teal/10 px-4 py-3 text-center text-sm font-medium text-raz-dark">
+            {product.name} · {formatNIS(product.price)}
+          </div>
+        ) : <>
         <div className="grid grid-cols-4 gap-2 mb-4">
           {PRESETS.map((p) => (
             <button
@@ -71,6 +79,7 @@ export default function DonateAmountModal({ campaignId, title, gradient, emoji, 
             className="flex-1 outline-none text-end font-bold text-lg font-numeric text-gray-800 bg-transparent"
           />
         </div>
+        </>}
 
         <button
           onClick={goToDonate}

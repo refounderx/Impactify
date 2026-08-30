@@ -191,6 +191,22 @@ export interface Database {
           { foreignKeyName: "community_campaigns_campaign_id_fkey"; columns: ["campaign_id"]; isOneToOne: false; referencedRelation: "campaigns"; referencedColumns: ["id"] },
         ];
       };
+      refund_requests: {
+        Row: {
+          id: string;
+          donation_id: string;
+          org_id: string;
+          requested_by: string | null;
+          status: "pending" | "processed" | "rejected";
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["refund_requests"]["Row"], "id" | "created_at" | "status"> & { id?: string; created_at?: string; status?: "pending" | "processed" | "rejected" };
+        Update: Partial<Pick<Database["public"]["Tables"]["refund_requests"]["Row"], "status">>;
+        Relationships: [
+          { foreignKeyName: "refund_requests_donation_id_fkey"; columns: ["donation_id"]; isOneToOne: false; referencedRelation: "donations"; referencedColumns: ["id"] },
+          { foreignKeyName: "refund_requests_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
+        ];
+      };
       ngo_updates: {
         Row: { id: string; org_id: string; audience: "all" | "campaigns" | "products"; target_ids: string[]; channels: string[]; timing: "now" | "scheduled" | "trigger"; scheduled_at: string | null; trigger_type: "donation" | "quantity" | "days" | null; title: string; body: string; cta: "none" | "addProduct" | "priceQty"; image_name: string | null; status: "active" | "paused" | "sent"; sent_so_far: number; created_at: string; updated_at: string };
         Insert: Omit<Database["public"]["Tables"]["ngo_updates"]["Row"], "id" | "created_at" | "updated_at"> & { id?: string; created_at?: string; updated_at?: string };
