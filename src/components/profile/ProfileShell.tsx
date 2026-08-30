@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Heart, House, ReceiptText, Repeat2, ShieldCheck, UserRound, Users } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
 import { useLang } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ProfileShellVariant = "donor" | "admin";
 
@@ -22,7 +23,9 @@ const adminLinks = [
 
 export default function ProfileShell({ children, variant }: { children: React.ReactNode; variant: ProfileShellVariant }) {
   const { lang } = useLang();
-  const links = variant === "admin" ? adminLinks : donorLinks;
+  const { user, loading: authLoading } = useAuth();
+  const authenticated = !authLoading && !!user;
+  const links = authenticated ? (variant === "admin" ? adminLinks : donorLinks) : (variant === "admin" ? adminLinks.slice(0, 1) : donorLinks.slice(0, 1));
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
@@ -46,7 +49,7 @@ export default function ProfileShell({ children, variant }: { children: React.Re
       </aside>
       <div className="min-w-0 flex-1 bg-raz-surface">
         <div className="mx-auto max-w-6xl px-5 py-8 pb-20 md:px-8 md:py-12">{children}</div>
-        {variant === "donor" && <BottomNav variant="donor" />}
+        {variant === "donor" && authenticated && <BottomNav variant="donor" />}
       </div>
     </div>
   );
