@@ -8,7 +8,7 @@ import type { CommunityCampaignRow } from "@/lib/community-admin-data";
 
 const HEADERS = ["שם הקמפיין", "הקמה", "סיום", "מוצרים", "מוצרים שגויסו", "סכום שגויס", "מספר תורמים", "מצטרפים", "עמותה", "צפייה", "עריכה", ""];
 
-export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows: CommunityCampaignRow[]; onStatusChange: (id: string, action: "pause" | "resume") => Promise<void> }) {
+export default function CommunityCampaignsTable({ rows, communityId, onStatusChange }: { rows: CommunityCampaignRow[]; communityId: string; onStatusChange: (id: string, action: "pause" | "resume") => Promise<void> }) {
   const router = useRouter();
   const { lang, t } = useLang();
   const [openMenu, setOpenMenu] = useState<{ id: string; type: "edit" | "view" } | null>(null);
@@ -82,12 +82,12 @@ export default function CommunityCampaignsTable({ rows, onStatusChange }: { rows
                     </button>
                     {openMenu?.id === row.id && openMenu.type === "view" && (
                       <div className="absolute z-10 top-9 start-0 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[140px] text-start">
-                        <button type="button" onClick={() => { closeMenu(); router.push(`/campaign/${row.id}`); }} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+                        <button type="button" onClick={() => { closeMenu(); router.push(`/campaign/${row.id}?community_id=${encodeURIComponent(communityId)}`); }} className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
                           {lang === "en" ? "View campaign" : "צפייה בקמפיין"}
                         </button>
                         <button
                           type="button"
-                          onClick={() => { void navigator.clipboard?.writeText(`${window.location.origin}/campaign/${row.id}`); closeMenu(); }}
+                          onClick={() => { void navigator.clipboard?.writeText(`${window.location.origin}/campaign/${row.id}?community_id=${encodeURIComponent(communityId)}`); closeMenu(); }}
                           className="block w-full text-start px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
                         >
                           {lang === "en" ? "Copy link" : "העתקת קישור"}

@@ -8,7 +8,7 @@ export const audienceIcons: { id: string; kind: AudienceKind; labelKey: string; 
   { id: "child", kind: "child", labelKey: "landing.aud.child", emoji: "🧒" },
 ];
 
-export type AudienceProduct = { id: string; title: string; titleEn: string; price: number; emoji: string };
+export type AudienceProduct = { id: string; title: string; titleEn: string; price: number; emoji: string; imageUrl?: string; videoUrl?: string };
 
 export const audienceProducts: Record<AudienceKind, AudienceProduct[]> = {
   elderly: [

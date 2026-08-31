@@ -12,10 +12,10 @@ export default function PaymentPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ amount?: string; product_id?: string; recurring?: string }>;
+  searchParams: Promise<{ amount?: string; product_id?: string; recurring?: string; community_id?: string }>;
 }) {
   const { id } = use(params);
-  const { amount: amountParam, product_id: productId, recurring: recurringParam } = use(searchParams);
+  const { amount: amountParam, product_id: productId, recurring: recurringParam, community_id: communityId } = use(searchParams);
   const router = useRouter();
   const { lang } = useLang();
   const [campaignData, setCampaignData] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
@@ -100,7 +100,7 @@ export default function PaymentPage({
                     const response = await fetch("/api/donations", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ campaign_id: campaign.id, org_id: orgId, amount, is_recurring: isRecurring, product_id: productId ?? undefined, quantity: productId ? 1 : undefined, simulation: isSimulation }),
+                      body: JSON.stringify({ campaign_id: campaign.id, org_id: orgId, amount, is_recurring: isRecurring, product_id: productId ?? undefined, quantity: productId ? 1 : undefined, community_id: communityId ?? undefined, simulation: isSimulation }),
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.error ?? "Donation could not be saved");

@@ -3,12 +3,12 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import type { AudienceProduct } from "@/lib/landing-data";
-import StepProduct from "./StepProduct";
 import StepPersonalDetails from "./StepPersonalDetails";
 import StepFrequency, { type Frequency } from "./StepFrequency";
 import StepPaymentMethod from "./StepPaymentMethod";
 import StepFinal from "./StepFinal";
 import WizardShell from "@/components/wizard/WizardShell";
+import ProductDonationPanel from "./ProductDonationPanel";
 
 type Step = "product" | "personal" | "frequency" | "payment" | "final";
 
@@ -56,6 +56,24 @@ export default function CheckoutModal({
     final: lang === "en" ? "Complete the final payment details securely." : "השלימו את פרטי התשלום האחרונים בצורה מאובטחת.",
   };
 
+  if (step === "product") {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-raz-dark/80 p-4 backdrop-blur-[2px]">
+        <ProductDonationPanel
+          product={product}
+          qty={qty}
+          onQtyChange={setQty}
+          otherProducts={otherProducts}
+          otherQty={otherQty}
+          onOtherQtyChange={(id, quantity) => setOtherQty((previous) => ({ ...previous, [id]: quantity }))}
+          total={total}
+          onContinue={() => setStep("personal")}
+          onClose={onClose}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-raz-dark/90 p-0 backdrop-blur-[2px] md:p-7">
       <WizardShell
@@ -80,18 +98,6 @@ export default function CheckoutModal({
           </div>
         )}
       >
-          {step === "product" && (
-            <StepProduct
-              product={product}
-              qty={qty}
-              onQtyChange={setQty}
-              otherProducts={otherProducts}
-              otherQty={otherQty}
-              onOtherQtyChange={(id, q) => setOtherQty((prev) => ({ ...prev, [id]: q }))}
-              total={total}
-              onContinue={() => setStep("personal")}
-            />
-          )}
           {step === "personal" && (
             <StepPersonalDetails
               total={total}

@@ -25,6 +25,7 @@ export function useCommunityAdminView() {
     });
     return {
       AS_OF: new Date().toLocaleDateString("he-IL"),
+      communityId: community.id,
       communityCampaignRows: campaignRows,
       communityCampaignCards: campaigns.map((campaign) => ({ id: campaign.id, title: campaign.title,
         titleEn: campaign.title_en ?? campaign.title, emoji: campaign.emoji,

@@ -13,11 +13,12 @@ interface DonateAmountModalProps {
   title: string;
   gradient: string;
   emoji: string;
+  communityId?: string;
   product?: { id: string; name: string; price: number } | null;
   onClose: () => void;
 }
 
-export default function DonateAmountModal({ campaignId, title, gradient, emoji, product = null, onClose }: DonateAmountModalProps) {
+export default function DonateAmountModal({ campaignId, title, gradient, emoji, communityId, product = null, onClose }: DonateAmountModalProps) {
   const router = useRouter();
   const { t } = useLang();
   const [selected, setSelected] = useState<number | null>(product?.price ?? 100);
@@ -28,13 +29,14 @@ export default function DonateAmountModal({ campaignId, title, gradient, emoji, 
     if (!amount || amount <= 0) return;
     const params = new URLSearchParams({ amount: String(amount) });
     if (product) params.set("product_id", product.id);
+    if (communityId) params.set("community_id", communityId);
     router.push(`/donate/${campaignId}/payment?${params.toString()}`);
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="bg-white w-full max-w-md rounded-2xl p-6 relative max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl"
+        className="bg-white w-full max-w-md rounded-2xl p-6 relative shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button onClick={onClose} className="micro-hint micro-hint-below absolute top-4 end-4 text-gray-400 hover:text-gray-600" aria-label={t("hint.close")}>

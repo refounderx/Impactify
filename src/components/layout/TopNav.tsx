@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Search, LogIn, Pencil, X } from "lucide-react";
+import { Bell, Search, LogIn, Pencil, Globe2, X } from "lucide-react";
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,7 @@ export default function TopNav() {
   const { lang, setLang, t } = useLang();
   const { user, profile } = useAuth();
   const { adminMode, toggleAdminMode } = useAdminMode();
+  const [sitePagesOpen, setSitePagesOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Awaited<ReturnType<typeof getDonorUpdates>>>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
@@ -66,6 +67,16 @@ export default function TopNav() {
     : active === "/nonprofit" ? nonprofitLinks
     : active === "/community" ? communityLinks
     : donorLinks;
+  const adminSitePages = [
+    { href: "/", label: lang === "en" ? "Home" : "דף הבית" },
+    { href: "/search", label: lang === "en" ? "Search" : "חיפוש" },
+    { href: "/about", label: lang === "en" ? "About" : "אודות" },
+    { href: "/recurring", label: lang === "en" ? "Recurring donations" : "הוראות קבע" },
+    { href: "/cancellations", label: lang === "en" ? "Cancellations" : "ביטולים" },
+    { href: "/terms", label: lang === "en" ? "Terms of use" : "תנאי שימוש" },
+    { href: "/privacy", label: lang === "en" ? "Privacy" : "מדיניות פרטיות" },
+    { href: "/accessibility", label: lang === "en" ? "Accessibility" : "נגישות" },
+  ];
 
   return (
     <nav className="hidden md:flex bg-white border-b border-gray-100 px-6 py-3 items-center justify-between">
@@ -92,16 +103,44 @@ export default function TopNav() {
       {/* Right: lang toggle + bell + user */}
       <div className="flex items-center gap-3">
         {profile?.app_role === "admin" && (
-          <button
-            type="button"
-            onClick={toggleAdminMode}
-            className={`micro-hint flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-bold transition-colors ${adminMode ? "border-amber-500 bg-amber-500 text-white" : "border-gray-200 text-gray-600 hover:border-raz-teal hover:text-raz-teal"}`}
-            aria-pressed={adminMode}
-            aria-label={lang === "en" ? "Toggle online text editing" : "הפעלת עריכת טקסטים אונליין"}
-          >
-            <Pencil size={15} aria-hidden="true" />
-            {lang === "en" ? "Edit text" : "עריכת טקסט"}
-          </button>
+          <div className="group relative">
+            <button
+              type="button"
+              onClick={toggleAdminMode}
+              className={`flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-bold transition-colors ${adminMode ? "border-amber-500 bg-amber-500 text-white" : "border-gray-200 text-gray-600 hover:border-raz-teal hover:text-raz-teal"}`}
+              aria-pressed={adminMode}
+              aria-label={lang === "en" ? "Toggle online text editing" : "הפעלת עריכת טקסטים אונליין"}
+            >
+              <Pencil size={15} aria-hidden="true" />
+              {lang === "en" ? "Edit text" : "עריכת טקסט"}
+            </button>
+            <span role="tooltip" className="pointer-events-none absolute end-0 top-full z-[80] mt-2 w-max max-w-56 rounded-md bg-gray-800 px-2 py-1 text-center text-xs font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+              {lang === "en" ? "Turn online text editing on or off" : "הפעלה או כיבוי של עריכת טקסטים באתר"}
+            </span>
+          </div>
+        )}
+        {profile?.app_role === "admin" && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setSitePagesOpen((open) => !open)}
+              className="micro-hint micro-hint-below flex min-h-10 items-center gap-2 rounded-full border border-gray-200 px-3 text-sm font-bold text-gray-600 transition-colors hover:border-raz-teal hover:text-raz-teal"
+              aria-expanded={sitePagesOpen}
+              aria-label={lang === "en" ? "Browse site pages" : "מעבר בין דפי האתר"}
+            >
+              <Globe2 size={15} aria-hidden="true" />
+              {lang === "en" ? "Site pages" : "דפי האתר"}
+            </button>
+            {sitePagesOpen && (
+              <div className="absolute end-0 top-full z-[70] mt-2 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-xl">
+                {adminSitePages.map((page) => (
+                  <Link key={page.href} href={page.href} onClick={() => setSitePagesOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    {page.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         {/* Language toggle */}
         <div className="flex items-center bg-gray-100 rounded-full p-0.5 text-xs font-bold">

@@ -117,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     applySession(null, true);
+    window.location.replace("/auth");
   }
 
   async function refreshProfile() {

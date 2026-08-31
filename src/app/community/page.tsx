@@ -42,7 +42,7 @@ export default function CommunityCampaignsDashboardPage() {
           />
         </div>
 
-        <CommunityCampaignsTable rows={rows} onStatusChange={changeCampaignStatus} />
+        <CommunityCampaignsTable rows={rows} communityId={data?.communityId ?? ""} onStatusChange={changeCampaignStatus} />
       </div>
     </div>
   );

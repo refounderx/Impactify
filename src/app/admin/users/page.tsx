@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { deleteUser, getAdminDirectory, updateProfileRole, type AdminDirectory } from "@/lib/supabase/queries-account-admin";
 import type { AppRole } from "@/lib/supabase/types";
@@ -17,7 +16,6 @@ const ROLE_LABELS: Record<AppRole, string> = {
 type Draft = { role: AppRole; orgId: string; communityId: string };
 
 export default function AdminUsersPage() {
-  const router = useRouter();
   const { profile, signOut } = useAuth();
   const [directory, setDirectory] = useState<AdminDirectory | null>(null);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
@@ -74,8 +72,6 @@ export default function AdminUsersPage() {
 
   async function handleSignOut() {
     await signOut();
-    router.replace("/");
-    router.refresh();
   }
 
   async function removeUser(id: string) {

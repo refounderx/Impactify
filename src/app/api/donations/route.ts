@@ -15,6 +15,7 @@ type DonationRequest = {
   dedication_name?: unknown;
   product_id?: unknown;
   quantity?: unknown;
+  community_id?: unknown;
   simulation?: unknown;
 };
 
@@ -62,10 +63,14 @@ export async function POST(request: NextRequest) {
   const dedication_name = body.dedication_name;
   const product_id = body.product_id;
   const quantity = body.quantity;
+  const requestedCommunityId = typeof body.community_id === "string" ? body.community_id : null;
 
   // Validate inputs at trust boundary
   if (!UUID_RE.test(campaign_id ?? "") || !UUID_RE.test(org_id ?? "")) {
     return NextResponse.json({ error: "campaign_id and org_id required" }, { status: 400 });
+  }
+  if (requestedCommunityId !== null && !UUID_RE.test(requestedCommunityId)) {
+    return NextResponse.json({ error: "Invalid community link" }, { status: 400 });
   }
   const productId = typeof product_id === "string" ? product_id : null;
   const donationQuantity = productId ? Number(quantity ?? 1) : 1;
@@ -107,6 +112,21 @@ export async function POST(request: NextRequest) {
   let communityId: string | null = null;
   let donorName: string | null = null;
 
+  // A community share link takes precedence over a donor's profile affiliation.
+  // It may only attribute a donation to a community actively linked to this campaign.
+  if (requestedCommunityId) {
+    const { data: membership, error: membershipError } = await admin
+      .from("community_campaigns")
+      .select("community_id")
+      .eq("community_id", requestedCommunityId)
+      .eq("campaign_id", campaign_id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (membershipError) return NextResponse.json({ error: "Unable to validate community link" }, { status: 500 });
+    if (!membership) return NextResponse.json({ error: "This community link is no longer active for this campaign" }, { status: 400 });
+    communityId = membership.community_id;
+  }
+
   if (user) {
     const { data: donorProfile, error: donorProfileError } = await admin
       .from("profiles")
@@ -116,7 +136,7 @@ export async function POST(request: NextRequest) {
     if (donorProfileError) return NextResponse.json({ error: "Unable to identify donor community" }, { status: 500 });
 
     donorName = donorProfile?.full_name?.trim() || null;
-    if (donorProfile?.community_id) {
+    if (!communityId && donorProfile?.community_id) {
       const { data: membership, error: membershipError } = await admin
         .from("community_campaigns")
         .select("community_id")

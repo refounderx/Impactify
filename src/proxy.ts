@@ -11,7 +11,8 @@ const NGO_ADMIN_PREFIXES = [
 ];
 
 function isProtectedPath(pathname: string) {
-  return pathname === "/nonprofit" ||
+  return pathname === "/my-donations" ||
+    pathname === "/nonprofit" ||
     NGO_ADMIN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)) ||
     pathname === "/community" || pathname.startsWith("/community/") ||
     pathname === "/admin" || pathname.startsWith("/admin/") ||

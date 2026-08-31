@@ -9,7 +9,7 @@ import { getCampaignById, getProductsByIds } from "@/lib/supabase/queries";
 import { formatNIS, percent } from "@/lib/mock-data";
 import { Share2, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import EditableText from "@/components/admin/EditableText";
 import { getCampaignVideoSource } from "@/lib/campaign-media";
 import { sharePage } from "@/lib/share";
@@ -18,6 +18,8 @@ import { useCookieConsent } from "@/contexts/CookieConsentContext";
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const communityId = searchParams.get("community_id") ?? undefined;
   const { lang, t } = useLang();
   const { preferences, openPreferences } = useCookieConsent();
   const [campaign, setCampaign] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
@@ -174,6 +176,7 @@ export default function CampaignDetail() {
           title={title}
           gradient={campaign.gradient}
           emoji={campaign.emoji}
+          communityId={communityId}
           product={selectedProduct}
           onClose={() => { setShowModal(false); setSelectedProduct(null); }}
         />
