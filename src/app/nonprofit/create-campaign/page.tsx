@@ -29,6 +29,8 @@ export default function CreateCampaignPage() {
   const [loadError, setLoadError] = useState("");
   const [loadingCampaign, setLoadingCampaign] = useState(isEditing);
   const [publishing, setPublishing] = useState(false);
+  const [persistedCampaignId, setPersistedCampaignId] = useState<string | null>(null);
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>([]);
   const [image, setImage] = useState<File | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const STEPS = lang === "en"
@@ -97,6 +99,7 @@ export default function CreateCampaignPage() {
             .map((row) => row.product_id),
         });
         setExistingImageUrl(campaign.hero_image_url);
+        setSelectedCommunityIds(result.communityCampaigns.filter((row) => row.campaign_id === campaign.id).map((row) => row.community_id));
       })
       .catch((error: unknown) => {
         if (active) setLoadError(error instanceof Error ? error.message : "Unable to load campaign");
@@ -142,14 +145,28 @@ export default function CreateCampaignPage() {
       p_hero_image_url: uploadedImage?.publicUrl ?? existingImageUrl,
       p_video_url: videoUrl,
     };
-    const { data: savedCampaignId, error } = campaignId
-      ? await sb.rpc("update_campaign", { p_campaign_id: campaignId, ...sharedArgs })
+    const targetCampaignId = campaignId ?? persistedCampaignId;
+    const { data: savedCampaignId, error } = targetCampaignId
+      ? await sb.rpc("update_campaign", { p_campaign_id: targetCampaignId, ...sharedArgs })
       : await sb.rpc("publish_campaign", sharedArgs);
     if (error) {
       if (uploadedImage) await sb.storage.from("campaign-media").remove([uploadedImage.path]);
       setPublishError(error.message);
       setPublishing(false);
       return;
+    }
+    if (!targetCampaignId && savedCampaignId) setPersistedCampaignId(savedCampaignId);
+    if (savedCampaignId && selectedCommunityIds.length > 0) {
+      const { error: invitationError } = await sb.rpc("invite_communities_to_campaign", {
+        p_campaign_id: savedCampaignId,
+        p_community_ids: selectedCommunityIds,
+      });
+      if (invitationError) {
+        setPublishError(lang === "en" ? "The campaign was saved, but community invitations could not be sent." : "הקמפיין נשמר, אך לא ניתן היה לשלוח את ההזמנות לקהילות.");
+        setPublishing(false);
+        setStep(4);
+        return;
+      }
     }
     router.push(isEditing ? "/nonprofit/campaigns" : (savedCampaignId ? `/campaign/${savedCampaignId}` : "/nonprofit"));
   }
@@ -168,6 +185,10 @@ export default function CreateCampaignPage() {
 
   if (loadingCampaign) {
     return <div className="min-h-screen bg-[#eef0f1] p-10 text-center text-sm text-gray-500">{lang === "en" ? "Loading campaign…" : "טוען קמפיין…"}</div>;
+  }
+
+  function toggleCommunity(id: string) {
+    setSelectedCommunityIds((selected) => selected.includes(id) ? selected.filter((communityId) => communityId !== id) : [...selected, id]);
   }
   if (loadError) {
     return <div className="min-h-screen bg-[#eef0f1] p-10 text-center"><p className="mb-4 text-sm text-red-600" role="alert">{loadError}</p><Link href="/nonprofit/campaigns" className="font-bold text-raz-teal">{lang === "en" ? "Back to campaigns" : "חזרה לקמפיינים"}</Link></div>;
@@ -314,7 +335,7 @@ export default function CreateCampaignPage() {
             <h2 className="font-bold text-gray-700">הזמן קהילות ומשפיענים</h2>
             <p className="text-xs text-gray-500">בחר קהילות שיקדמו את הקמפיין שלך</p>
             {communities.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3">
+              <div key={c.id} className={`flex items-center gap-3 rounded-2xl border bg-white p-3 transition-colors ${selectedCommunityIds.includes(c.id) ? "border-raz-teal bg-raz-teal/5" : "border-slate-200"}`}>
                 <div className="w-10 h-10 bg-raz-teal/10 rounded-full flex items-center justify-center">
                   <Users size={18} className="text-raz-teal" />
                 </div>
@@ -323,7 +344,9 @@ export default function CreateCampaignPage() {
                   <p className="text-xs text-gray-500">{c.donors_count} חברים</p>
                   <p className="text-xs text-gray-400">{c.description ?? ""}</p>
                 </div>
-                <button className="bg-raz-teal/10 text-raz-teal text-xs px-3 py-1.5 rounded-lg font-medium">הזמן</button>
+                <button type="button" onClick={() => toggleCommunity(c.id)} className={`text-xs px-3 py-1.5 rounded-lg font-medium ${selectedCommunityIds.includes(c.id) ? "bg-raz-teal text-white" : "bg-raz-teal/10 text-raz-teal"}`}>
+                  {selectedCommunityIds.includes(c.id) ? (lang === "en" ? "Invited" : "הוזמן") : (lang === "en" ? "Invite" : "הזמן")}
+                </button>
               </div>
             ))}
           </div>

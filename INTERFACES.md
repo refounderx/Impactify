@@ -227,7 +227,7 @@ RLS: NGO owners can read only their organization's rows. All writes use the tena
 | `status` | text | `pending`, `active`, `paused`, or `rejected`; join requests start as `pending` |
 | `source` | text | `linked` or `created` for the community campaigns tabs |
 
-RLS: a community owner can read only its own relationships. Mutations use `set_community_campaign`, which derives the community from `auth.uid()` and never accepts a client-supplied tenant ID.
+RLS: a community owner can read only its own relationships. Mutations use `set_community_campaign`, which derives the community from `auth.uid()` and never accepts a client-supplied tenant ID. Migration `20260831110000_invite_communities_to_campaign.sql` adds `invite_communities_to_campaign(p_campaign_id, p_community_ids)` for an NGO owner to queue pending invitations after saving one of its own campaigns; the RPC derives the NGO tenant from `auth.uid()`, validates every community ID, and never accepts an organization ID from the browser.
 
 ### `hero_cards`
 | Column | Type | Notes |

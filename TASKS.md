@@ -20,6 +20,8 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 
 **NGO product management live (2026-08-28):** migration `20260825150000` provides tenant-derived creation and migration `20260828130000` adds authenticated-only product editing with field validation and an ownership-scoped update. `/nonprofit/products/dashboard` now follows the supplied wide table design with summary metrics, live search/status filtering, expandable product analytics, and a shared bilingual create/edit modal. The new migration is applied; SQL checks passed for its ledger entry, security-definer function, fixed `search_path`, authenticated-only execution, and product tenant predicate.
 
+**Community invitations from campaign creation live (2026-08-31):** Step 5 of `/nonprofit/create-campaign` records selected communities and calls the tenant-derived `invite_communities_to_campaign` RPC after a campaign is saved. Migration `20260831110000_invite_communities_to_campaign.sql` is applied; it creates pending `community_campaigns` relationships without allowing a browser to supply an NGO tenant.
+
 ### Screens complete
 - `/` — Marketing landing page (changed 2026-08-23, previously donor home; see Known Tech Debt)
 - `/landing` — same content as `/` (duplicate route, not deduplicated)
