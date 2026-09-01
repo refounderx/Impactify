@@ -158,7 +158,7 @@ export async function getDiscoverableProducts(categories?: string[]) {
     const sb = createClient();
     const { data, error } = await sb.rpc("get_discoverable_products", { p_categories: categories ?? null });
     if (error) throw error;
-    return (data ?? []).map((product) => ({
+    return (data ?? []).filter((product) => !DEMO_CAMPAIGN_IDS.has(product.campaign_id)).map((product) => ({
       productId: product.product_id,
       campaignId: product.campaign_id,
       category: product.category,

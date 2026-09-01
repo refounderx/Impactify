@@ -6,6 +6,7 @@ import type { AudienceKind } from "@/lib/landing-data";
 import { getDiscoverableProducts, type DiscoverableProduct } from "@/lib/supabase/queries";
 import { useRouter } from "next/navigation";
 import ProductCard from "./ProductCard";
+import LiveProductDonationModal from "./LiveProductDonationModal";
 import EditableText from "@/components/admin/EditableText";
 
 const audienceCategories: Record<AudienceKind, string[]> = {
@@ -26,6 +27,7 @@ export default function AudienceFilterOverlay({
   const { t, lang } = useLang();
   const router = useRouter();
   const [products, setProducts] = useState<DiscoverableProduct[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<DiscoverableProduct | null>(null);
 
   useEffect(() => {
     void getDiscoverableProducts(audienceCategories[kind]).then(setProducts);
@@ -55,11 +57,13 @@ export default function AudienceFilterOverlay({
                 title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
                 emoji={p.emoji}
-                onChoose={() => router.push(`/campaign/${p.campaignId}`)}
+                onChoose={() => setSelectedProduct(p)}
               />
             ))}
           </div>
       </div>
+
+      {selectedProduct && <LiveProductDonationModal product={selectedProduct} otherProducts={products.filter((product) => product !== selectedProduct)} onChooseProduct={setSelectedProduct} onContinue={() => router.push(`/donate/${selectedProduct.campaignId}/payment?amount=${selectedProduct.price}&product_id=${selectedProduct.productId}`)} onClose={() => setSelectedProduct(null)} />}
 
     </>
   );

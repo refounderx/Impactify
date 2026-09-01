@@ -5,12 +5,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { getDiscoverableProducts, type DiscoverableProduct } from "@/lib/supabase/queries";
 import ProductCard from "./ProductCard";
+import LiveProductDonationModal from "./LiveProductDonationModal";
 import EditableText from "@/components/admin/EditableText";
 
 export default function ProductCarousel() {
   const { t, dir, lang } = useLang();
   const router = useRouter();
   const [landingProducts, setLandingProducts] = useState<DiscoverableProduct[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<DiscoverableProduct | null>(null);
   const [desktopStart, setDesktopStart] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(1);
   const [skipMobileTransition, setSkipMobileTransition] = useState(false);
@@ -66,7 +68,7 @@ export default function ProductCarousel() {
                     title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                     price={p.price}
                     emoji={p.emoji}
-                    onChoose={() => router.push(`/campaign/${p.campaignId}`)}
+                    onChoose={() => setSelectedProduct(p)}
                   />
                 </div>
               ))}
@@ -90,7 +92,7 @@ export default function ProductCarousel() {
                 title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
                 emoji={p.emoji}
-                onChoose={() => router.push(`/campaign/${p.campaignId}`)}
+                onChoose={() => setSelectedProduct(p)}
               />
             ))}
           </div>
@@ -100,6 +102,7 @@ export default function ProductCarousel() {
           </button>
         </div>
       </div>
+      {selectedProduct && <LiveProductDonationModal product={selectedProduct} otherProducts={landingProducts.filter((product) => product !== selectedProduct)} onChooseProduct={setSelectedProduct} onContinue={() => router.push(`/donate/${selectedProduct.campaignId}/payment?amount=${selectedProduct.price}&product_id=${selectedProduct.productId}`)} onClose={() => setSelectedProduct(null)} />}
     </section>
   );
 }
