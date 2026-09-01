@@ -3,19 +3,11 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import type { AudienceKind } from "@/lib/landing-data";
-import { getDiscoverableProducts, type DiscoverableProduct } from "@/lib/supabase/queries";
+import { getDiscoverableProductsForAudience, type DiscoverableProduct } from "@/lib/supabase/queries";
 import { useRouter } from "next/navigation";
 import ProductCard from "./ProductCard";
 import LiveProductDonationModal from "./LiveProductDonationModal";
 import EditableText from "@/components/admin/EditableText";
-
-const audienceCategories: Record<AudienceKind, string[]> = {
-  elderly: ["elderly"],
-  soldier: ["soldier"],
-  teen: ["children"],
-  baby: ["children"],
-  child: ["education", "children"],
-};
 
 export default function AudienceFilterOverlay({
   kind,
@@ -30,7 +22,7 @@ export default function AudienceFilterOverlay({
   const [selectedProduct, setSelectedProduct] = useState<DiscoverableProduct | null>(null);
 
   useEffect(() => {
-    void getDiscoverableProducts(audienceCategories[kind]).then(setProducts);
+    void getDiscoverableProductsForAudience(kind).then(setProducts);
   }, [kind]);
 
   return (

@@ -79,6 +79,7 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | `manage_ngo_update(update_id, action)` | NGO owner only | Duplicates, pauses/resumes, or deletes only an update owned by the caller's organization |
 | `set_community_campaign(campaign_id, action)` | Community owner only | Creates/cancels a pending join request or pauses/resumes the caller's own active campaign relationship |
 | `get_discoverable_products(categories?)` | Anonymous or authenticated | Returns non-demo active campaign products ordered by completed donated units; exposes product/campaign display fields and aggregate count only, never donor or payment data |
+| `get_discoverable_products_for_audience(audience)` | Anonymous or authenticated | Returns non-demo active products explicitly linked to one home-page audience, ordered by completed donated units |
 | `get_public_impact_stats()` | Anonymous or authenticated | Read-only, platform-wide aggregate counts and completed donation total for the landing page; never returns donation, payment, or donor rows |
 | `get_ngo_payment_connections()` | NGO owner only | Returns only the caller's Cardcom/Grow terminal metadata; never returns provider credentials, card data, or payment tokens |
 | `start_ngo_payment_connection(provider, terminal_id)` | NGO owner only | Registers or updates the caller's Cardcom/Grow terminal identifier and keeps it in setup-required state until server-side verification is implemented |
@@ -98,6 +99,7 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `getOrganizations()` | No | `Organization[]` | `organizations` |
 | `getProductsByIds(ids[])` | No | `Product[]` | `products` |
 | `getDiscoverableProducts(categories?)` | No | Active campaign products ordered by donated quantity | `get_discoverable_products` |
+| `getDiscoverableProductsForAudience(audience)` | No | Active products linked to a home-page audience | `get_discoverable_products_for_audience` |
 | `getNgoAdminData()` | NGO owner | Own tenant's campaigns, products, donations, communities | normalized tenant tables |
 | `getCommunityAdminData()` | Community owner | Own community and attributed campaigns/donations | normalized tenant tables |
 | `getMyDonations(userId)` | Yes | donation rows | `donations`, `campaigns`, `organizations` |
@@ -140,6 +142,14 @@ Public reads include `goals` and `activity_area` but continue to exclude bank-ac
 | `donors_count` | integer | Auto-incremented by trigger |
 | `hero_image_url` | text | Nullable public URL for the uploaded campaign header image |
 | `video_url` | text | Nullable HTTPS YouTube, Vimeo, or direct-video URL; displayed ahead of the header image |
+
+### `product_home_audiences`
+| Column | Type | Notes |
+|---|---|---|
+| `product_id` | uuid | FK → `products`; composite primary key with `audience` |
+| `audience` | text | One of `elderly`, `soldier`, `teen`, `baby`, or `child` |
+
+Public reads support the home-page audience selectors. An NGO owner may create, change, or remove links only for products in the owner's organization. Education campaign products are initially linked to both `teen` and `child`; future product-to-audience choices are stored here rather than inferred from a campaign category.
 
 ### `donations` (append-only)
 | Column | Type | Notes |

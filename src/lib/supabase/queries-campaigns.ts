@@ -175,3 +175,26 @@ export async function getDiscoverableProducts(categories?: string[]) {
     return [];
   }
 }
+
+export async function getDiscoverableProductsForAudience(audience: string) {
+  try {
+    const sb = createClient();
+    const { data, error } = await sb.rpc("get_discoverable_products_for_audience", { p_audience: audience });
+    if (error) throw error;
+    return (data ?? []).filter((product) => !DEMO_CAMPAIGN_IDS.has(product.campaign_id)).map((product) => ({
+      productId: product.product_id,
+      campaignId: product.campaign_id,
+      category: product.category,
+      name: product.name,
+      nameEn: product.name_en ?? undefined,
+      description: product.description ?? "",
+      descriptionEn: product.description_en ?? undefined,
+      price: Number(product.price),
+      emoji: product.emoji ?? "💙",
+      donationCount: Number(product.donation_count),
+    } satisfies DiscoverableProduct));
+  } catch (error) {
+    console.error("Unable to load audience products", error);
+    return [];
+  }
+}
