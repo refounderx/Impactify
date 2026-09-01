@@ -22,5 +22,5 @@ language sql stable security definer set search_path = public as $$
       'c6666666-6666-6666-6666-666666666666'::uuid
     )
   group by p.id, c.id, c.category
-  order by donation_count desc, p.created_at desc;
+  order by coalesce(sum(d.quantity) filter (where d.status = 'completed'), 0) desc, max(p.created_at) desc;
 $$;
