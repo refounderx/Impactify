@@ -35,7 +35,7 @@ export default function ProductCard({
           <EditableText tKey="landing.detail.chosenBtn" />
         </button>
       ) : (
-        <button onClick={onChoose} className="interactive-control w-full bg-raz-teal text-white font-bold py-2 rounded-full text-sm mb-2">
+      <button type="button" onClick={onChoose} className="interactive-control w-full bg-raz-teal text-white font-bold py-2 rounded-full text-sm mb-2">
           <EditableText tKey="landing.products.ctaBuy" />
         </button>
       )}

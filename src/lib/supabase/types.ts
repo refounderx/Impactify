@@ -330,6 +330,7 @@ export interface Database {
       get_ngo_campaign_requests: { Args: Record<string, never>; Returns: { community_campaign_id: string; campaign_id: string; community_id: string; community_name: string; campaign_title: string; requested_at: string }[] };
       get_ngo_community_links: { Args: Record<string, never>; Returns: { community_id: string; community_name: string; community_name_en: string | null; community_total_raised: number; community_created_at: string; campaign_id: string; status: string }[] };
       invite_communities_to_campaign: { Args: { p_campaign_id: string; p_community_ids: string[] }; Returns: number };
+      get_discoverable_products: { Args: { p_categories?: string[] | null }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; donation_count: number }[] };
       manage_ngo_campaign_request: { Args: { p_community_id: string; p_campaign_id: string; p_action: string }; Returns: string };
       set_my_recurring_donation_status: { Args: { p_recurring_id: string; p_status: string }; Returns: undefined };
       add_my_payment_method: { Args: { p_brand: string; p_last_four: string }; Returns: { id: string; brand: string; last_four: string }[] };

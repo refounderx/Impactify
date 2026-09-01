@@ -1,12 +1,20 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import type { AudienceKind } from "@/lib/landing-data";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
+import { getDiscoverableProducts, type DiscoverableProduct } from "@/lib/supabase/queries";
+import { useRouter } from "next/navigation";
 import ProductCard from "./ProductCard";
-import CheckoutModal from "./checkout/CheckoutModal";
 import EditableText from "@/components/admin/EditableText";
+
+const audienceCategories: Record<AudienceKind, string[]> = {
+  elderly: ["elderly"],
+  soldier: ["soldier"],
+  teen: ["children"],
+  baby: ["children"],
+  child: ["education", "children"],
+};
 
 export default function AudienceFilterOverlay({
   kind,
@@ -16,10 +24,12 @@ export default function AudienceFilterOverlay({
   onClose: () => void;
 }) {
   const { t, lang } = useLang();
-  const { data } = useSiteDataset("landing");
-  const [chosenId, setChosenId] = useState<string | null>(null);
-  const products = data?.audienceProducts[kind] ?? [];
-  const chosenProduct = products.find((p) => p.id === chosenId);
+  const router = useRouter();
+  const [products, setProducts] = useState<DiscoverableProduct[]>([]);
+
+  useEffect(() => {
+    void getDiscoverableProducts(audienceCategories[kind]).then(setProducts);
+  }, [kind]);
 
   return (
     <>
@@ -41,24 +51,16 @@ export default function AudienceFilterOverlay({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {products.map((p) => (
               <ProductCard
-                key={p.id}
-                title={lang === "en" ? p.titleEn : p.title}
+                key={`${p.productId}-${p.campaignId}`}
+                title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
                 emoji={p.emoji}
-                isChosen={p.id === chosenId}
-                onChoose={() => setChosenId(p.id)}
+                onChoose={() => router.push(`/campaign/${p.campaignId}`)}
               />
             ))}
           </div>
       </div>
 
-      {chosenProduct && (
-        <CheckoutModal
-          product={chosenProduct}
-          otherProducts={products.filter((p) => p.id !== chosenProduct.id)}
-          onClose={() => setChosenId(null)}
-        />
-      )}
     </>
   );
 }

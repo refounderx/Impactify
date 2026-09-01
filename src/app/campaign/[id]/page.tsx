@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import BottomNav from "@/components/layout/BottomNav";
 import DonateAmountModal from "@/components/campaign/DonateAmountModal";
-import ProductBuyCard from "@/components/campaign/ProductBuyCard";
+import ProductCard from "@/components/landing/ProductCard";
 import CampaignTabs from "@/components/campaign/CampaignTabs";
 import { getCampaignById, getProductsByIds } from "@/lib/supabase/queries";
 import { formatNIS, percent } from "@/lib/mock-data";
@@ -149,14 +149,12 @@ export default function CampaignDetail() {
         {products.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {products.slice(0, 3).map((p) => (
-              <ProductBuyCard
+              <ProductCard
                 key={p.id}
                 emoji={p.emoji}
-                name={lang === "en" ? (p.nameEn ?? p.name) : p.name}
-                description={lang === "en" ? (p.descriptionEn ?? p.description) : p.description}
+                title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
-                chosenCount={campaign.donors}
-                onBuy={() => { setSelectedProduct({ id: p.id, name: lang === "en" ? (p.nameEn ?? p.name) : p.name, price: p.price }); setShowModal(true); }}
+                onChoose={() => { setSelectedProduct({ id: p.id, name: lang === "en" ? (p.nameEn ?? p.name) : p.name, price: p.price }); setShowModal(true); }}
               />
             ))}
           </div>

@@ -6,7 +6,7 @@ const he = {
   "brand.tagline": "תרמו למטרות שאתם אוהבים",
   // Nav
   "nav.home": "בית", "nav.search": "חיפוש", "nav.activity": "פעילות",
-  "nav.profile": "פרופיל", "nav.dashboard": "לוח בקרה", "nav.users": "ניהול משתמשים",
+  "nav.profile": "פרופיל", "nav.popular": "בחירת הגולשים", "nav.dashboard": "לוח בקרה", "nav.users": "ניהול משתמשים",
   "nav.newCampaign": "קמפיין חדש", "nav.community": "קהילה",
   // Common
   "donate": "תרמו עכשיו", "continue": "המשך", "back": "חזרה",
@@ -331,7 +331,7 @@ const en: Record<string, string> = {
   "brand": "Impactify",
   "brand.tagline": "Support the causes you love",
   "nav.home": "Home", "nav.search": "Search", "nav.activity": "Activity",
-  "nav.profile": "Profile", "nav.dashboard": "Dashboard", "nav.users": "User management",
+  "nav.profile": "Profile", "nav.popular": "Popular choices", "nav.dashboard": "Dashboard", "nav.users": "User management",
   "nav.newCampaign": "New Campaign", "nav.community": "Community",
   "donate": "Donate Now", "continue": "Continue", "back": "Back",
   "cancel": "Cancel", "confirm": "Confirm", "all": "All",

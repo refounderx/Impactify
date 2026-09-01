@@ -78,6 +78,7 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | `save_ngo_update(update_id?, audience, target_ids, channels, timing, scheduled_at, trigger_type, title, body, cta, image_name)` | NGO owner only | Persists an update in the NGO tenant; a new immediate Push update also creates donor-facing `system_updates` rows for matching donors |
 | `manage_ngo_update(update_id, action)` | NGO owner only | Duplicates, pauses/resumes, or deletes only an update owned by the caller's organization |
 | `set_community_campaign(campaign_id, action)` | Community owner only | Creates/cancels a pending join request or pauses/resumes the caller's own active campaign relationship |
+| `get_discoverable_products(categories?)` | Anonymous or authenticated | Returns active campaign products ordered by completed donated units; exposes product/campaign display fields and aggregate count only, never donor or payment data |
 | `get_public_impact_stats()` | Anonymous or authenticated | Read-only, platform-wide aggregate counts and completed donation total for the landing page; never returns donation, payment, or donor rows |
 | `get_ngo_payment_connections()` | NGO owner only | Returns only the caller's Cardcom/Grow terminal metadata; never returns provider credentials, card data, or payment tokens |
 | `start_ngo_payment_connection(provider, terminal_id)` | NGO owner only | Registers or updates the caller's Cardcom/Grow terminal identifier and keeps it in setup-required state until server-side verification is implemented |
@@ -96,6 +97,7 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `searchCampaigns(q, category?)` | No | `Campaign[]` | same |
 | `getOrganizations()` | No | `Organization[]` | `organizations` |
 | `getProductsByIds(ids[])` | No | `Product[]` | `products` |
+| `getDiscoverableProducts(categories?)` | No | Active campaign products ordered by donated quantity | `get_discoverable_products` |
 | `getNgoAdminData()` | NGO owner | Own tenant's campaigns, products, donations, communities | normalized tenant tables |
 | `getCommunityAdminData()` | Community owner | Own community and attributed campaigns/donations | normalized tenant tables |
 | `getMyDonations(userId)` | Yes | donation rows | `donations`, `campaigns`, `organizations` |

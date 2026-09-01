@@ -1,20 +1,20 @@
 "use client";
-import { type TransitionEvent, useState } from "react";
+import { type TransitionEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
-import { useSiteDataset } from "@/contexts/SiteDataContext";
+import { getDiscoverableProducts, type DiscoverableProduct } from "@/lib/supabase/queries";
 import ProductCard from "./ProductCard";
 import EditableText from "@/components/admin/EditableText";
 
 export default function ProductCarousel() {
-  const { t, dir } = useLang();
+  const { t, dir, lang } = useLang();
   const router = useRouter();
-  const { data } = useSiteDataset("landing");
-  const landingProducts = data?.landingProducts ?? [];
+  const [landingProducts, setLandingProducts] = useState<DiscoverableProduct[]>([]);
   const [desktopStart, setDesktopStart] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(1);
   const [skipMobileTransition, setSkipMobileTransition] = useState(false);
+  useEffect(() => { void getDiscoverableProducts().then(setLandingProducts); }, []);
   const maxDesktopStart = Math.max(0, landingProducts.length - 4);
   const desktopVisible = landingProducts.slice(desktopStart, desktopStart + 4);
   const hasMobileCarousel = landingProducts.length > 1;
@@ -49,7 +49,7 @@ export default function ProductCarousel() {
   }
 
   return (
-    <section className="bg-raz-surface py-14">
+    <section id="popular-products" className="bg-raz-surface py-14">
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-8"><EditableText tKey="landing.products.heading" /></h2>
 
@@ -61,14 +61,12 @@ export default function ProductCarousel() {
           <div className="min-w-0 flex-1 overflow-hidden">
             <div className={`flex ${skipMobileTransition ? "" : "transition-transform duration-300 ease-out"}`} style={{ transform: `translateX(${mobileOffset * 100}%)` }} onTransitionEnd={handleMobileTransitionEnd}>
               {mobileSlides.map((p, index) => (
-                <div className="w-full flex-none" key={`${p.id}-${index}`}>
+                <div className="w-full flex-none" key={`${p.productId}-${p.campaignId}-${index}`}>
                   <ProductCard
-                    title={t(p.titleKey)}
+                    title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                     price={p.price}
-                    priceRange={p.priceRange}
                     emoji={p.emoji}
-                    campaignCta={p.cta === "campaign"}
-                    onChoose={() => router.push("/search")}
+                    onChoose={() => router.push(`/campaign/${p.campaignId}`)}
                   />
                 </div>
               ))}
@@ -88,13 +86,11 @@ export default function ProductCarousel() {
           <div className="grid min-w-0 flex-1 grid-cols-4 gap-5" dir={dir}>
             {desktopVisible.map((p) => (
               <ProductCard
-                key={p.id}
-                title={t(p.titleKey)}
+                key={`${p.productId}-${p.campaignId}`}
+                title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
-                priceRange={p.priceRange}
                 emoji={p.emoji}
-                campaignCta={p.cta === "campaign"}
-                onChoose={() => router.push("/search")}
+                onChoose={() => router.push(`/campaign/${p.campaignId}`)}
               />
             ))}
           </div>

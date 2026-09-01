@@ -43,6 +43,7 @@ export default function TopNav() {
   const donorLinks = [
     { key: "nav.home", href: "/" },
     { key: "nav.search", href: "/search" },
+    { key: "nav.popular", href: "/#popular-products" },
     { key: "nav.profile", href: profileHref },
   ];
   const nonprofitLinks = [

@@ -2,6 +2,19 @@ import { createClient } from "@/lib/supabase/client";
 import { toUICampaign, toUIProduct, attachProductIds } from "@/lib/supabase/query-helpers";
 import type { CampaignWithOrg } from "@/lib/supabase/types";
 
+export type DiscoverableProduct = {
+  productId: string;
+  campaignId: string;
+  category: string;
+  name: string;
+  nameEn?: string;
+  description: string;
+  descriptionEn?: string;
+  price: number;
+  emoji: string;
+  donationCount: number;
+};
+
 const CAMPAIGN_WITH_ORG = "*, organizations(id,name,name_en,initials,color,description,description_en,goals,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,activity_area,phone,video_gradient,created_at)";
 const DEMO_CAMPAIGN_IDS = new Set([
   "c1111111-1111-1111-1111-111111111111",
@@ -136,6 +149,29 @@ export async function getProducts() {
     return (data ?? []).map(toUIProduct);
   } catch (error) {
     console.error("Unable to load products", error);
+    return [];
+  }
+}
+
+export async function getDiscoverableProducts(categories?: string[]) {
+  try {
+    const sb = createClient();
+    const { data, error } = await sb.rpc("get_discoverable_products", { p_categories: categories ?? null });
+    if (error) throw error;
+    return (data ?? []).map((product) => ({
+      productId: product.product_id,
+      campaignId: product.campaign_id,
+      category: product.category,
+      name: product.name,
+      nameEn: product.name_en ?? undefined,
+      description: product.description ?? "",
+      descriptionEn: product.description_en ?? undefined,
+      price: Number(product.price),
+      emoji: product.emoji ?? "💙",
+      donationCount: Number(product.donation_count),
+    } satisfies DiscoverableProduct));
+  } catch (error) {
+    console.error("Unable to load discoverable products", error);
     return [];
   }
 }
