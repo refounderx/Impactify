@@ -4,8 +4,9 @@ import Link from "next/link";
 import BottomNav from "@/components/layout/BottomNav";
 import DonateAmountModal from "@/components/campaign/DonateAmountModal";
 import ProductCard from "@/components/landing/ProductCard";
+import LiveProductDonationModal from "@/components/landing/LiveProductDonationModal";
 import CampaignTabs from "@/components/campaign/CampaignTabs";
-import { getCampaignById, getProductsByIds } from "@/lib/supabase/queries";
+import { getCampaignById, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
 import { formatNIS, percent } from "@/lib/mock-data";
 import { Share2, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
@@ -26,7 +27,7 @@ export default function CampaignDetail() {
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string; price: number } | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<DiscoverableProduct | null>(null);
   const [shareNotice, setShareNotice] = useState("");
 
   useEffect(() => {
@@ -65,6 +66,24 @@ export default function CampaignDetail() {
   const orgName = lang === "en" ? (org?.name_en ?? org?.name) : org?.name;
   const orgBio = lang === "en" ? (org?.description_en ?? "") : (org?.description ?? "");
   const video = getCampaignVideoSource(campaign.videoUrl);
+  const campaignProducts: DiscoverableProduct[] = products.map((product) => ({
+    productId: product.id,
+    campaignId: campaign.id,
+    category: campaign.category,
+    name: product.name,
+    nameEn: product.nameEn,
+    description: product.description,
+    descriptionEn: product.descriptionEn,
+    price: product.price,
+    emoji: product.emoji,
+    donationCount: campaign.donors,
+  }));
+
+  function continueWithProduct(product: DiscoverableProduct) {
+    const params = new URLSearchParams({ amount: String(product.price), product_id: product.productId });
+    if (communityId) params.set("community_id", communityId);
+    router.push(`/donate/${product.campaignId}/payment?${params.toString()}`);
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-raz-surface">
@@ -148,13 +167,13 @@ export default function CampaignDetail() {
         {/* 3 products chosen by the org admin when creating the campaign */}
         {products.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            {products.slice(0, 3).map((p) => (
+            {campaignProducts.slice(0, 3).map((p) => (
               <ProductCard
-                key={p.id}
+                key={p.productId}
                 emoji={p.emoji}
                 title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
-                onChoose={() => { setSelectedProduct({ id: p.id, name: lang === "en" ? (p.nameEn ?? p.name) : p.name, price: p.price }); setShowModal(true); }}
+                onChoose={() => setSelectedProduct(p)}
               />
             ))}
           </div>
@@ -168,17 +187,18 @@ export default function CampaignDetail() {
         />
       </div>
 
-      {showModal && (
+      {showModal && !selectedProduct && (
         <DonateAmountModal
           campaignId={campaign.id}
           title={title}
           gradient={campaign.gradient}
           emoji={campaign.emoji}
           communityId={communityId}
-          product={selectedProduct}
+          product={null}
           onClose={() => { setShowModal(false); setSelectedProduct(null); }}
         />
       )}
+      {selectedProduct && <LiveProductDonationModal product={selectedProduct} otherProducts={campaignProducts.filter((product) => product.productId !== selectedProduct.productId)} onChooseProduct={setSelectedProduct} onContinue={() => continueWithProduct(selectedProduct)} onClose={() => setSelectedProduct(null)} />}
 
       <BottomNav variant="donor" />
     </div>
