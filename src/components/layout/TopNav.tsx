@@ -39,11 +39,15 @@ export default function TopNav() {
     ? (profile?.full_name_en ?? profile?.full_name ?? "")
     : (profile?.full_name ?? "");
   const profileHref = profilePathForRole(profile?.app_role);
+  const dashboardHref = profile?.app_role === "ngo_owner" ? "/nonprofit"
+    : profile?.app_role === "community_owner" ? "/community"
+    : profile?.app_role === "admin" ? "/admin/users"
+    : "/my-donations";
 
   const donorLinks = [
     { key: "nav.home", href: "/" },
     { key: "nav.search", href: "/search" },
-    { key: "nav.popular", href: "/#popular-products" },
+    ...(user && profile ? [{ key: "nav.dashboard", href: dashboardHref }] : []),
     { key: "nav.profile", href: profileHref },
   ];
   const nonprofitLinks = [
