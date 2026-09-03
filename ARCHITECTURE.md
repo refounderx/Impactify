@@ -76,7 +76,7 @@ Mutation APIs require same-origin JSON and bounded bodies. Production responses 
 src/
 ├── app/                    Next.js pages (all client components currently)
 ├── components/
-│   ├── layout/             DemoBar, TopNav, BottomNav, Header
+│   ├── layout/             DemoBar, TopNav, MobileAppChrome (shared mobile header/footer), BottomNav, Header
 │   ├── campaign/           Campaign cards/tabs, centered donation modal, story editor/renderer, media step
 │   ├── nonprofit-admin/    AdminShell (sidebar+topbar; `variant: "nonprofit" | "community"` picks nav
 │   │                       routes/labels and whether the Products group renders), DonutChart, StatHeader,
@@ -133,6 +133,8 @@ src/
 **`community/` admin tree (added 2026-08-11):** mirrors the `nonprofit/(admin)/` pattern one level down. Its layout requires `community_owner`, and its data provider derives `community_id` from the signed-in profile before making RLS-filtered normalized queries. The community profile lives at `/community/profile`, so it inherits the same side panel. Request-to-join and updates remain UI-only where no normalized persistence contract exists.
 
 **Authenticated profile UI (updated 2026-08-29):** every role has a profile route inside a role-appropriate side-panel shell: donor `/profile`, community owner `/community/profile`, NGO owner `/nonprofit/profile`, and platform admin `/admin/profile`. The root `/profile` route resolves the authenticated role on the server and redirects non-donors to their protected role route, while landing/header links use the same shared role-to-profile mapping. `UnifiedProfileContent` owns the common personal-profile structure for donor, community-owner, and admin views and the embedded `/my-donations` profile. NGO owners use a dedicated organization editor matching the admin-shell reference design and persisting name, description, activity area, address, phone, contact, founding year, and logo URL through a tenant-derived RPC; organization goals remain a separate editor below it.
+
+**Mobile chrome (added 2026-09-03):** `TopNav` renders `MobileAppChrome` on every non-immersive mobile route. It supplies the Impactify header, language control, update panel, safe-area-aware fixed footer, and role-specific primary navigation. The NGO and community dashboards retain their desktop `AdminShell` sidebar, but delegate mobile branding/navigation to this shared chrome so a second header/footer is not rendered. Authentication, onboarding, and the campaign-creation wizard are intentionally immersive and do not receive the global footer.
 
 ## Database Schema
 

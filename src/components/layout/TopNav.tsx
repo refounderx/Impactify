@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Search, LogIn, LogOut, Home, LayoutDashboard, User, Pencil, Globe2, X } from "lucide-react";
+import { Bell, Search, LogIn, Pencil, Globe2, X } from "lucide-react";
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,11 +9,12 @@ import { useAdminMode } from "@/contexts/AdminModeContext";
 import EditableText from "@/components/admin/EditableText";
 import { profilePathForRole } from "@/lib/profile-routes";
 import { getDonorUpdates } from "@/lib/supabase/queries-my-donations";
+import MobileAppChrome from "@/components/layout/MobileAppChrome";
 
 export default function TopNav() {
   const pathname = usePathname();
   const { lang, setLang, t } = useLang();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
   const { adminMode, toggleAdminMode } = useAdminMode();
   const [sitePagesOpen, setSitePagesOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -82,7 +83,6 @@ export default function TopNav() {
     { href: "/privacy", label: lang === "en" ? "Privacy" : "מדיניות פרטיות" },
     { href: "/accessibility", label: lang === "en" ? "Accessibility" : "נגישות" },
   ];
-  const showPublicMobileNavigation = active === "/";
 
   return (
     <>
@@ -192,36 +192,7 @@ export default function TopNav() {
         )}
       </div>
     </nav>
-    {showPublicMobileNavigation && <>
-      <header className="flex items-center justify-between border-b border-gray-100 bg-white px-5 py-3 md:hidden">
-        <Link href="/" className="flex items-center gap-2" aria-label="Impactify">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-raz-teal text-white"><span className="text-lg">♥</span></span>
-          <span className="text-xl font-extrabold tracking-tight text-raz-teal">Impactify</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => void toggleNotifications()} className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 hover:text-raz-teal" aria-expanded={notificationsOpen} aria-label={t("hint.notifications")}>
-            <Bell size={20} />
-            <span className="absolute end-1 top-1 h-2 w-2 rounded-full bg-red-400" />
-          </button>
-          <div className="flex rounded-full bg-gray-100 p-0.5 text-xs font-bold">
-            <button onClick={() => setLang("he")} className={`rounded-full px-2.5 py-1 ${lang === "he" ? "bg-raz-teal text-white" : "text-gray-500"}`}>עב</button>
-            <button onClick={() => setLang("en")} className={`rounded-full px-2.5 py-1 ${lang === "en" ? "bg-raz-teal text-white" : "text-gray-500"}`}>EN</button>
-          </div>
-        </div>
-      </header>
-      {notificationsOpen && <div className="fixed end-4 top-16 z-[70] w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-100 bg-white p-4 shadow-xl md:hidden"><div className="mb-3 flex items-center justify-between"><p className="font-bold text-raz-dark">{lang === "en" ? "Updates" : "עדכונים"}</p><button type="button" onClick={() => setNotificationsOpen(false)} className="rounded-full p-1 text-gray-400 hover:bg-gray-100" aria-label={lang === "en" ? "Close" : "סגירה"}><X size={16} /></button></div>{notificationsLoading ? <p className="text-sm text-gray-400">…</p> : notifications.length ? <div className="space-y-3">{notifications.map((item) => <div key={item.id} className="border-b border-gray-100 pb-3 last:border-0"><p className="text-sm font-bold text-gray-800">{lang === "en" ? item.productNameEn : item.productName}</p><p className="mt-1 text-xs text-gray-500">{lang === "en" ? item.descriptionEn : item.description}</p></div>)}</div> : <p className="text-sm text-gray-500">{lang === "en" ? "No updates yet" : "אין עדכונים חדשים"}</p>}</div>}
-      <nav className="fixed inset-x-0 bottom-0 z-[60] grid grid-cols-5 border-t border-gray-200 bg-white shadow-[0_-8px_20px_rgba(15,23,42,0.10)] md:hidden">
-        <MobileNavLink href="/" label={lang === "en" ? "Home" : "בית"} Icon={Home} active={pathname === "/"} />
-        <MobileNavLink href="/search" label={lang === "en" ? "Search" : "חיפוש"} Icon={Search} active={pathname.startsWith("/search")} />
-        <MobileNavLink href={dashboardHref} label={lang === "en" ? "Dashboard" : "אזור אישי"} Icon={LayoutDashboard} active={pathname === dashboardHref} />
-        <MobileNavLink href={profileHref} label={lang === "en" ? "Profile" : "פרופיל"} Icon={user ? User : LogIn} active={pathname === profileHref} />
-        {user ? <button type="button" onClick={() => void signOut()} className="flex min-h-16 flex-col items-center justify-center gap-1 text-xs text-gray-400 hover:text-raz-teal" aria-label={lang === "en" ? "Sign out" : "התנתקות"}><LogOut size={21} /><span>{lang === "en" ? "Sign out" : "התנתקות"}</span></button> : <MobileNavLink href="/auth" label={lang === "en" ? "Sign in" : "התחברות"} Icon={LogIn} active={pathname === "/auth"} />}
-      </nav>
-    </>}
+    <MobileAppChrome />
     </>
   );
-}
-
-function MobileNavLink({ href, label, Icon, active }: { href: string; label: string; Icon: typeof Home; active: boolean }) {
-  return <Link href={href} className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs transition-colors ${active ? "text-raz-teal" : "text-gray-400 hover:text-raz-teal"}`}><Icon size={21} /><span>{label}</span></Link>;
 }

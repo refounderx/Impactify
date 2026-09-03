@@ -150,7 +150,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
       </aside>
 
       <div className="flex min-h-0 flex-1 flex-col bg-raz-surface">
-        <div className="border-b border-gray-100 bg-white px-5 py-3 md:hidden">
+        <div className="hidden border-b border-gray-100 bg-white px-5 py-3 md:hidden">
           <Link href={routes.campaignsDashboard} className="flex w-fit items-center gap-2" aria-label="Impactify">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-raz-teal text-white"><Heart size={18} fill="currentColor" /></span>
             <span className="text-xl font-extrabold tracking-tight text-raz-teal">Impactify</span>

@@ -378,3 +378,12 @@
 **Context:** The admin update wizard and community join controls were previously local UI state, so refresh discarded changes and no donor-facing update was created.
 **Rationale:** Database-enforced tenant derivation prevents a client from writing another organization's updates or another community's campaign relationship. Immediate Push updates are materialized as donor `system_updates` rows; external Email/SMS and scheduled/trigger execution require a provider/worker.
 **Consequences:** Admin screens now survive refresh and community requests have durable `pending` status. NGO approval/notification UI and external delivery infrastructure remain explicit follow-ups.
+
+---
+
+## 2026-09-03 — One role-aware mobile chrome for non-immersive routes
+
+**Decision:** Centralize the mobile Impactify header and fixed footer in `MobileAppChrome`, rendered by `TopNav`, instead of allowing each page family to own a separate `BottomNav`.
+**Context:** The public `TopNav` was hidden at mobile widths while dashboard and public pages used different navigation containers. Some footers were placed inside scrolling content, so they were not visible until the user reached the bottom of the page.
+**Rationale:** One route- and role-aware chrome keeps the logo, language control, notification entry point, profile access, and primary navigation consistently visible without duplicating navigation inside community or NGO dashboards. The campaign wizard, onboarding, and authentication remain immersive flows.
+**Consequences:** New mobile pages should use the shared chrome by default. Do not add a page-local mobile header or bottom navigation unless the route is intentionally immersive; preserve bottom content clearance above the fixed footer.

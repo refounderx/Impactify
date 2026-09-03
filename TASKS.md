@@ -38,8 +38,8 @@ Responsive bilingual application with Supabase-backed normalized entities, authe
 - `/recurring` — הוראות קבע (standing orders): monthly summary, per-order pause/resume/cancel with inline confirmation
 
 ### Navigation
-- Desktop: `TopNav` (white bar, logo + links + user avatar, hidden on mobile)
-- Mobile: `BottomNav` (4-tab, hidden on desktop via `md:hidden`)
+- Desktop: `TopNav` (white bar, logo + links + user avatar)
+- Mobile: `MobileAppChrome` (shared Impactify header + fixed, role-aware footer on every non-immersive route). `BottomNav` remains only as a legacy compatibility wrapper and must not be used for new page navigation.
 - All pages: `DemoBar` (role switcher, dark, always visible)
 
 ---
