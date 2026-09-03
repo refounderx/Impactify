@@ -21,6 +21,8 @@ The `site_datasets` and organization-profile migrations were applied to the live
 
 Campaigns support three fundraising target cadences: a fixed deadline, a calendar-month target, or a calendar-year target. The donor-facing campaign, product-detail, and donation-modal progress views always show the active target window. At a month/year boundary the displayed total restarts automatically from the immutable donation ledger; historical donation data and lifetime campaign totals are never deleted.
 
+Product details link directly to a public nonprofit profile at `/organization/[id]`, which provides the organization overview and its active campaign cards. Product media appears first in the reading direction (right in Hebrew RTL and left in English LTR); remaining products from the same campaign are shown below the product and campaign details.
+
 Four-role auth, one-time onboarding RPCs, admin role management, tenant RLS, and atomic campaign publishing from migrations `20260823160000`–`20260823162000` are live. The sole existing profile was bootstrapped as the initial admin after an exact one-profile/zero-admin precondition check. REST and SQL probes verified tenant consistency, blocked bank fields, blocked anonymous RPC execution, and rejected a simulated non-admin role change.
 
 Structured NGO goals are live from migration `20260825130000`. New NGO owners must provide 1–10 goals during onboarding; existing NGO owners can add or revise them from `/nonprofit/profile`, and public NGO profiles display the persisted list.
