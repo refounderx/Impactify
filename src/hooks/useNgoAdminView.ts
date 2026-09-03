@@ -53,7 +53,7 @@ export function useNgoAdminView() {
           communities: 0, unitPrice: Number(product.price), totalRaised: totals.amount,
           unitsDonated: totals.quantity, ownerInitials: initials,
           description: product.description ?? "", descriptionEn: product.description_en ?? "",
-          emoji: product.emoji ?? "💙", active: product.active };
+          emoji: product.emoji ?? "💙", imageUrl: product.image_url ?? undefined, active: product.active };
       }),
       adminProductDetails: Object.fromEntries(products.map((product) => {
         const productDonations = donations.filter((donation) => donation.product_id === product.id);
@@ -66,7 +66,7 @@ export function useNgoAdminView() {
       adminProductCards: products.map((product) => {
         const donated = productDonationTotals.get(product.id)?.quantity ?? 0;
         return { id: product.id, name: product.name, nameEn: product.name_en ?? product.name,
-          emoji: product.emoji ?? "💙", campaignsCount: campaignProducts.filter((row) => row.product_id === product.id).length,
+          emoji: product.emoji ?? "💙", imageUrl: product.image_url ?? undefined, campaignsCount: campaignProducts.filter((row) => row.product_id === product.id).length,
           donated, goal: Math.max(donated, 1) };
       }),
       adminProductsTotalUnits: donations.reduce((sum, donation) => sum + donation.quantity, 0),

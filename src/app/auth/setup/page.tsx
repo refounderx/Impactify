@@ -33,11 +33,12 @@ export default function SetupPage() {
   const [goals, setGoals] = useState<OrganizationGoal[]>([{ he: "", en: null }]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [redirectingToRoleOnboarding, setRedirectingToRoleOnboarding] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth");
-    if (profile?.onboarding_completed_at) router.replace(homeForRole(profile.app_role));
-  }, [loading, profile, router, user]);
+    if (profile?.onboarding_completed_at && !redirectingToRoleOnboarding) router.replace(homeForRole(profile.app_role));
+  }, [loading, profile, redirectingToRoleOnboarding, router, user]);
 
   async function completeSignup() {
     if (!user || !name.trim() || (role !== "donor" && !tenantName.trim())) return;
@@ -60,14 +61,21 @@ export default function SetupPage() {
       setSaving(false);
       return;
     }
+    if (role === "ngo_owner" || role === "community_owner") setRedirectingToRoleOnboarding(true);
     await refreshProfile();
-    router.replace(homeForRole(role));
+    router.replace(role === "ngo_owner" ? "/nonprofit/onboarding" : role === "community_owner" ? "/community/onboarding" : homeForRole(role));
     router.refresh();
   }
 
   const tenantLabel = role === "ngo_owner"
     ? (lang === "en" ? "NGO name" : "שם העמותה")
     : (lang === "en" ? "Community name" : "שם הקהילה");
+  const identityReady = Boolean(name.trim());
+  const tenantReady = role === "donor" || Boolean(tenantName.trim());
+  const goalsReady = role !== "ngo_owner" || goals.every((goal) => Boolean(goal.he.trim()));
+  const roleDetailsReady = role === "donor" ? identityReady : tenantReady && goalsReady;
+  const milestones = [identityReady, true, roleDetailsReady];
+  const completedMilestones = milestones.filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-raz-dark flex items-center justify-center px-6 py-10">
@@ -77,46 +85,59 @@ export default function SetupPage() {
           <p className="text-gray-400 text-sm">{lang === "en" ? "Create your profile" : "יצירת הפרופיל שלך"}</p>
         </div>
         <div className="bg-white rounded-2xl p-6 space-y-5">
-          <h1 className="font-bold text-gray-800 text-lg">{lang === "en" ? "Account setup" : "הגדרת חשבון"}</h1>
+          <div>
+            <div className="mb-2 flex items-center justify-between text-xs font-bold text-gray-400">
+              <span>{lang === "en" ? "Account setup" : "הגדרת חשבון"}</span>
+              <span aria-live="polite">{completedMilestones}/3</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5" aria-label={lang === "en" ? `${completedMilestones} of 3 setup details complete` : `${completedMilestones} מתוך 3 פרטי הקמה הושלמו`}>
+              {milestones.map((complete, index) => (
+                <span key={index} className={`h-1.5 rounded-full transition-colors duration-300 ${complete ? "bg-raz-teal" : "bg-gray-100"}`} />
+              ))}
+            </div>
+          </div>
+          <h1 className="font-bold text-gray-800 text-lg">{lang === "en" ? "Tell us who you are" : "ספרו לנו מי אתם"}</h1>
           <label className="block text-sm text-gray-500">
             {lang === "en" ? "Full name" : "שם מלא"}
             <input value={name} onChange={(event) => setName(event.target.value)} maxLength={120}
-              className="mt-1.5 w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-raz-teal text-gray-800" />
+              className="interactive-field mt-1.5 w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800" />
           </label>
           <div className="space-y-2">
             {roles.map((option) => (
               <button key={option.key} type="button" onClick={() => { setRole(option.key); setTenantName(""); setTenantNameEn(""); }}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-start ${role === option.key ? "border-raz-teal bg-raz-teal/5" : "border-gray-100"}`}>
+                aria-pressed={role === option.key}
+                className={`interactive-control w-full flex items-center gap-3 p-3 rounded-xl border-2 text-start ${role === option.key ? "border-raz-teal bg-raz-teal/5 shadow-sm" : "border-gray-100 hover:border-gray-200"}`}>
                 <span className="text-2xl">{option.emoji}</span>
-                <span><strong className="block text-sm text-gray-800">{lang === "en" ? option.en : option.he}</strong>
+                <span className="flex-1"><strong className="block text-sm text-gray-800">{lang === "en" ? option.en : option.he}</strong>
                   <span className="text-xs text-gray-400">{lang === "en" ? option.descriptionEn : option.descriptionHe}</span></span>
+                <span className={`flex h-5 w-5 items-center justify-center rounded-full border text-xs transition-all ${role === option.key ? "scale-100 border-raz-teal bg-raz-teal text-white" : "scale-90 border-gray-200 text-transparent"}`} aria-hidden="true">✓</span>
               </button>
             ))}
           </div>
           {role !== "donor" && (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flow-reveal grid gap-3 sm:grid-cols-2">
               <label className="text-sm text-gray-500">{tenantLabel}
                 <input value={tenantName} onChange={(event) => setTenantName(event.target.value)} maxLength={160}
-                  className="mt-1.5 w-full border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-raz-teal text-gray-800" />
+                  className="interactive-field mt-1.5 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-gray-800" />
               </label>
               <label className="text-sm text-gray-500">{tenantLabel} (English)
                 <input value={tenantNameEn} onChange={(event) => setTenantNameEn(event.target.value)} maxLength={160} dir="ltr"
-                  className="mt-1.5 w-full border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-raz-teal text-gray-800" />
+                  className="interactive-field mt-1.5 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-gray-800" />
               </label>
             </div>
           )}
           {role === "ngo_owner" && (
-            <div className="space-y-3">
+            <div className="flow-reveal space-y-3">
               <div><p className="text-sm font-bold text-gray-700">{lang === "en" ? "Organization goals" : "מטרות העמותה"}</p>
                 <p className="text-xs text-gray-400">{lang === "en" ? "Add 1–10 goals. Hebrew is required; English is optional." : "הוסיפו 1–10 מטרות. עברית חובה ואנגלית אופציונלית."}</p></div>
               {goals.map((goal, index) => <div key={index} className="rounded-xl border border-gray-100 p-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="text-sm text-gray-500">מטרה בעברית
                     <input value={goal.he} onChange={(event) => setGoals((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, he: event.target.value } : item))} maxLength={200} dir="rtl"
-                      className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-gray-800 outline-none focus:border-raz-teal" /></label>
+                      className="interactive-field mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-gray-800" /></label>
                   <label className="text-sm text-gray-500">Goal in English
                     <input value={goal.en ?? ""} onChange={(event) => setGoals((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, en: event.target.value || null } : item))} maxLength={200} dir="ltr"
-                      className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-gray-800 outline-none focus:border-raz-teal" /></label>
+                      className="interactive-field mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-gray-800" /></label>
                 </div>
                 {goals.length > 1 && <button type="button" onClick={() => setGoals((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="mt-2 text-xs text-red-600">{lang === "en" ? "Remove" : "הסר"}</button>}
               </div>)}
@@ -125,7 +146,7 @@ export default function SetupPage() {
           )}
           {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
           <button onClick={completeSignup} disabled={saving || !name.trim() || (role !== "donor" && !tenantName.trim()) || (role === "ngo_owner" && goals.some((goal) => !goal.he.trim()))}
-            className="w-full bg-raz-teal text-white py-3.5 rounded-xl font-bold disabled:opacity-50">
+            className="interactive-control w-full bg-raz-teal text-white py-3.5 rounded-xl font-bold shadow-lg shadow-teal-950/10 disabled:opacity-50">
             {saving ? (lang === "en" ? "Creating account…" : "יוצר חשבון…") : (lang === "en" ? "Continue" : "המשך")}
           </button>
         </div>

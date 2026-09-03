@@ -30,6 +30,9 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 - Public non-profit profile (`/nonprofit/[id]`) — org video, verification/founding/CEO/volunteer/address info, product quantity picker with running total, one-click donate that skips straight to payment
 - Donation flow: amount selection → hosted-payment readiness screen; completed-payment simulation and thank-you confirmation are development-only until the PSP is connected
 - Non-Profit admin panel (`/nonprofit/*`, teal sidebar shell) — campaigns dashboard (table) + campaigns grid (donut-chart cards), searchable/filterable products-management table with tenant-scoped creation/editing + products grid (donut-chart cards), donations table, updates/alerts table with trigger/schedule tabs; replaces the old single-page NP dashboard
+- NGO onboarding (`/nonprofit/onboarding`) — a five-step guided setup after NGO signup: organization readiness, payment-terminal setup, first product creation with a live preview, first-campaign handoff for community invitations, and dashboard completion
+- Community onboarding (`/community/onboarding`) — a matching five-step guided setup after community signup: tenant readiness, active-campaign discovery, a persisted join request, an explicit NGO-approval wait state, and dashboard handoff
+- Bidirectional partnership queues (`20260902100000_bidirectional_partnership_queue.sql`) — code and migration define many-to-many NGO/community campaign partnerships, three-slot review queues in both directions, FIFO backlog, mutual-interest auto-approval, 30-day re-request cooldowns, and in-app daily digests. **Deployment status: pending Dashboard SQL Editor application and live verification.**
 - 6-step campaign creation/editing wizard (basics → story → media → products → communities → publish/save)
 - Community manager dashboard (stats, leaderboard, styled social card export preview)
 - Donor profile (donation history, receipts menu)
@@ -59,4 +62,3 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 - Platform commission on donations?
 - Non-profit verification: what documents, who moderates?
 - Section 46 tax receipt auto-compliance?
-- Community-initiated affiliation (can community request to join org, or only org invites?)

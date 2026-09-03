@@ -102,6 +102,8 @@ create table public.products (
   description_en text,
   price          numeric(10,2) not null check (price > 0),
   emoji          text,
+  image_url      text,
+  video_url      text,
   active         boolean not null default true,
   created_at     timestamptz default now() not null
 );
@@ -203,7 +205,6 @@ create table public.communities (
   name_en       text,
   description   text,
   manager_id    uuid references auth.users(id) on delete set null,
-  org_id        uuid references public.organizations(id) on delete set null,
   referral_code text unique default encode(gen_random_bytes(6), 'hex'),
   total_raised  numeric(12,2) not null default 0,
   donors_count  integer not null default 0,

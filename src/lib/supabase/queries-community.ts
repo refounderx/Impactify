@@ -3,7 +3,8 @@ import { getCommunityAdminData } from "@/lib/supabase/queries-community-admin";
 
 export async function getCommunityDashboardData() {
   try {
-    const { community: data, organization: org } = await getCommunityAdminData();
+    const { community: data, organizations } = await getCommunityAdminData();
+    const org = organizations[0] ?? null;
     const sb = createClient();
 
     // All communities for leaderboard

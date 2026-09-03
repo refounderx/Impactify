@@ -12,6 +12,8 @@ export type DiscoverableProduct = {
   descriptionEn?: string;
   price: number;
   emoji: string;
+  imageUrl?: string;
+  videoUrl?: string;
   donationCount: number;
 };
 
@@ -168,6 +170,8 @@ export async function getDiscoverableProducts(categories?: string[]) {
       descriptionEn: product.description_en ?? undefined,
       price: Number(product.price),
       emoji: product.emoji ?? "💙",
+      imageUrl: product.image_url ?? undefined,
+      videoUrl: product.video_url ?? undefined,
       donationCount: Number(product.donation_count),
     } satisfies DiscoverableProduct));
   } catch (error) {
@@ -191,6 +195,8 @@ export async function getDiscoverableProductsForAudience(audience: string) {
       descriptionEn: product.description_en ?? undefined,
       price: Number(product.price),
       emoji: product.emoji ?? "💙",
+      imageUrl: product.image_url ?? undefined,
+      videoUrl: product.video_url ?? undefined,
       donationCount: Number(product.donation_count),
     } satisfies DiscoverableProduct));
   } catch (error) {

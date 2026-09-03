@@ -76,6 +76,8 @@ export default function CampaignDetail() {
     descriptionEn: product.descriptionEn,
     price: product.price,
     emoji: product.emoji,
+    imageUrl: product.imageUrl,
+    videoUrl: product.videoUrl,
     donationCount: campaign.donors,
   }));
 
@@ -171,6 +173,8 @@ export default function CampaignDetail() {
               <ProductCard
                 key={p.productId}
                 emoji={p.emoji}
+                imageUrl={p.imageUrl}
+                videoUrl={p.videoUrl}
                 title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
                 onChoose={() => setSelectedProduct(p)}

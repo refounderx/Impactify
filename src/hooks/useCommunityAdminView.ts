@@ -9,7 +9,7 @@ export function useCommunityAdminView() {
   const state = useCommunityAdminData();
   const data = useMemo(() => {
     if (!state.data) return null;
-    const { community, organization, organizations, campaigns, donations } = state.data;
+    const { community, organizations, campaigns, donations } = state.data;
     const campaignRows = campaigns.map((campaign) => {
       const campaignOrganization = organizations.find((item) => item.id === campaign.org_id);
       const orgName = campaignOrganization?.name ?? "";
@@ -39,12 +39,12 @@ export function useCommunityAdminView() {
         frequency: item.is_recurring ? "חודשי" : "חד פעמי", frequencyEn: item.is_recurring ? "Monthly" : "One-time" })),
       communityDonationsTotal: donations.reduce((sum, item) => sum + Number(item.amount), 0),
       communityDonationsCount: donations.length,
-      communityNonprofitRows: organization ? [{ id: organization.id, name: organization.name,
+      communityNonprofitRows: organizations.map((organization) => ({ id: organization.id, name: organization.name,
         nameEn: organization.name_en ?? organization.name, activityArea: "—", activityAreaEn: "—",
-        joinedDate: date(community.created_at), activeCampaigns: campaigns.length, productsSold: 0,
-        totalRaised: Number(community.total_raised), contactName: organization.ceo ?? "—", contactPhone: organization.phone ?? "—" }] : [],
+        joinedDate: date(community.created_at), activeCampaigns: campaigns.filter((campaign) => campaign.org_id === organization.id).length, productsSold: 0,
+        totalRaised: donations.filter((donation) => donation.org_id === organization.id).reduce((sum, donation) => sum + Number(donation.amount), 0), contactName: organization.ceo ?? "—", contactPhone: organization.phone ?? "—" })),
       communityNonprofitsTotalRaised: Number(community.total_raised),
-      communityNonprofitsCount: organization ? 1 : 0,
+      communityNonprofitsCount: organizations.length,
     };
   }, [state.data]);
   return { ...state, data };

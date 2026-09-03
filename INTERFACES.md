@@ -143,6 +143,12 @@ Public reads include `goals` and `activity_area` but continue to exclude bank-ac
 | `hero_image_url` | text | Nullable public URL for the uploaded campaign header image |
 | `video_url` | text | Nullable HTTPS YouTube, Vimeo, or direct-video URL; displayed ahead of the header image |
 
+### `products`
+| Column | Type | Notes |
+|---|---|---|
+| `image_url` | text | Nullable public image path or URL; public product cards and donation modal show it when present |
+| `video_url` | text | Nullable video URL; the donation modal exposes it as an external, user-initiated link |
+
 ### `product_home_audiences`
 | Column | Type | Notes |
 |---|---|---|

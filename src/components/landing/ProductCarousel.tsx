@@ -68,6 +68,8 @@ export default function ProductCarousel() {
                     title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                     price={p.price}
                     emoji={p.emoji}
+                    imageUrl={p.imageUrl}
+                    videoUrl={p.videoUrl}
                     onChoose={() => setSelectedProduct(p)}
                   />
                 </div>
@@ -92,6 +94,8 @@ export default function ProductCarousel() {
                 title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
                 emoji={p.emoji}
+                imageUrl={p.imageUrl}
+                videoUrl={p.videoUrl}
                 onChoose={() => setSelectedProduct(p)}
               />
             ))}

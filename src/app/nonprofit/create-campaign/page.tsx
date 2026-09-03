@@ -308,8 +308,8 @@ export default function CreateCampaignPage() {
               </div>
             )}
             {products.map((p) => (
-              <div key={p.id} onClick={() => toggleProduct(p.id)}
-                className={`bg-white rounded-2xl p-3 flex items-center gap-3 cursor-pointer border transition-colors ${
+              <button key={p.id} type="button" onClick={() => toggleProduct(p.id)} aria-pressed={form.selectedProducts.includes(p.id)}
+                className={`interactive-control w-full bg-white rounded-2xl p-3 flex items-center gap-3 border text-start transition-colors ${
                   form.selectedProducts.includes(p.id) ? "border-raz-teal shadow-sm" : "border-slate-200 hover:border-raz-teal/50"
                 }`}
               >
@@ -324,7 +324,7 @@ export default function CreateCampaignPage() {
                     <span className="text-raz-teal"><Check size={16} /></span>
                   )}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}

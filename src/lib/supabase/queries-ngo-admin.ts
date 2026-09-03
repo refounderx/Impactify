@@ -89,7 +89,7 @@ export async function getNgoAdminData(): Promise<NgoAdminData> {
   const linkedRows = communityLinks.data ?? [];
   const communities = Array.from(new Map(linkedRows.map((row) => [row.community_id, {
     id: row.community_id, name: row.community_name, name_en: row.community_name_en,
-    description: null, manager_id: null, org_id: orgId, referral_code: null,
+    description: null, manager_id: null, referral_code: null,
     total_raised: Number(row.community_total_raised), donors_count: 0, created_at: row.community_created_at,
   }])).values()) as Community[];
   return {

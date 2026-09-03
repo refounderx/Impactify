@@ -62,6 +62,8 @@ export function toUIProduct(row: Product) {
     description: row.description ?? "",
     descriptionEn: row.description_en ?? undefined,
     emoji: row.emoji ?? "💙",
+    imageUrl: row.image_url ?? undefined,
+    videoUrl: row.video_url ?? undefined,
   };
 }
 

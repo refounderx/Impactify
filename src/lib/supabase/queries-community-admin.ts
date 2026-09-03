@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Campaign, Community, Donation, Organization } from "@/lib/supabase/types";
+import { getPartnershipRequests } from "@/lib/supabase/queries-partnerships";
 
 export type CommunityDonation = Donation & {
   campaigns: { title: string; title_en: string | null } | null;
@@ -8,13 +9,12 @@ export type CommunityDonation = Donation & {
 
 export type CommunityAdminData = {
   community: Community;
-  organization: Organization | null;
   organizations: Organization[];
   campaigns: Array<Campaign & { membershipStatus: "active" | "paused"; membershipSource: "created" | "linked" }>;
   donations: CommunityDonation[];
 };
 
-export type CommunityCampaignStatus = "pending" | "active" | "paused" | "rejected";
+export type CommunityCampaignStatus = "pending" | "active" | "paused";
 type CommunityCampaignMembership = {
   community_id: string;
   campaign_id: string;
@@ -34,15 +34,14 @@ export async function getCommunityAdminData(): Promise<CommunityAdminData> {
     throw new Error("Community owner profile required");
   }
   const { data: community, error: communityError } = await sb.from("communities")
-    .select("id,name,name_en,description,org_id,total_raised,donors_count,created_at").eq("id", profile.community_id).single();
+    .select("id,name,name_en,description,total_raised,donors_count,created_at").eq("id", profile.community_id).single();
   if (communityError || !community) throw new Error(communityError?.message ?? "Community not found");
-  const [organization, memberships, donations] = await Promise.all([
-    community.org_id ? sb.from("organizations").select(ORG_COLUMNS).eq("id", community.org_id).single() : Promise.resolve({ data: null, error: null }),
+  const [memberships, donations] = await Promise.all([
     sb.from("community_campaigns").select("community_id,campaign_id,status,source").eq("community_id", community.id),
     sb.from("donations").select("id,donor_id,campaign_id,org_id,amount,currency,status,is_recurring,dedication_name,dedication_message,donor_name,community_id,last_four,card_brand,receipt_id,receipt_url,created_at,product_id,donation_type,quantity,campaigns(title,title_en),products(name,name_en)")
       .eq("community_id", community.id).order("created_at", { ascending: false }),
   ]);
-  const error = organization.error ?? memberships.error ?? donations.error;
+  const error = memberships.error ?? donations.error;
   if (error) throw new Error(error.message);
   const membershipRows = (memberships.data ?? []) as CommunityCampaignMembership[];
   const managedMemberships = membershipRows.filter((item) => item.status === "active" || item.status === "paused");
@@ -59,7 +58,6 @@ export async function getCommunityAdminData(): Promise<CommunityAdminData> {
   const membershipByCampaign = new Map(managedMemberships.map((item) => [item.campaign_id, item]));
   return {
     community: { ...community, manager_id: null, referral_code: null } as Community,
-    organization: organization.data as Organization | null,
     organizations: (organizationsResult.data ?? []) as Organization[],
     campaigns: campaignRows.map((campaign) => ({
       ...campaign,
@@ -76,9 +74,14 @@ export async function getCommunityCampaignStatuses(): Promise<Record<string, Com
   if (!user) throw new Error("Authentication required");
   const { data: profile, error: profileError } = await sb.from("profiles").select("community_id,app_role").eq("id", user.id).single();
   if (profileError || profile?.app_role !== "community_owner" || !profile.community_id) throw new Error("Community owner profile required");
-  const { data, error } = await sb.from("community_campaigns").select("campaign_id,status").eq("community_id", profile.community_id);
+  const [{ data, error }, sent] = await Promise.all([
+    sb.from("community_campaigns").select("campaign_id,status").eq("community_id", profile.community_id),
+    getPartnershipRequests("sent"),
+  ]);
   if (error) throw new Error(error.message);
-  return Object.fromEntries((data ?? []).map((item) => [item.campaign_id, item.status as CommunityCampaignStatus]));
+  const statuses = Object.fromEntries((data ?? []).map((item) => [item.campaign_id, item.status as CommunityCampaignStatus]));
+  for (const request of sent) if (request.status === "queued" || request.status === "active_review") statuses[request.campaign_id] = "pending";
+  return statuses;
 }
 
 export async function setCommunityCampaign(campaignId: string, action: "request" | "cancel" | "pause" | "resume") {

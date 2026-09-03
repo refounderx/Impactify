@@ -38,6 +38,8 @@ New schema/seed changes should be added as a new timestamped file under `supabas
 - Do not retry the Supabase CLI for migration deployment; this project consistently hits the same temporary database `login role` failure. Run the exact timestamped migration in a transaction through the already-authenticated SQL Editor.
 - Record its version/name in `supabase_migrations.schema_migrations` in the same transaction when the migration does not already do so.
 - Run a separate read-only verification query afterward. Confirm the ledger entry and changed objects, plus grants, fixed `search_path`, and tenant checks for privileged functions. Do not treat the migration as live until these checks pass.
+- Apply both partnership-queue migrations before deploying the accompanying application code: `supabase/migrations/20260902100000_bidirectional_partnership_queue.sql` and `supabase/migrations/20260902101500_fix_partnership_queue_slot_assignment.sql`.
+- For product-media content, apply `supabase/migrations/20260903110000_product_images.sql` and `supabase/migrations/20260903111500_product_discovery_media.sql`; then run `supabase/scripts/create-impact-products.sql` to create the three demonstration organizations, products, campaigns, and product links.
 
 See `AGENTS.md` for the required agent workflow and security constraints.
 
@@ -65,8 +67,11 @@ Runtime data queries Supabase directly; missing data or query failures surface e
 | `/donate/[id]/payment` | Payment form (mock) |
 | `/donate/[id]/thanks` | Thank you / confirmation |
 | `/nonprofit` | Org dashboard |
+| `/nonprofit/onboarding` | Guided NGO setup: account readiness, payment terminal, first product, then campaign/community setup |
 | `/nonprofit/create-campaign` | 6-step campaign creation wizard |
+| `/community/onboarding` | Guided community setup: campaign discovery, a real join request, NGO approval, then dashboard handoff |
 | `/community` | Community manager dashboard |
+| `/community/updates` | Community partnership inbox, FIFO backlog, and in-app daily digests |
 | `/profile` | Donor profile inside the donor side panel |
 | `/nonprofit/profile` | NGO organization profile inside the NGO admin shell |
 | `/community/profile` | Community-owner profile inside the community admin shell |

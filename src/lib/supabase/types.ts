@@ -96,6 +96,8 @@ export interface Database {
           description_en: string | null;
           price: number;
           emoji: string | null;
+          image_url: string | null;
+          video_url: string | null;
           active: boolean;
           created_at: string;
         };
@@ -172,7 +174,6 @@ export interface Database {
           name_en: string | null;
           description: string | null;
           manager_id: string | null;
-          org_id: string | null;
           referral_code: string | null;
           total_raised: number;
           donors_count: number;
@@ -180,16 +181,28 @@ export interface Database {
         };
         Insert: Omit<Database["public"]["Tables"]["communities"]["Row"], "id" | "created_at">;
         Update: Partial<Database["public"]["Tables"]["communities"]["Insert"]>;
-        Relationships: [{ foreignKeyName: "communities_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }];
+        Relationships: [];
       };
       community_campaigns: {
-        Row: { community_id: string; campaign_id: string; status: "pending" | "active" | "paused" | "rejected"; source: "created" | "linked"; requested_at: string; updated_at: string };
-        Insert: { community_id: string; campaign_id: string; status?: "pending" | "active" | "paused" | "rejected"; source?: "created" | "linked"; requested_at?: string; updated_at?: string };
+        Row: { community_id: string; campaign_id: string; status: "active" | "paused"; source: "created" | "linked"; requested_at: string; updated_at: string };
+        Insert: { community_id: string; campaign_id: string; status?: "active" | "paused"; source?: "created" | "linked"; requested_at?: string; updated_at?: string };
         Update: Partial<Database["public"]["Tables"]["community_campaigns"]["Insert"]>;
         Relationships: [
           { foreignKeyName: "community_campaigns_community_id_fkey"; columns: ["community_id"]; isOneToOne: false; referencedRelation: "communities"; referencedColumns: ["id"] },
           { foreignKeyName: "community_campaigns_campaign_id_fkey"; columns: ["campaign_id"]; isOneToOne: false; referencedRelation: "campaigns"; referencedColumns: ["id"] },
         ];
+      };
+      partnership_requests: {
+        Row: { id: string; community_id: string; campaign_id: string; org_id: string; initiator_type: "community" | "organization"; status: "queued" | "active_review" | "approved" | "rejected" | "cancelled"; review_slot: number | null; requested_by: string | null; requested_at: string; promoted_at: string | null; decided_at: string | null; decided_by: string | null; cancelled_at: string | null; last_notified_at: string | null; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["partnership_requests"]["Row"]> & { community_id: string; campaign_id: string; org_id: string; initiator_type: "community" | "organization" };
+        Update: Partial<Database["public"]["Tables"]["partnership_requests"]["Row"]>;
+        Relationships: [];
+      };
+      partnership_notifications: {
+        Row: { id: string; recipient_type: "community" | "organization"; recipient_id: string; digest_date: string; total_waiting: number; new_waiting: number; channel: "in_app"; read_at: string | null; created_at: string };
+        Insert: Partial<Database["public"]["Tables"]["partnership_notifications"]["Row"]> & { recipient_type: "community" | "organization"; recipient_id: string; digest_date: string; total_waiting: number; new_waiting: number };
+        Update: Partial<Database["public"]["Tables"]["partnership_notifications"]["Row"]>;
+        Relationships: [];
       };
       refund_requests: {
         Row: {
@@ -327,11 +340,16 @@ export interface Database {
       };
       manage_ngo_update: { Args: { p_update_id: string; p_action: string }; Returns: string };
       set_community_campaign: { Args: { p_campaign_id: string; p_action: string }; Returns: string };
+      create_partnership_request: { Args: { p_campaign_id: string; p_initiator_type: string; p_community_id?: string | null }; Returns: string };
+      decide_partnership_request: { Args: { p_request_id: string; p_action: string }; Returns: string };
+      cancel_partnership_request: { Args: { p_request_id: string }; Returns: string };
+      get_partnership_requests: { Args: { p_view: string }; Returns: { id: string; community_id: string; community_name: string; campaign_id: string; campaign_title: string; org_id: string; org_name: string; initiator_type: string; status: string; requested_at: string; promoted_at: string | null; review_slot: number | null }[] };
+      create_partnership_daily_digests: { Args: Record<string, never>; Returns: number };
       get_ngo_campaign_requests: { Args: Record<string, never>; Returns: { community_campaign_id: string; campaign_id: string; community_id: string; community_name: string; campaign_title: string; requested_at: string }[] };
       get_ngo_community_links: { Args: Record<string, never>; Returns: { community_id: string; community_name: string; community_name_en: string | null; community_total_raised: number; community_created_at: string; campaign_id: string; status: string }[] };
       invite_communities_to_campaign: { Args: { p_campaign_id: string; p_community_ids: string[] }; Returns: number };
-      get_discoverable_products: { Args: { p_categories?: string[] | null }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; donation_count: number }[] };
-      get_discoverable_products_for_audience: { Args: { p_audience: string }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; donation_count: number }[] };
+      get_discoverable_products: { Args: { p_categories?: string[] | null }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; image_url: string | null; video_url: string | null; donation_count: number }[] };
+      get_discoverable_products_for_audience: { Args: { p_audience: string }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; image_url: string | null; video_url: string | null; donation_count: number }[] };
       manage_ngo_campaign_request: { Args: { p_community_id: string; p_campaign_id: string; p_action: string }; Returns: string };
       set_my_recurring_donation_status: { Args: { p_recurring_id: string; p_status: string }; Returns: undefined };
       add_my_payment_method: { Args: { p_brand: string; p_last_four: string }; Returns: { id: string; brand: string; last_four: string }[] };

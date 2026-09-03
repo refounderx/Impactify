@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Eye, Pencil, Plus, X } from "lucide-react";
 import EditableText from "@/components/admin/EditableText";
 import AdminDataStatus from "@/components/nonprofit-admin/AdminDataStatus";
@@ -24,7 +25,7 @@ function ProductCard({ card, onEdit, onView }: { card: AdminProductCard; onEdit:
           <Eye size={18} />
         </button>
       </div>
-      <div className="flex h-52 items-center justify-center border-b border-slate-200 pe-12 text-8xl" aria-hidden="true">{card.emoji}</div>
+      <div className="relative flex h-52 items-center justify-center overflow-hidden border-b border-slate-200 pe-12 text-8xl" aria-hidden="true">{card.imageUrl ? <Image src={card.imageUrl} alt="" fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" /> : card.emoji}</div>
       <div className="flex flex-1 flex-col items-center pt-7 text-center">
         <h2 className="text-3xl font-extrabold leading-tight text-raz-dark">{lang === "en" ? card.nameEn : card.name}</h2>
         <p className="mt-6 text-base text-gray-500">

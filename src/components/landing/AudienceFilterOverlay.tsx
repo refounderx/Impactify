@@ -49,6 +49,8 @@ export default function AudienceFilterOverlay({
                 title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
                 emoji={p.emoji}
+                imageUrl={p.imageUrl}
+                videoUrl={p.videoUrl}
                 onChoose={() => setSelectedProduct(p)}
               />
             ))}

@@ -83,6 +83,7 @@ export type AdminCampaignCard = {
   title: string;
   titleEn: string;
   emoji: string;
+  imageUrl?: string;
   raised: number;
   goal: number;
   endDate: string;
@@ -181,6 +182,7 @@ export type AdminProductCard = {
   name: string;
   nameEn: string;
   emoji: string;
+  imageUrl?: string;
   campaignsCount: number;
   donated: number;
   goal: number;
