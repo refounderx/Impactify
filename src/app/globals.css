@@ -20,6 +20,8 @@
 
 body {
   font-family: var(--font-assistant), "Assistant", Arial, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.55;
   background-color: #1A1A2E;
   color: #333333;
   direction: rtl;
@@ -28,6 +30,20 @@ body {
 }
 
 h1 { font-weight: 800; }
+
+/* Readable type scale: desktop layouts have generous visual space, so the
+   original 12–16px utility sizes made primary actions and explanations feel
+   disproportionately small. Scaling the root preserves every Tailwind
+   responsive type variant instead of overriding individual utility classes. */
+html { font-size: 16px; }
+
+@media (min-width: 1024px) {
+  html { font-size: 17px; }
+}
+
+@media (min-width: 1536px) {
+  html { font-size: 18px; }
+}
 
 /* Keep desktop composition within the shared frame without constraining phones. */
 .site-frame {

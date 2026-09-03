@@ -54,10 +54,10 @@ export default function Hero() {
     <section className="mx-auto max-w-7xl px-6 py-14">
       <div className="grid items-center gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-16" dir="ltr">
         <div className="order-1 text-right md:order-2" dir={lang === "he" ? "rtl" : "ltr"}>
-          <EditableText tKey="landing.hero.title" as="h1" className="mb-6 block text-4xl font-bold leading-tight text-gray-900 sm:text-5xl" />
-          <EditableText tKey="landing.hero.body" as="p" className="text-gray-500 leading-relaxed mb-6 block" />
+          <EditableText tKey="landing.hero.title" as="h1" className="mb-6 block text-4xl font-bold leading-tight text-gray-900 sm:text-5xl xl:text-6xl" />
+          <EditableText tKey="landing.hero.body" as="p" className="mb-7 block text-lg leading-relaxed text-gray-500 xl:text-xl" />
           {!authLoading && !user && (
-            <Link href="/auth" className="interactive-control inline-block border-2 border-raz-teal text-raz-teal font-bold px-8 py-3 rounded-full">
+            <Link href="/auth" className="interactive-control inline-block rounded-full border-2 border-raz-teal px-8 py-3 text-lg font-bold text-raz-teal">
               <EditableText tKey="landing.hero.cta" />
             </Link>
           )}
