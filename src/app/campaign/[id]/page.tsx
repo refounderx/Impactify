@@ -176,6 +176,7 @@ export default function CampaignDetail() {
                 imageUrl={p.imageUrl}
                 videoUrl={p.videoUrl}
                 donationCount={p.donationCount}
+                onOpenDetails={() => router.push(`/product/${p.productId}?campaign_id=${p.campaignId}`)}
                 title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
                 onChoose={() => setSelectedProduct(p)}

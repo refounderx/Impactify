@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Play, X } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
@@ -7,6 +8,8 @@ import { useCookieConsent } from "@/contexts/CookieConsentContext";
 import { getCampaignVideoSource } from "@/lib/campaign-media";
 import { formatNIS } from "@/lib/mock-data";
 import type { DiscoverableProduct } from "@/lib/supabase/queries";
+import { getCampaignById } from "@/lib/supabase/queries";
+import { percent } from "@/lib/mock-data";
 
 export default function LiveProductDonationModal({
   product,
@@ -26,6 +29,9 @@ export default function LiveProductDonationModal({
   const title = lang === "en" ? (product.nameEn ?? product.name) : product.name;
   const description = lang === "en" ? (product.descriptionEn ?? product.description) : product.description;
   const video = getCampaignVideoSource(product.videoUrl);
+  const [campaign, setCampaign] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
+
+  useEffect(() => { void getCampaignById(product.campaignId).then(setCampaign); }, [product.campaignId]);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-raz-dark/85 p-4 backdrop-blur-[2px]" onClick={onClose}>
@@ -56,6 +62,12 @@ export default function LiveProductDonationModal({
           </div>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-white"><div className="h-full w-3/5 rounded-full bg-raz-teal" /></div>
         </div>
+
+        {campaign && <div className="border-b border-slate-100 px-6 py-5 sm:px-9">
+          <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>{lang === "en" ? "Campaign progress" : "התקדמות הקמפיין"}</span><span className="text-raz-teal">{percent(campaign.raised, campaign.goal)}%</span></div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-raz-teal" style={{ width: `${percent(campaign.raised, campaign.goal)}%` }} /></div>
+          <p className="mt-2 text-xs text-slate-500">{formatNIS(campaign.raised)} {lang === "en" ? "raised of" : "גויסו מתוך"} {formatNIS(campaign.goal)} · {campaign.donors.toLocaleString()} {lang === "en" ? "donors" : "תורמים"}</p>
+        </div>}
 
         {otherProducts.length > 0 && <div className="px-6 py-6 sm:px-9">
           <p className="mb-4 text-center text-sm font-black text-raz-dark">{lang === "en" ? "Other donors also chose" : "תורמים אחרים בחרו גם במוצרים האלה"}</p>

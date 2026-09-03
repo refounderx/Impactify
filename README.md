@@ -63,6 +63,7 @@ Runtime data queries Supabase directly; missing data or query failures surface e
 | `/landing` | Same content as `/` (duplicate route) |
 | `/search` | Campaign search & filters |
 | `/campaign/[id]` | Campaign detail |
+| `/product/[id]?campaign_id=…` | Product detail, nonprofit/campaign context, and donation entry point |
 | `/donate/[id]/amount` | Donation amount selection |
 | `/donate/[id]/payment` | Payment form (mock) |
 | `/donate/[id]/thanks` | Thank you / confirmation |

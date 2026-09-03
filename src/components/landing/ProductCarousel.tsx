@@ -71,6 +71,7 @@ export default function ProductCarousel() {
                     imageUrl={p.imageUrl}
                     videoUrl={p.videoUrl}
                     donationCount={p.donationCount}
+                    onOpenDetails={() => router.push(`/product/${p.productId}?campaign_id=${p.campaignId}`)}
                     onChoose={() => setSelectedProduct(p)}
                   />
                 </div>
@@ -98,6 +99,7 @@ export default function ProductCarousel() {
                 imageUrl={p.imageUrl}
                 videoUrl={p.videoUrl}
                 donationCount={p.donationCount}
+                onOpenDetails={() => router.push(`/product/${p.productId}?campaign_id=${p.campaignId}`)}
                 onChoose={() => setSelectedProduct(p)}
               />
             ))}
