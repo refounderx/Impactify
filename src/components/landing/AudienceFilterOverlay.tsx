@@ -25,6 +25,9 @@ export default function AudienceFilterOverlay({
     void getDiscoverableProductsForAudience(kind).then(setProducts);
   }, [kind]);
 
+  const overlayWidth = products.length === 1 ? "max-w-[20rem]" : products.length === 2 ? "max-w-[39rem]" : "max-w-6xl";
+  const gridColumns = products.length === 1 ? "grid-cols-1" : products.length === 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4";
+
   return (
     <>
       <button
@@ -33,7 +36,7 @@ export default function AudienceFilterOverlay({
         onClick={onClose}
         aria-label={t("landing.filter.close")}
       />
-      <div className="relative z-50 mt-8 rounded-2xl bg-white p-8 shadow-2xl">
+      <div className={`relative z-50 mx-auto mt-8 w-full rounded-2xl bg-white p-8 shadow-2xl ${overlayWidth}`}>
         <div className="mb-5 flex justify-end">
           <button onClick={onClose} className="interactive-control flex items-center gap-1 text-sm text-gray-600" aria-label={t("landing.filter.close")}>
             <X size={20} /> <EditableText tKey="landing.filter.close" />
@@ -42,7 +45,7 @@ export default function AudienceFilterOverlay({
           <h2 className="text-2xl font-bold text-raz-teal text-center mb-8">
             <EditableText tKey="landing.filter.heading" /> <EditableText tKey={`landing.aud.${kind}.plural`} />
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          <div className={`grid gap-5 ${gridColumns}`}>
             {products.map((p) => (
               <ProductCard
                 key={`${p.productId}-${p.campaignId}`}
