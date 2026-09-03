@@ -1,5 +1,6 @@
 export type AppRole = "donor" | "ngo_owner" | "community_owner" | "admin";
 export type CampaignStatus = "draft" | "active" | "paused" | "completed" | "archived" | "blocked";
+export type CampaignGoalType = "deadline" | "monthly" | "annual";
 export type DonationStatus = "pending" | "completed" | "failed" | "refunded";
 export type RecurringStatus = "active" | "paused" | "cancelled";
 export type OrganizationGoal = { he: string; en: string | null };
@@ -74,6 +75,7 @@ export interface Database {
           raised: number;
           donors_count: number;
           end_date: string | null;
+          goal_type: CampaignGoalType;
           status: CampaignStatus;
           gradient: string;
           emoji: string;
@@ -384,6 +386,7 @@ export interface Database {
           p_product_ids?: string[];
           p_hero_image_url?: string | null;
           p_video_url?: string | null;
+          p_goal_type?: CampaignGoalType;
         };
         Returns: string;
       };
@@ -399,8 +402,13 @@ export interface Database {
           p_product_ids?: string[];
           p_hero_image_url?: string | null;
           p_video_url?: string | null;
+          p_goal_type?: CampaignGoalType;
         };
         Returns: string;
+      };
+      get_campaign_progress: {
+        Args: { p_campaign_ids: string[] };
+        Returns: { campaign_id: string; goal_type: CampaignGoalType; period_start: string; period_end: string | null; raised: number; donors_count: number }[];
       };
       update_ngo_product: {
         Args: {

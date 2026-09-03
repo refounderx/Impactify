@@ -15,6 +15,7 @@ import EditableText from "@/components/admin/EditableText";
 import { getCampaignVideoSource } from "@/lib/campaign-media";
 import { sharePage } from "@/lib/share";
 import { useCookieConsent } from "@/contexts/CookieConsentContext";
+import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-target";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -154,6 +155,8 @@ export default function CampaignDetail() {
             <div className="bg-raz-teal rounded-full h-full transition-all duration-500" style={{ width: `${pct}%` }} />
           </div>
           <p className="text-sm text-gray-400 mt-1.5"><EditableText tKey="campaign.goalLabel" /> {formatNIS(campaign.goal)}</p>
+          <p className="mt-1 text-sm font-bold text-raz-teal">{campaignTargetLabel(campaign, lang)}</p>
+          <p className="mt-1 text-xs text-gray-400">{campaignTimeRemaining(campaign, lang)}</p>
         </div>
 
         {/* Opens the donation-amount popup */}

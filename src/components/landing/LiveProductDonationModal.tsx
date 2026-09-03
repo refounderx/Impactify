@@ -10,6 +10,7 @@ import { formatNIS } from "@/lib/mock-data";
 import type { DiscoverableProduct } from "@/lib/supabase/queries";
 import { getCampaignById } from "@/lib/supabase/queries";
 import { percent } from "@/lib/mock-data";
+import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-target";
 
 export default function LiveProductDonationModal({
   product,
@@ -67,6 +68,8 @@ export default function LiveProductDonationModal({
           <div className="flex items-center justify-between text-sm font-bold text-slate-600"><span>{lang === "en" ? "Campaign progress" : "התקדמות הקמפיין"}</span><span className="text-raz-teal">{percent(campaign.raised, campaign.goal)}%</span></div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-raz-teal" style={{ width: `${percent(campaign.raised, campaign.goal)}%` }} /></div>
           <p className="mt-2 text-xs text-slate-500">{formatNIS(campaign.raised)} {lang === "en" ? "raised of" : "גויסו מתוך"} {formatNIS(campaign.goal)} · {campaign.donors.toLocaleString()} {lang === "en" ? "donors" : "תורמים"}</p>
+          <p className="mt-1 text-xs font-bold text-raz-teal">{campaignTargetLabel(campaign, lang)}</p>
+          <p className="mt-1 text-xs text-slate-400">{campaignTimeRemaining(campaign, lang)}</p>
         </div>}
 
         {otherProducts.length > 0 && <div className="px-6 py-6 sm:px-9">

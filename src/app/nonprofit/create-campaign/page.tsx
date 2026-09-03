@@ -63,6 +63,7 @@ export default function CreateCampaignPage() {
     title: "",
     category: "",
     goal: "",
+    goalType: "deadline" as "deadline" | "monthly" | "annual",
     endDate: "",
     shortDesc: "",
     story: "",
@@ -90,6 +91,7 @@ export default function CreateCampaignPage() {
           title: campaign.title,
           category: campaign.category,
           goal: String(campaign.goal),
+          goalType: campaign.goal_type ?? "deadline",
           endDate: campaign.end_date ?? "",
           shortDesc: campaign.short_desc ?? "",
           story: campaign.story ?? "",
@@ -117,6 +119,11 @@ export default function CreateCampaignPage() {
       setPublishError(lang === "en" ? "Title, category and a positive goal are required." : "נדרשים שם, קטגוריה ויעד חיובי.");
       return;
     }
+    if (form.goalType === "deadline" && !form.endDate) {
+      setPublishError(lang === "en" ? "Set an end date for a deadline target." : "יש להגדיר תאריך סיום ליעד עד תאריך.");
+      setStep(0);
+      return;
+    }
     const videoUrl = validateCampaignVideoUrl(form.videoUrl);
     if (form.videoUrl.trim() && !videoUrl) {
       setPublishError(lang === "en" ? "Enter a valid HTTPS video URL." : "יש להזין קישור HTTPS תקין לסרטון.");
@@ -140,7 +147,7 @@ export default function CreateCampaignPage() {
     }
     const sharedArgs = {
       p_title: form.title.trim(), p_short_desc: form.shortDesc.trim(), p_story: form.story.trim(),
-      p_category: form.category, p_goal: goal, p_end_date: form.endDate || null,
+      p_category: form.category, p_goal: goal, p_goal_type: form.goalType, p_end_date: form.goalType === "deadline" ? form.endDate : null,
       p_product_ids: form.selectedProducts,
       p_hero_image_url: uploadedImage?.publicUrl ?? existingImageUrl,
       p_video_url: videoUrl,
@@ -245,17 +252,33 @@ export default function CreateCampaignPage() {
                 ))}
               </div>
             </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-2 block">סוג יעד</label>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  ["deadline", "עד תאריך"],
+                  ["monthly", "חודשי"],
+                  ["annual", "שנתי"],
+                ] as const).map(([goalType, label]) => (
+                  <button key={goalType} type="button" onClick={() => setForm((current) => ({ ...current, goalType, endDate: goalType === "deadline" ? current.endDate : "" }))}
+                    className={`rounded-xl border px-3 py-2 text-sm font-bold transition-colors ${form.goalType === goalType ? "border-raz-teal bg-raz-teal text-white" : "border-slate-200 bg-white text-slate-600"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-slate-500">{form.goalType === "monthly" ? "הסכום המוצג מתאפס בתחילת כל חודש; היסטוריית התרומות נשמרת." : form.goalType === "annual" ? "הסכום המוצג מתאפס בתחילת כל שנה; היסטוריית התרומות נשמרת." : "התרומות נספרות עד לתאריך הסיום שנבחר."}</p>
+            </div>
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="text-xs text-gray-500 mb-1 block">יעד גיוס (₪)</label>
                 <input type="number" value={form.goal} onChange={(e) => setForm({...form, goal: e.target.value})}
                   placeholder="25000" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-raz-teal font-numeric text-right bg-white" />
               </div>
-              <div className="flex-1">
+              {form.goalType === "deadline" && <div className="flex-1">
                 <label className="text-xs text-gray-500 mb-1 block">תאריך סיום</label>
                 <input type="date" value={form.endDate} onChange={(e) => setForm({...form, endDate: e.target.value})}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-raz-teal bg-white" />
-              </div>
+              </div>}
             </div>
             <div>
               <label className="text-xs text-gray-500 mb-1 block">תיאור קצר (עד 255 תווים)</label>
@@ -362,7 +385,7 @@ export default function CreateCampaignPage() {
             <p className="text-sm text-gray-500">{isEditing ? "השינויים יעודכנו בקמפיין הקיים" : "הקמפיין יועלה לפלטפורמה ויהיה זמין לתרומות מיידית"}</p>
             <div className="bg-gray-50 rounded-2xl p-4 text-sm text-right w-full">
               <div className="flex justify-between mb-2"><span className="text-gray-500">שם:</span><span className="font-medium">{form.title || "ארוחות חמות לקשישים"}</span></div>
-              <div className="flex justify-between mb-2"><span className="text-gray-500">יעד:</span><span className="font-medium font-numeric">₪{form.goal || "25,000"}</span></div>
+              <div className="flex justify-between mb-2"><span className="text-gray-500">יעד:</span><span className="font-medium font-numeric">₪{form.goal || "25,000"} · {form.goalType === "monthly" ? "חודשי" : form.goalType === "annual" ? "שנתי" : "עד תאריך"}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">מוצרים:</span><span className="font-medium">{form.selectedProducts.length}</span></div>
             </div>
             {publishError && <p className="w-full text-sm text-red-600" role="alert">{publishError}</p>}

@@ -73,8 +73,9 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | `update_ngo_product(product_id, name, name_en, description, description_en, price, emoji, active)` | NGO owner only | Derives the tenant from auth, validates all product fields, and updates only a product owned by that organization |
 | `update_ngo_goals(goals)` | NGO owner only | Validates 1–10 goals and updates the organization derived from `auth.uid()`; no client-supplied organization ID is trusted |
 | `update_ngo_profile(name, description, activity_area, address, phone, ceo, founded, logo_url)` | NGO owner only | Validates editable organization fields and updates the organization derived from `auth.uid()`; no client-supplied organization ID is trusted |
-| `publish_campaign(title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Validates tenant products and HTTPS media URLs, then atomically publishes a campaign |
-| `update_campaign(campaign_id, title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?)` | NGO owner only | Derives the tenant from auth, verifies campaign/product ownership and HTTPS media, then atomically updates the campaign and product links |
+| `publish_campaign(title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?, goal_type?)` | NGO owner only | Validates tenant products and HTTPS media URLs, then atomically publishes a campaign with a `deadline`, `monthly`, or `annual` target. A deadline target requires `end_date`; periodic targets do not accept one. |
+| `update_campaign(campaign_id, title, short_desc, story, category, goal, end_date, product_ids?, hero_image_url?, video_url?, goal_type?)` | NGO owner only | Derives the tenant from auth, verifies campaign/product ownership and HTTPS media, then atomically updates the campaign, target definition, and product links |
+| `get_campaign_progress(campaign_ids)` | Anonymous or authenticated | Returns only aggregate completed-donation progress for active public campaigns (or the caller's own/admin campaigns), scoped to each campaign's current target window; never returns donor rows. |
 | `save_ngo_update(update_id?, audience, target_ids, channels, timing, scheduled_at, trigger_type, title, body, cta, image_name)` | NGO owner only | Persists an update in the NGO tenant; a new immediate Push update also creates donor-facing `system_updates` rows for matching donors |
 | `manage_ngo_update(update_id, action)` | NGO owner only | Duplicates, pauses/resumes, or deletes only an update owned by the caller's organization |
 | `set_community_campaign(campaign_id, action)` | Community owner only | Creates/cancels a pending join request or pauses/resumes the caller's own active campaign relationship |
@@ -100,6 +101,7 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `getProductsByIds(ids[])` | No | `Product[]` | `products` |
 | `getDiscoverableProducts(categories?)` | No | Active campaign products ordered by donated quantity | `get_discoverable_products` |
 | `getDiscoverableProductsForAudience(audience)` | No | Active products linked to a home-page audience | `get_discoverable_products_for_audience` |
+| `getCampaignProgress(campaignIds[])` (internal helper) | No | Current target-window totals used by campaign/product progress UI | `get_campaign_progress` |
 | `getNgoAdminData()` | NGO owner | Own tenant's campaigns, products, donations, communities | normalized tenant tables |
 | `getCommunityAdminData()` | Community owner | Own community and attributed campaigns/donations | normalized tenant tables |
 | `getMyDonations(userId)` | Yes | donation rows | `donations`, `campaigns`, `organizations` |
@@ -140,6 +142,7 @@ Public reads include `goals` and `activity_area` but continue to exclude bank-ac
 | `status` | enum | `draft\|active\|paused\|completed\|archived\|blocked` |
 | `raised` | numeric | Auto-incremented by trigger on donation insert |
 | `donors_count` | integer | Auto-incremented by trigger |
+| `goal_type` | `deadline\|monthly\|annual` | `deadline` counts from campaign creation through the required `end_date`; monthly and annual targets show only completed donations in the current Israel-time calendar month or year, preserving the full donation ledger and historical `raised` total. |
 | `hero_image_url` | text | Nullable public URL for the uploaded campaign header image |
 | `video_url` | text | Nullable HTTPS YouTube, Vimeo, or direct-video URL; displayed ahead of the header image |
 
@@ -147,7 +150,7 @@ Public reads include `goals` and `activity_area` but continue to exclude bank-ac
 | Column | Type | Notes |
 |---|---|---|
 | `image_url` | text | Nullable public image path or URL; public product cards and donation modal show it when present |
-| `video_url` | text | Nullable video URL; the donation modal exposes it as an external, user-initiated link |
+| `video_url` | text | Nullable video URL; product cards and donation modal play supported video inside Impactify when marketing cookies are approved |
 
 ### `product_home_audiences`
 | Column | Type | Notes |

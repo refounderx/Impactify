@@ -1,20 +1,33 @@
-import type { Organization, Product, CampaignWithOrg } from "@/lib/supabase/types";
+import type { CampaignGoalType, Organization, Product, CampaignWithOrg } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/client";
 
 type PublicOrganization = Omit<Organization, "bank_name" | "bank_branch" | "bank_account">;
 
-export function toUICampaign(row: CampaignWithOrg) {
+export type CampaignProgress = {
+  goal_type: CampaignGoalType;
+  period_start: string;
+  period_end: string | null;
+  raised: number;
+  donors_count: number;
+};
+
+export function toUICampaign(row: CampaignWithOrg, progress?: CampaignProgress) {
+  const goalType = progress?.goal_type ?? row.goal_type ?? "deadline";
+  const periodEnd = progress?.period_end ?? row.end_date;
   return {
     id: row.id,
     title: row.title,
     titleEn: row.title_en ?? undefined,
     orgId: row.org_id,
     category: row.category,
-    raised: Number(row.raised),
+    raised: Number(progress?.raised ?? row.raised),
     goal: Number(row.goal),
-    donors: row.donors_count,
-    daysLeft: row.end_date
-      ? Math.max(0, Math.ceil((new Date(row.end_date).getTime() - Date.now()) / 86400000))
+    donors: Number(progress?.donors_count ?? row.donors_count),
+    goalType,
+    periodStart: progress?.period_start ?? row.created_at.slice(0, 10),
+    periodEnd,
+    daysLeft: goalType === "deadline" && periodEnd
+      ? Math.max(0, Math.ceil((new Date(periodEnd).getTime() - Date.now()) / 86400000))
       : 0,
     gradient: row.gradient,
     emoji: row.emoji,

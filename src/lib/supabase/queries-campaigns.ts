@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { toUICampaign, toUIProduct, attachProductIds } from "@/lib/supabase/query-helpers";
+import { toUICampaign, toUIProduct, attachProductIds, type CampaignProgress } from "@/lib/supabase/query-helpers";
 import type { CampaignWithOrg } from "@/lib/supabase/types";
 
 export type DiscoverableProduct = {
@@ -29,6 +29,13 @@ const DEMO_CAMPAIGN_IDS = new Set([
 
 const withoutDemoCampaigns = <T extends { id: string }>(rows: T[] | null) => (rows ?? []).filter((row) => !DEMO_CAMPAIGN_IDS.has(row.id));
 
+async function getCampaignProgressMap(sb: ReturnType<typeof createClient>, campaignIds: string[]) {
+  if (!campaignIds.length) return new Map<string, CampaignProgress>();
+  const { data, error } = await sb.rpc("get_campaign_progress", { p_campaign_ids: campaignIds });
+  if (error) throw error;
+  return new Map((data ?? []).map((progress) => [progress.campaign_id, progress]));
+}
+
 export async function getCampaigns(category?: string) {
   try {
     const sb = createClient();
@@ -44,9 +51,9 @@ export async function getCampaigns(category?: string) {
     if (error) throw error;
 
     const campaigns = withoutDemoCampaigns(data);
-    const productMap = await attachProductIds(sb, campaigns.map((c) => c.id));
+    const [productMap, progressMap] = await Promise.all([attachProductIds(sb, campaigns.map((c) => c.id)), getCampaignProgressMap(sb, campaigns.map((c) => c.id))]);
     return campaigns.map((row) => {
-      const c = toUICampaign(row as CampaignWithOrg);
+      const c = toUICampaign(row as CampaignWithOrg, progressMap.get(row.id));
       c.productIds = productMap[row.id] ?? [];
       return c;
     });
@@ -68,8 +75,8 @@ export async function getCampaignById(id: string) {
 
     if (error || !data) return null;
 
-    const productMap = await attachProductIds(sb, [id]);
-    const c = toUICampaign(data as CampaignWithOrg);
+    const [productMap, progressMap] = await Promise.all([attachProductIds(sb, [id]), getCampaignProgressMap(sb, [id])]);
+    const c = toUICampaign(data as CampaignWithOrg, progressMap.get(id));
     c.productIds = productMap[id] ?? [];
     return c;
   } catch (error) {
@@ -95,9 +102,9 @@ export async function searchCampaigns(query: string, category?: string) {
     if (error) throw error;
 
     const campaigns = withoutDemoCampaigns(data);
-    const productMap = await attachProductIds(sb, campaigns.map((c) => c.id));
+    const [productMap, progressMap] = await Promise.all([attachProductIds(sb, campaigns.map((c) => c.id)), getCampaignProgressMap(sb, campaigns.map((c) => c.id))]);
     return campaigns.map((row) => {
-      const c = toUICampaign(row as CampaignWithOrg);
+      const c = toUICampaign(row as CampaignWithOrg, progressMap.get(row.id));
       c.productIds = productMap[row.id] ?? [];
       return c;
     });
@@ -131,9 +138,9 @@ export async function getCampaignsByOrg(orgId: string) {
     if (error) throw error;
     if (!data) return [];
 
-    const productMap = await attachProductIds(sb, data.map((campaign) => campaign.id));
+    const [productMap, progressMap] = await Promise.all([attachProductIds(sb, data.map((campaign) => campaign.id)), getCampaignProgressMap(sb, data.map((campaign) => campaign.id))]);
     return data.map((row) => {
-      const campaign = toUICampaign(row as CampaignWithOrg);
+      const campaign = toUICampaign(row as CampaignWithOrg, progressMap.get(row.id));
       campaign.productIds = productMap[row.id] ?? [];
       return campaign;
     });

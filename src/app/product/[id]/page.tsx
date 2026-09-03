@@ -9,6 +9,7 @@ import LiveProductDonationModal from "@/components/landing/LiveProductDonationMo
 import { useLang } from "@/contexts/LanguageContext";
 import { formatNIS, percent } from "@/lib/mock-data";
 import { getCampaignById, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
+import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-target";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -60,7 +61,8 @@ export default function ProductDetailPage() {
         <h2 className="mt-2 text-3xl font-extrabold text-raz-dark">{campaignTitle}</h2>
         <div className="mt-6 flex items-center justify-between font-bold"><span>{formatNIS(campaign.raised)} {lang === "en" ? "raised" : "גויסו"}</span><span className="text-raz-teal">{progress}%</span></div>
         <div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-raz-teal" style={{ width: `${progress}%` }} /></div>
-        <p className="mt-2 text-sm text-slate-500">{lang === "en" ? `Goal: ${formatNIS(campaign.goal)} · ${campaign.donors.toLocaleString()} donors` : `יעד: ${formatNIS(campaign.goal)} · ${campaign.donors.toLocaleString()} תורמים`}</p>
+        <p className="mt-2 text-sm text-slate-500">{campaignTargetLabel(campaign, lang)} · {lang === "en" ? `Goal: ${formatNIS(campaign.goal)} · ${campaign.donors.toLocaleString()} donors` : `יעד: ${formatNIS(campaign.goal)} · ${campaign.donors.toLocaleString()} תורמים`}</p>
+        <p className="mt-1 text-xs text-slate-400">{campaignTimeRemaining(campaign, lang)}</p>
       </section>
 
       <section className="mt-8 rounded-3xl bg-white p-7 shadow-sm md:p-10">

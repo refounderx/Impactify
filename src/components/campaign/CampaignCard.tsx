@@ -5,6 +5,7 @@ import { formatNIS } from "@/lib/mock-data";
 import { useLang } from "@/contexts/LanguageContext";
 import type { getCampaigns } from "@/lib/supabase/queries";
 import EditableText from "@/components/admin/EditableText";
+import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-target";
 
 type Campaign = Awaited<ReturnType<typeof getCampaigns>>[number];
 
@@ -38,11 +39,8 @@ export default function CampaignCard({ campaign }: { campaign: Campaign }) {
           <span className="text-gray-500">{campaign.donors} <EditableText tKey="donors" /></span>
           <span className="font-bold text-raz-teal">{formatNIS(campaign.raised)}</span>
         </div>
-        {campaign.daysLeft > 0 ? (
-          <span className="mt-3 block text-xs font-medium text-gray-400">{campaign.daysLeft} <EditableText tKey="daysLeft" /></span>
-        ) : (
-          <span className="mt-3 block text-xs font-bold text-raz-success"><EditableText tKey="goalReached" /></span>
-        )}
+        <span className="mt-3 block text-xs font-bold text-raz-teal">{campaignTargetLabel(campaign, lang)}</span>
+        <span className="mt-1 block text-xs font-medium text-gray-400">{campaignTimeRemaining(campaign, lang)}</span>
       </div>
     </Link>
   );

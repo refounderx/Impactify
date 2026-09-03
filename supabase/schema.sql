@@ -83,6 +83,7 @@ create table public.campaigns (
   raised        numeric(12,2) not null default 0 check (raised >= 0),
   donors_count  integer not null default 0 check (donors_count >= 0),
   end_date      date,
+  goal_type     text not null default 'deadline' check (goal_type in ('deadline', 'monthly', 'annual')),
   status        campaign_status not null default 'active',
   gradient      text not null default 'from-teal-400 to-blue-400',
   emoji         text not null default '💙',
@@ -242,6 +243,7 @@ create index idx_campaigns_status   on public.campaigns(status);
 create index idx_campaigns_category on public.campaigns(category);
 create index idx_donations_donor    on public.donations(donor_id);
 create index idx_donations_campaign on public.donations(campaign_id);
+create index idx_donations_campaign_completed_created on public.donations(campaign_id, created_at) where status = 'completed';
 create index idx_donations_org      on public.donations(org_id);
 create index idx_recurring_donor    on public.recurring_donations(donor_id);
 create index idx_profiles_org       on public.profiles(org_id);
