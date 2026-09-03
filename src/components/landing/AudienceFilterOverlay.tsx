@@ -51,6 +51,7 @@ export default function AudienceFilterOverlay({
                 emoji={p.emoji}
                 imageUrl={p.imageUrl}
                 videoUrl={p.videoUrl}
+                donationCount={p.donationCount}
                 onChoose={() => setSelectedProduct(p)}
               />
             ))}

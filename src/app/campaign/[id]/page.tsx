@@ -175,6 +175,7 @@ export default function CampaignDetail() {
                 emoji={p.emoji}
                 imageUrl={p.imageUrl}
                 videoUrl={p.videoUrl}
+                donationCount={p.donationCount}
                 title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}
                 onChoose={() => setSelectedProduct(p)}

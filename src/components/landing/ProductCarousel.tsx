@@ -70,6 +70,7 @@ export default function ProductCarousel() {
                     emoji={p.emoji}
                     imageUrl={p.imageUrl}
                     videoUrl={p.videoUrl}
+                    donationCount={p.donationCount}
                     onChoose={() => setSelectedProduct(p)}
                   />
                 </div>
@@ -96,6 +97,7 @@ export default function ProductCarousel() {
                 emoji={p.emoji}
                 imageUrl={p.imageUrl}
                 videoUrl={p.videoUrl}
+                donationCount={p.donationCount}
                 onChoose={() => setSelectedProduct(p)}
               />
             ))}

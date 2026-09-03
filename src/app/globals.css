@@ -8,7 +8,7 @@
   --color-raz-success: #27AE60;
   --color-raz-danger: #E74C3C;
 
-  --font-hebrew: var(--font-heebo), "Heebo", Arial, sans-serif;
+  --font-hebrew: var(--font-assistant), "Assistant", Arial, sans-serif;
   --font-caption: var(--font-assistant), "Assistant", Arial, sans-serif;
   --font-numeric: var(--font-roboto), "Roboto", Arial, sans-serif;
 }
@@ -19,13 +19,15 @@
 }
 
 body {
-  font-family: var(--font-heebo), "Heebo", Arial, sans-serif;
+  font-family: var(--font-assistant), "Assistant", Arial, sans-serif;
   background-color: #1A1A2E;
   color: #333333;
   direction: rtl;
   max-width: 100%;
   overflow-x: clip;
 }
+
+h1 { font-weight: 800; }
 
 /* Keep desktop composition within the shared frame without constraining phones. */
 .site-frame {
@@ -76,7 +78,7 @@ html[dir="ltr"] textarea {
 .text-raz-teal\/80   { color: rgba(0,181,173,0.80); }
 
 /* ── Font utilities ── */
-.font-hebrew  { font-family: var(--font-heebo), "Heebo", Arial, sans-serif; }
+.font-hebrew  { font-family: var(--font-assistant), "Assistant", Arial, sans-serif; }
 .font-caption { font-family: var(--font-assistant), "Assistant", Arial, sans-serif; }
 .font-numeric { font-family: var(--font-roboto), "Roboto", Arial, sans-serif; }
 
