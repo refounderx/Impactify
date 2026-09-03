@@ -17,7 +17,7 @@ export default function CommunityCampaignsGridPage() {
   const router = useRouter();
   const { lang, t } = useLang();
   const { data, loading, error, reload } = useCommunityAdminView();
-  const [source, setSource] = useState<CommunityCampaignSource>("linked");
+  const [source, setSource] = useState<CommunityCampaignSource>("created");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
 

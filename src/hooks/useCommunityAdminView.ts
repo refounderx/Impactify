@@ -14,13 +14,31 @@ export function useCommunityAdminView() {
       const campaignOrganization = organizations.find((item) => item.id === campaign.org_id);
       const orgName = campaignOrganization?.name ?? "";
       const orgNameEn = campaignOrganization?.name_en ?? orgName;
+      const campaignDonations = donations.filter((item) => item.campaign_id === campaign.id);
+      const products = Array.from(campaignDonations.reduce((totals, donation) => {
+        if (!donation.product_id) return totals;
+        const existing = totals.get(donation.product_id) ?? {
+          id: donation.product_id,
+          name: donation.products?.name ?? "—",
+          nameEn: donation.products?.name_en ?? donation.products?.name ?? "—",
+          quantity: 0,
+          amount: 0,
+        };
+        existing.quantity += donation.quantity;
+        existing.amount += Number(donation.amount);
+        totals.set(donation.product_id, existing);
+        return totals;
+      }, new Map<string, { id: string; name: string; nameEn: string; quantity: number; amount: number }>()).values());
       return {
         id: campaign.id, name: campaign.title, nameEn: campaign.title_en ?? campaign.title,
-        created: date(campaign.created_at), ended: date(campaign.end_date), productsCount: 0,
-        productsRaisedCount: donations.filter((item) => item.campaign_id === campaign.id).reduce((sum, item) => sum + item.quantity, 0),
-        amountRaised: donations.filter((item) => item.campaign_id === campaign.id).reduce((sum, item) => sum + Number(item.amount), 0),
-        joinedCount: 1, donorCount: donations.filter((item) => item.campaign_id === campaign.id).length,
-        orgName, orgNameEn, source: campaign.membershipSource, paused: campaign.membershipStatus === "paused",
+        created: date(campaign.created_at), ended: date(campaign.end_date), productsCount: products.length,
+        productsRaisedCount: campaignDonations.reduce((sum, item) => sum + item.quantity, 0),
+        amountRaised: campaignDonations.reduce((sum, item) => sum + Number(item.amount), 0),
+        joinedCount: 1, donorCount: campaignDonations.length,
+        orgName, orgNameEn, orgId: campaign.org_id, campaignRaised: Number(campaign.raised), campaignGoal: Number(campaign.goal),
+        campaignDonorCount: campaign.donors_count, goalType: campaign.goal_type,
+        description: campaign.short_desc ?? campaign.story ?? "", descriptionEn: campaign.short_desc_en ?? campaign.story_en ?? campaign.short_desc ?? campaign.story ?? "",
+        products, source: campaign.membershipSource, paused: campaign.membershipStatus === "paused",
       };
     });
     return {

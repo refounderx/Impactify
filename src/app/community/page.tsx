@@ -14,7 +14,7 @@ import { setCommunityCampaign } from "@/lib/supabase/queries-community-admin";
 export default function CommunityCampaignsDashboardPage() {
   const { lang, t } = useLang();
   const { data, loading, error, reload } = useCommunityAdminView();
-  const [source, setSource] = useState<CommunityCampaignSource>("linked");
+  const [source, setSource] = useState<CommunityCampaignSource>("created");
   const [actionError, setActionError] = useState("");
   const rows = (data?.communityCampaignRows ?? []).filter((r) => r.source === source);
 
@@ -36,8 +36,8 @@ export default function CommunityCampaignsDashboardPage() {
           <SearchFilterBar filterLabel={lang === "en" ? "Filter by activity area" : "אזור פעילות העמותה"} />
           <StatHeader
             stats={[
-              { label: t("adm.activeCampaigns"), value: String(data?.communityCampaignsActiveCount ?? 0) },
-              { label: `${t("adm.totalRaisedToDate")} ${data?.AS_OF ?? ""})`, value: formatNIS(data?.communityCampaignsTotalRaised ?? 0) },
+              { label: t("adm.activeCampaigns"), value: String(rows.filter((row) => !row.paused).length) },
+              { label: `${t("adm.totalRaisedToDate")} ${data?.AS_OF ?? ""})`, value: formatNIS(rows.reduce((total, row) => total + row.amountRaised, 0)) },
             ]}
           />
         </div>

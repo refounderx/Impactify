@@ -15,6 +15,14 @@ export type CommunityCampaignRow = {
   donorCount: number;
   orgName: string;
   orgNameEn: string;
+  orgId: string;
+  campaignRaised: number;
+  campaignGoal: number;
+  campaignDonorCount: number;
+  goalType: "deadline" | "monthly" | "annual";
+  description: string;
+  descriptionEn: string;
+  products: { id: string; name: string; nameEn: string; quantity: number; amount: number }[];
   source: CommunityCampaignSource;
   paused?: boolean;
 };
@@ -32,6 +40,14 @@ export const communityCampaignRows: CommunityCampaignRow[] = Array.from({ length
   donorCount: 87,
   orgName: "עושים חייל",
   orgNameEn: "Osim Hayil",
+  orgId: "org-1",
+  campaignRaised: 12500,
+  campaignGoal: 25000,
+  campaignDonorCount: 87,
+  goalType: "deadline",
+  description: "קמפיין לדוגמה",
+  descriptionEn: "Example campaign",
+  products: [],
   source: i < 4 ? "created" : "linked",
   paused: i === 5,
 }));

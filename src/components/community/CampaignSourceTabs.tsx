@@ -10,17 +10,17 @@ export default function CampaignSourceTabs({
   onChange: (source: CommunityCampaignSource) => void;
 }) {
   return (
-    <div className="flex items-center justify-end gap-4 mb-5">
+    <div className="mb-5 flex w-full flex-wrap items-center justify-end gap-2 rounded-2xl bg-white p-2 shadow-sm sm:w-fit">
       <button
         onClick={() => onChange("linked")}
-        className={`text-sm transition-colors ${active === "linked" ? "text-gray-800 font-bold" : "text-gray-400 hover:text-gray-600"}`}
+        className={`min-h-11 rounded-xl px-4 text-sm font-bold transition-colors sm:px-5 sm:text-base ${active === "linked" ? "bg-raz-teal text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
       >
         <EditableText tKey="cm.campaignsLinked" />
       </button>
       <button
         onClick={() => onChange("created")}
-        className={`px-4 py-2 rounded-full text-sm font-bold border transition-colors ${
-          active === "created" ? "border-raz-teal text-raz-teal" : "border-transparent text-gray-400 hover:text-gray-600"
+        className={`min-h-11 rounded-xl px-4 text-sm font-bold transition-colors sm:px-5 sm:text-base ${
+          active === "created" ? "bg-raz-teal text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
         }`}
       >
         <EditableText tKey="cm.campaignsCreated" />
