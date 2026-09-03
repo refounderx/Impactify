@@ -149,7 +149,7 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
         </div>
       </aside>
 
-      <div className="flex-1 min-h-0 overflow-y-auto bg-raz-surface">
+      <div className="flex min-h-0 flex-1 flex-col bg-raz-surface">
         <div className="border-b border-gray-100 bg-white px-5 py-3 md:hidden">
           <Link href={routes.campaignsDashboard} className="flex w-fit items-center gap-2" aria-label="Impactify">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-raz-teal text-white"><Heart size={18} fill="currentColor" /></span>
@@ -175,7 +175,9 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
           </div>
         </div>
 
-        <div className="px-4 py-5 pb-6 sm:px-6 sm:py-6 md:px-6">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="px-4 py-5 pb-24 sm:px-6 sm:py-6 md:px-6 md:pb-6">{children}</div>
+        </div>
         <BottomNav variant={variant} onSignOut={signOut} />
       </div>
     </div>
