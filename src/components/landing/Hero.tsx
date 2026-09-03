@@ -63,18 +63,18 @@ export default function Hero() {
           )}
         </div>
 
+        <div className={`order-2 mt-2 md:order-3 md:col-span-2 md:mt-14 ${selectedKind ? "z-50" : ""}`}>
+          <AudienceIconRow selected={selectedKind} onSelect={setSelectedKind} />
+        </div>
+
         {/* Image+bubble cards — captions use their own reserved space below each image. */}
-        <div className="order-2 grid grid-cols-[0.95fr_1.05fr] gap-5 md:order-1" dir="ltr">
+        <div className="order-3 grid grid-cols-[0.95fr_1.05fr] gap-5 md:order-1" dir="ltr">
           <div className="flex flex-col gap-5">
             {elderlyCard && <HeroImageCard card={elderlyCard} lang={lang} className="h-[9.5rem]" />}
             {childCard && <HeroImageCard card={childCard} lang={lang} className="h-[9.5rem]" />}
           </div>
           {soldierCard && <HeroImageCard card={soldierCard} lang={lang} className="h-80" />}
         </div>
-      </div>
-
-      <div className={`relative mt-14 ${selectedKind ? "z-50" : ""}`}>
-        <AudienceIconRow selected={selectedKind} onSelect={setSelectedKind} />
       </div>
 
       {selectedKind && (
