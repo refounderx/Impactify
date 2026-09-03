@@ -31,13 +31,13 @@ export default function LandingFooter() {
           <Link href="/privacy" className="interactive-control"><EditableText tKey="landing.footer.privacy" /></Link>
           <button type="button" onClick={openPreferences} className="interactive-control text-start">{lang === "en" ? "Cookie settings" : "הגדרות עוגיות"}</button>
           <Link href="/accessibility" className="interactive-control"><EditableText tKey="landing.footer.accessibility" /></Link>
+          <Link href="/cancellations" className="interactive-control"><EditableText tKey="landing.footer.cancellations" /></Link>
         </div>
 
         <div className="flex flex-col gap-2 text-gray-300">
           <Link href="/about" className="interactive-control"><EditableText tKey="landing.footer.about" /></Link>
           <Link href="/nonprofit" className="interactive-control"><EditableText tKey="landing.footer.haveOrg" /></Link>
           <a href="/recurring" className="interactive-control"><EditableText tKey="landing.footer.recurring" /></a>
-          <Link href="/cancellations" className="interactive-control"><EditableText tKey="landing.footer.cancellations" /></Link>
         </div>
       </div>
     </footer>
