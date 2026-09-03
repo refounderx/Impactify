@@ -57,6 +57,7 @@ html { font-size: 16px; }
 
 @media (max-width: 639px) {
   .site-frame { width: 100%; }
+  #main-content { padding-bottom: 4rem; }
 }
 
 /* LTR override: when html[dir=ltr], inputs should align start (left) not force-right */

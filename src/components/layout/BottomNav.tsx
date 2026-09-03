@@ -28,6 +28,8 @@ const communityTabs = [
 
 export default function BottomNav({ variant = "donor", onSignOut }: { variant?: NavVariant; onSignOut?: () => void }) {
   const pathname = usePathname();
+  const isPublicPage = !pathname.startsWith("/nonprofit") && !pathname.startsWith("/community") && !pathname.startsWith("/admin");
+  if (isPublicPage) return null;
   const tabs =
     variant === "nonprofit" ? nonprofitTabs : variant === "community" ? communityTabs : donorTabs;
 
