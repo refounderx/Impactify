@@ -32,7 +32,12 @@ const withoutDemoCampaigns = <T extends { id: string }>(rows: T[] | null) => (ro
 async function getCampaignProgressMap(sb: ReturnType<typeof createClient>, campaignIds: string[]) {
   if (!campaignIds.length) return new Map<string, CampaignProgress>();
   const { data, error } = await sb.rpc("get_campaign_progress", { p_campaign_ids: campaignIds });
-  if (error) throw error;
+  // The public product/campaign pages remain available while a newly deployed
+  // database migration is pending; legacy campaign totals are the safe fallback.
+  if (error) {
+    console.warn("Unable to load period-aware campaign progress", error.message);
+    return new Map<string, CampaignProgress>();
+  }
   return new Map((data ?? []).map((progress) => [progress.campaign_id, progress]));
 }
 
