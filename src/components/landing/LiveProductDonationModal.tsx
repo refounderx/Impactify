@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { Play, X } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
+import { useCookieConsent } from "@/contexts/CookieConsentContext";
+import { getCampaignVideoSource } from "@/lib/campaign-media";
 import { formatNIS } from "@/lib/mock-data";
 import type { DiscoverableProduct } from "@/lib/supabase/queries";
 
@@ -20,18 +22,20 @@ export default function LiveProductDonationModal({
   onClose: () => void;
 }) {
   const { lang, t } = useLang();
+  const { preferences, openPreferences } = useCookieConsent();
   const title = lang === "en" ? (product.nameEn ?? product.name) : product.name;
   const description = lang === "en" ? (product.descriptionEn ?? product.description) : product.description;
+  const video = getCampaignVideoSource(product.videoUrl);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-raz-dark/85 p-4 backdrop-blur-[2px]" onClick={onClose}>
       <section className="my-auto w-full max-w-[34rem] overflow-hidden rounded-[2rem] bg-white shadow-[0_28px_80px_rgba(10,15,35,0.45)]" dir={lang === "en" ? "ltr" : "rtl"} onClick={(event) => event.stopPropagation()}>
         <div className="relative px-6 pb-5 pt-6 sm:px-9">
           <button type="button" onClick={onClose} className="absolute start-3 top-3 z-10 rounded-full p-2 text-slate-300 transition hover:bg-slate-100 hover:text-slate-700" aria-label={t("hint.close")}><X size={25} /></button>
-          {product.videoUrl && <a href={product.videoUrl} target="_blank" rel="noreferrer" className="relative mt-5 flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl bg-black text-white shadow-inner" aria-label={lang === "en" ? "Watch impact video" : "צפייה בסרטון ההשפעה"}>
-            <span className="flex h-20 w-20 items-center justify-center rounded-full border-[3px] border-white/75 bg-white/10 ps-1 transition hover:scale-105 hover:bg-white/20"><Play size={38} fill="currentColor" /></span>
-          </a>}
-          <div className={`flex items-center gap-5 ${product.videoUrl ? "mt-6" : "mt-8"}`}>
+          {video?.kind === "embed" && preferences.marketing && <iframe src={video.url} title={title} className="relative mt-5 aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-inner" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />}
+          {video?.kind === "embed" && !preferences.marketing && <div className="relative mt-5 flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-2xl bg-raz-dark px-6 text-center text-white shadow-inner"><Play size={38} /><p className="text-sm font-bold">{lang === "en" ? "Approve marketing cookies to play this video here." : "יש לאשר עוגיות שיווק כדי לנגן את הסרטון כאן."}</p><button type="button" onClick={openPreferences} className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-raz-teal">{lang === "en" ? "Cookie settings" : "ניהול הגדרות עוגיות"}</button></div>}
+          {video?.kind === "video" && <video src={video.url} controls playsInline className="relative mt-5 aspect-video w-full rounded-2xl bg-black shadow-inner" />}
+          <div className={`flex items-center gap-5 ${video ? "mt-6" : "mt-8"}`}>
             {product.imageUrl && <div className="relative h-28 w-32 shrink-0 overflow-hidden rounded-2xl bg-slate-50"><Image src={product.imageUrl} alt="" fill className="object-contain" sizes="128px" /></div>}
             <div className="min-w-0 flex-1">
               <h2 className="text-xl font-black leading-tight text-raz-dark sm:text-2xl">{title}</h2>
