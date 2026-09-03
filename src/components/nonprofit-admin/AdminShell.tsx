@@ -150,7 +150,13 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
       </aside>
 
       <div className="flex-1 min-h-0 overflow-y-auto bg-raz-surface">
-        <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between">
+        <div className="border-b border-gray-100 bg-white px-5 py-3 md:hidden">
+          <Link href={routes.campaignsDashboard} className="flex w-fit items-center gap-2" aria-label="Impactify">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-raz-teal text-white"><Heart size={18} fill="currentColor" /></span>
+            <span className="text-xl font-extrabold tracking-tight text-raz-teal">Impactify</span>
+          </Link>
+        </div>
+        <div className="hidden items-center justify-between border-b border-gray-100 bg-white px-6 py-3 md:flex">
           <div className="flex items-center gap-2">
             <button onClick={signOut} className="bg-raz-dark text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5 hover:bg-gray-800 transition-colors">
               <LogOut size={13} />
@@ -169,8 +175,8 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
           </div>
         </div>
 
-        <div className="px-6 py-6">{children}</div>
-        <BottomNav variant={variant} />
+        <div className="px-4 py-5 pb-6 sm:px-6 sm:py-6 md:px-6">{children}</div>
+        <BottomNav variant={variant} onSignOut={signOut} />
       </div>
     </div>
   );

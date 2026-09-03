@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Activity, User, LayoutDashboard, FileText, Users } from "lucide-react";
+import { Home, Search, Activity, User, LayoutDashboard, FileText, Users, LogOut } from "lucide-react";
 
 type NavVariant = "donor" | "nonprofit" | "community";
 
@@ -26,13 +26,13 @@ const communityTabs = [
   { label: "פרופיל", href: "/community/profile", Icon: User },
 ];
 
-export default function BottomNav({ variant = "donor" }: { variant?: NavVariant }) {
+export default function BottomNav({ variant = "donor", onSignOut }: { variant?: NavVariant; onSignOut?: () => void }) {
   const pathname = usePathname();
   const tabs =
     variant === "nonprofit" ? nonprofitTabs : variant === "community" ? communityTabs : donorTabs;
 
   return (
-    <nav className="sticky bottom-0 bg-white border-t border-gray-200 flex z-40 mt-auto md:hidden">
+    <nav className="sticky bottom-0 z-40 mt-auto flex border-t border-gray-200 bg-white shadow-[0_-8px_20px_rgba(15,23,42,0.06)] md:hidden">
       {tabs.map(({ label, href, Icon }) => {
         const isDashboardRoot = href === "/nonprofit" || href === "/community";
         const isActive = pathname === href || (!isDashboardRoot && href !== "/" && pathname.startsWith(href));
@@ -49,6 +49,12 @@ export default function BottomNav({ variant = "donor" }: { variant?: NavVariant 
           </Link>
         );
       })}
+      {onSignOut && (
+        <button type="button" onClick={onSignOut} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs text-gray-400 transition-colors hover:text-raz-teal" aria-label="התנתקות">
+          <LogOut size={22} />
+          <span>התנתקות</span>
+        </button>
+      )}
     </nav>
   );
 }
