@@ -117,7 +117,7 @@ export default function AccessibilityMenu() {
     }`;
 
   return (
-    <div className="fixed bottom-5 left-5 z-[80]" dir={isHebrew ? "rtl" : "ltr"}>
+    <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-5 z-[80] md:bottom-5" dir={isHebrew ? "rtl" : "ltr"}>
       {open && (
         <div
           ref={panelRef}
