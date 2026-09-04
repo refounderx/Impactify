@@ -52,7 +52,7 @@ export default function Hero() {
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-14">
-      <div className="grid items-center gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-16" dir="ltr">
+      <div className="grid min-w-0 items-center gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-16" dir="ltr">
         <div className="order-1 text-right md:order-2" dir={lang === "he" ? "rtl" : "ltr"}>
           <EditableText tKey="landing.hero.title" as="h1" className="mb-6 block text-4xl font-bold leading-tight text-gray-900 sm:text-5xl xl:text-6xl" />
           <EditableText tKey="landing.hero.body" as="p" className="mb-7 block text-lg leading-relaxed text-gray-500 xl:text-xl" />
@@ -63,7 +63,7 @@ export default function Hero() {
           )}
         </div>
 
-        <div className={`order-2 mt-2 md:order-3 md:col-span-2 md:mt-14 ${selectedKind ? "z-50" : ""}`}>
+        <div className={`order-2 mt-2 min-w-0 md:order-3 md:col-span-2 md:mt-14 ${selectedKind ? "z-50" : ""}`}>
           <AudienceIconRow selected={selectedKind} onSelect={setSelectedKind} />
         </div>
 
