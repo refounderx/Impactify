@@ -42,6 +42,7 @@ New schema/seed changes should be added as a new timestamped file under `supabas
 - For product-media content, apply `supabase/migrations/20260903110000_product_images.sql` and `supabase/migrations/20260903111500_product_discovery_media.sql`; then run `supabase/scripts/create-impact-products.sql` to create the three demonstration organizations, products, campaigns, and product links.
 - Before deploying the NGO/community sign-up color picker, apply `supabase/migrations/20260904100000_add_tenant_brand_colors.sql`.
 - Before deploying public organization-profile activity tabs, apply `supabase/migrations/20260904110000_public_organization_activity.sql`.
+- Apply `supabase/migrations/20260904120000_fix_partnership_requests_org_id_ambiguity.sql` to restore the community and NGO partnership inboxes.
 
 See `AGENTS.md` for the required agent workflow and security constraints.
 
