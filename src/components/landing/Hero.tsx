@@ -68,7 +68,7 @@ export default function Hero() {
         </div>
 
         {/* Image+bubble cards — captions use their own reserved space below each image. */}
-        <div className="order-3 grid grid-cols-[0.95fr_1.05fr] gap-5 md:order-1" dir="ltr">
+        <div className={`order-3 grid grid-cols-[0.95fr_1.05fr] gap-5 transition-all duration-300 md:order-1 ${selectedKind ? "hidden" : ""}`} dir="ltr">
           <div className="flex flex-col gap-5">
             {elderlyCard && <HeroImageCard card={elderlyCard} lang={lang} className="h-[9.5rem]" />}
             {childCard && <HeroImageCard card={childCard} lang={lang} className="h-[9.5rem]" />}

@@ -1,5 +1,5 @@
 "use client";
-import { type TransitionEvent, useEffect, useState } from "react";
+import { type TransitionEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
@@ -16,6 +16,7 @@ export default function ProductCarousel() {
   const [desktopStart, setDesktopStart] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(1);
   const [skipMobileTransition, setSkipMobileTransition] = useState(false);
+  const mobileDragStart = useRef<number | null>(null);
   useEffect(() => { void getDiscoverableProducts().then(setLandingProducts); }, []);
   const maxDesktopStart = Math.max(0, landingProducts.length - 4);
   const desktopVisible = landingProducts.slice(desktopStart, desktopStart + 4);
@@ -60,7 +61,7 @@ export default function ProductCarousel() {
             <ChevronRight size={28} />
           </button>
 
-          <div className="min-w-0 flex-1 overflow-hidden">
+          <div className="min-w-0 flex-1 overflow-hidden touch-pan-y" onPointerDown={(event) => { mobileDragStart.current = event.clientX; }} onPointerUp={(event) => { if (mobileDragStart.current === null) return; const delta = event.clientX - mobileDragStart.current; mobileDragStart.current = null; if (Math.abs(delta) > 42) { if (delta < 0) nextMobile(); else previousMobile(); } }}>
             <div className={`flex ${skipMobileTransition ? "" : "transition-transform duration-300 ease-out"}`} style={{ transform: `translateX(${mobileOffset * 100}%)` }} onTransitionEnd={handleMobileTransitionEnd}>
               {mobileSlides.map((p, index) => (
                 <div className="w-full flex-none" key={`${p.productId}-${p.campaignId}-${index}`}>
