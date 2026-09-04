@@ -61,8 +61,8 @@ html { font-size: 16px; }
 }
 
 /* The landing footer lives inside the shared content frame. Extend only its
-   paint area on desktop, leaving its layout width unchanged. */
-@media (min-width: 1024px) and (hover: hover) {
+   paint area on mouse-driven desktop displays, leaving mobile untouched. */
+@media (min-width: 1024px) and (pointer: fine) and (hover: hover) {
   .landing-footer {
     box-shadow: 0 0 0 100vmax #1A1A2E;
     clip-path: inset(0 -100vmax);
