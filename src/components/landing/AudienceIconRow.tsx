@@ -22,8 +22,10 @@ export default function AudienceIconRow({
   function centerCard(card: HTMLButtonElement, behavior: ScrollBehavior = "smooth") {
     const container = carouselRef.current;
     if (!container) return;
-    const target = card.offsetLeft - (container.clientWidth - card.offsetWidth) / 2;
-    container.scrollTo({ left: target, behavior });
+    const containerBounds = container.getBoundingClientRect();
+    const cardBounds = card.getBoundingClientRect();
+    const distanceFromCenter = cardBounds.left + cardBounds.width / 2 - (containerBounds.left + containerBounds.width / 2);
+    container.scrollBy({ left: distanceFromCenter, behavior });
   }
 
   function scrollToCard(direction: -1 | 1) {
@@ -31,8 +33,13 @@ export default function AudienceIconRow({
     if (!cards.length) return;
     const container = carouselRef.current;
     if (!container) return;
-    const center = container.scrollLeft + container.clientWidth / 2;
-    const current = cards.reduce((best, card, index) => Math.abs(card.offsetLeft + card.clientWidth / 2 - center) < Math.abs(cards[best].offsetLeft + cards[best].clientWidth / 2 - center) ? index : best, 0);
+    const containerBounds = container.getBoundingClientRect();
+    const center = containerBounds.left + containerBounds.width / 2;
+    const current = cards.reduce((best, card, index) => {
+      const cardCenter = card.getBoundingClientRect().left + card.clientWidth / 2;
+      const bestCenter = cards[best].getBoundingClientRect().left + cards[best].clientWidth / 2;
+      return Math.abs(cardCenter - center) < Math.abs(bestCenter - center) ? index : best;
+    }, 0);
     const target = cards[Math.max(0, Math.min(cards.length - 1, current + direction))];
     if (target) centerCard(target);
   }
