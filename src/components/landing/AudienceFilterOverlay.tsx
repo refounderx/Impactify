@@ -36,7 +36,7 @@ export default function AudienceFilterOverlay({
         onClick={onClose}
         aria-label={t("landing.filter.close")}
       />
-      <div className={`relative z-50 mx-auto mt-8 w-full rounded-2xl bg-white p-8 shadow-2xl ${overlayWidth}`}>
+      <div className={`relative left-1/2 z-50 mt-8 w-[calc(100%-2rem)] -translate-x-1/2 rounded-2xl bg-white p-8 shadow-2xl ${overlayWidth}`}>
         <div className="mb-5 flex justify-end">
           <button onClick={onClose} className="interactive-control flex items-center gap-1 text-sm text-gray-600" aria-label={t("landing.filter.close")}>
             <X size={20} /> <EditableText tKey="landing.filter.close" />
