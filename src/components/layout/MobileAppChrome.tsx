@@ -22,7 +22,6 @@ export default function MobileAppChrome() {
   if (immersive) return null;
 
   const role = profile?.app_role;
-  const homeHref = role === "ngo_owner" ? "/nonprofit" : role === "community_owner" ? "/community" : role === "admin" ? "/admin/users" : "/";
   const profileHref = profilePathForRole(role);
   const items = getItems(role, lang, profileHref);
 
@@ -37,7 +36,7 @@ export default function MobileAppChrome() {
 
   return <>
     <header className="flex items-center justify-between border-b border-gray-100 bg-white px-5 py-3 md:hidden">
-      <Link href={homeHref} className="flex items-center gap-2" aria-label="Impactify">
+      <Link href="/" className="flex items-center gap-2" aria-label="Impactify">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-raz-teal text-white"><Heart size={18} fill="currentColor" /></span>
         <span className="text-xl font-extrabold tracking-tight text-raz-teal">Impactify</span>
       </Link>
