@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLang } from "@/contexts/LanguageContext";
 import type { AppRole } from "@/lib/supabase/types";
 import type { OrganizationGoal } from "@/lib/supabase/types";
+import BrandColorPicker from "@/components/onboarding/BrandColorPicker";
 
 type SignupRole = Exclude<AppRole, "admin">;
 const roles: { key: SignupRole; he: string; en: string; descriptionHe: string; descriptionEn: string; emoji: string }[] = [
@@ -31,6 +32,8 @@ export default function SetupPage() {
   const [tenantName, setTenantName] = useState("");
   const [tenantNameEn, setTenantNameEn] = useState("");
   const [goals, setGoals] = useState<OrganizationGoal[]>([{ he: "", en: null }]);
+  const [brandColor, setBrandColor] = useState("#00B5AD");
+  const [brandColorValid, setBrandColorValid] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [redirectingToRoleOnboarding, setRedirectingToRoleOnboarding] = useState(false);
@@ -51,10 +54,12 @@ export default function SetupPage() {
         ? await sb.rpc("complete_ngo_signup", {
             p_full_name: name.trim(), p_org_name: tenantName.trim(), p_org_name_en: tenantNameEn.trim() || null,
             p_goals: goals.map((goal) => ({ he: goal.he.trim(), en: goal.en?.trim() || null })),
+            p_color: brandColor,
           })
         : await sb.rpc("complete_community_signup", {
             p_full_name: name.trim(), p_community_name: tenantName.trim(),
             p_community_name_en: tenantNameEn.trim() || null,
+            p_color: brandColor,
           });
     if (result.error) {
       setError(result.error.message);
@@ -115,15 +120,18 @@ export default function SetupPage() {
             ))}
           </div>
           {role !== "donor" && (
-            <div className="flow-reveal grid gap-3 sm:grid-cols-2">
-              <label className="text-sm text-gray-500">{tenantLabel}
-                <input value={tenantName} onChange={(event) => setTenantName(event.target.value)} maxLength={160}
-                  className="interactive-field mt-1.5 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-gray-800" />
-              </label>
-              <label className="text-sm text-gray-500">{tenantLabel} (English)
-                <input value={tenantNameEn} onChange={(event) => setTenantNameEn(event.target.value)} maxLength={160} dir="ltr"
-                  className="interactive-field mt-1.5 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-gray-800" />
-              </label>
+            <div className="space-y-3">
+              <div className="flow-reveal grid gap-3 sm:grid-cols-2">
+                <label className="text-sm text-gray-500">{tenantLabel}
+                  <input value={tenantName} onChange={(event) => setTenantName(event.target.value)} maxLength={160}
+                    className="interactive-field mt-1.5 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-gray-800" />
+                </label>
+                <label className="text-sm text-gray-500">{tenantLabel} (English)
+                  <input value={tenantNameEn} onChange={(event) => setTenantNameEn(event.target.value)} maxLength={160} dir="ltr"
+                    className="interactive-field mt-1.5 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-gray-800" />
+                </label>
+              </div>
+              <BrandColorPicker color={brandColor} onChange={(color, valid) => { setBrandColor(color); setBrandColorValid(valid); }} lang={lang} />
             </div>
           )}
           {role === "ngo_owner" && (
@@ -145,7 +153,7 @@ export default function SetupPage() {
             </div>
           )}
           {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
-          <button onClick={completeSignup} disabled={saving || !name.trim() || (role !== "donor" && !tenantName.trim()) || (role === "ngo_owner" && goals.some((goal) => !goal.he.trim()))}
+          <button onClick={completeSignup} disabled={saving || !name.trim() || (role !== "donor" && (!tenantName.trim() || !brandColorValid)) || (role === "ngo_owner" && goals.some((goal) => !goal.he.trim()))}
             className="interactive-control w-full bg-raz-teal text-white py-3.5 rounded-xl font-bold shadow-lg shadow-teal-950/10 disabled:opacity-50">
             {saving ? (lang === "en" ? "Creating account…" : "יוצר חשבון…") : (lang === "en" ? "Continue" : "המשך")}
           </button>

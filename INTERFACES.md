@@ -65,8 +65,8 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | Function | Caller | Contract |
 |---|---|---|
 | `complete_donor_signup(full_name)` | Authenticated, incomplete user | Completes onboarding as donor |
-| `complete_ngo_signup(full_name, org_name, org_name_en, goals)` | Authenticated, incomplete user | Validates 1–10 bilingual goals, atomically creates an NGO, and assigns its owner |
-| `complete_community_signup(full_name, community_name, community_name_en?)` | Authenticated, incomplete user | Atomically creates a community and assigns its owner |
+| `complete_ngo_signup(full_name, org_name, org_name_en, goals, color)` | Authenticated, incomplete user | Validates 1–10 bilingual goals and a six-digit brand-color HEX value, atomically creates an NGO, and assigns its owner |
+| `complete_community_signup(full_name, community_name, community_name_en?, color)` | Authenticated, incomplete user | Validates a six-digit brand-color HEX value, atomically creates a community, and assigns its owner |
 | `admin_update_profile_role(profile_id, role, org_id?, community_id?)` | Admin only | Changes role/tenant, blocks self-change and last-admin demotion, writes an audit row |
 | `admin_delete_user(user_id)` | Admin only | Deletes another `auth.users` account, blocks self-deletion and last-admin deletion, anonymizes retained donation rows through FK `SET NULL`, and writes a non-PII audit row |
 | `create_ngo_product(name, name_en, description, description_en, price, emoji)` | NGO owner only | Validates product fields and creates an active product for the organization derived from `auth.uid()` |
@@ -130,9 +130,19 @@ Key columns only — see `supabase/schema.sql` for full definitions.
 | `id` | uuid | PK |
 | `name` / `name_en` | text | Hebrew name required; English nullable |
 | `goals` | jsonb | Array of 1–10 `{ he, en }` objects for new NGOs; legacy rows default to `[]` until their owner updates the profile |
+| `color` | text | Required six-digit HEX leading brand color selected at signup; defaults to `#00B5AD` for existing and legacy flows |
 | `activity_area` | text | Nullable operating region selected in the NGO-owner profile |
 
 Public reads include `goals` and `activity_area` but continue to exclude bank-account columns. Goal writes use `update_ngo_goals`; editable profile fields use `update_ngo_profile`. Both RPCs resolve the target organization from the authenticated NGO-owner profile.
+
+### `communities`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | PK |
+| `name` / `name_en` | text | Hebrew name required; English nullable |
+| `color` | text | Required six-digit HEX leading brand color selected at signup; legacy rows default to `#00B5AD` |
+
+The onboarding RPC derives the manager from `auth.uid()` and validates the normalized hexadecimal color before writing the row.
 
 ### `campaigns`
 | Column | Type | Notes |
@@ -285,3 +295,4 @@ RLS: public read; insert/update require an authenticated `admin` profile. Read v
 | `supabase/seed.sql` | Inserts demo data (orgs, campaigns, products, communities) | After schema, on fresh DB |
 | `supabase/migrations/20260830143000_org_payment_connections.sql` | Adds NGO-scoped Cardcom/Grow terminal registry and tenant-derived setup RPCs | Apply through Supabase SQL Editor before enabling the profile connection UI |
 | `supabase/migrations/20260830170000_security_hardening.sql` | Removes direct financial/campaign mutations, hides token/referral columns, and adds narrow donor RPCs | Applied through Supabase SQL Editor on 2026-08-30; privilege verification returned `false, false, true, true, false, false` for direct donation insert, direct recurring update, the two approved RPCs, token read, and referral-code read |
+| `supabase/migrations/20260904100000_add_tenant_brand_colors.sql` | Adds a validated leading brand color to communities and extends NGO/community signup RPCs to persist it | Apply through Supabase SQL Editor before deploying the signup color picker |

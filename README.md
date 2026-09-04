@@ -40,6 +40,7 @@ New schema/seed changes should be added as a new timestamped file under `supabas
 - Run a separate read-only verification query afterward. Confirm the ledger entry and changed objects, plus grants, fixed `search_path`, and tenant checks for privileged functions. Do not treat the migration as live until these checks pass.
 - Apply both partnership-queue migrations before deploying the accompanying application code: `supabase/migrations/20260902100000_bidirectional_partnership_queue.sql` and `supabase/migrations/20260902101500_fix_partnership_queue_slot_assignment.sql`.
 - For product-media content, apply `supabase/migrations/20260903110000_product_images.sql` and `supabase/migrations/20260903111500_product_discovery_media.sql`; then run `supabase/scripts/create-impact-products.sql` to create the three demonstration organizations, products, campaigns, and product links.
+- Before deploying the NGO/community sign-up color picker, apply `supabase/migrations/20260904100000_add_tenant_brand_colors.sql`.
 
 See `AGENTS.md` for the required agent workflow and security constraints.
 

@@ -34,7 +34,7 @@ export async function getCommunityAdminData(): Promise<CommunityAdminData> {
     throw new Error("Community owner profile required");
   }
   const { data: community, error: communityError } = await sb.from("communities")
-    .select("id,name,name_en,description,total_raised,donors_count,created_at").eq("id", profile.community_id).single();
+    .select("id,name,name_en,description,color,total_raised,donors_count,created_at").eq("id", profile.community_id).single();
   if (communityError || !community) throw new Error(communityError?.message ?? "Community not found");
   const [memberships, donations] = await Promise.all([
     sb.from("community_campaigns").select("community_id,campaign_id,status,source").eq("community_id", community.id),

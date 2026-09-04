@@ -175,6 +175,7 @@ export interface Database {
           name: string;
           name_en: string | null;
           description: string | null;
+          color: string;
           manager_id: string | null;
           referral_code: string | null;
           total_raised: number;
@@ -321,11 +322,11 @@ export interface Database {
         Returns: string;
       };
       complete_ngo_signup: {
-        Args: { p_full_name: string; p_org_name: string; p_org_name_en: string | null; p_goals: OrganizationGoal[] };
+        Args: { p_full_name: string; p_org_name: string; p_org_name_en: string | null; p_goals: OrganizationGoal[]; p_color: string };
         Returns: string;
       };
       complete_community_signup: {
-        Args: { p_full_name: string; p_community_name: string; p_community_name_en?: string | null };
+        Args: { p_full_name: string; p_community_name: string; p_community_name_en?: string | null; p_color: string };
         Returns: string;
       };
       admin_update_profile_role: {
