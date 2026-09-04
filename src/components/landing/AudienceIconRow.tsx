@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { audienceIcons as defaultAudienceIcons, type AudienceKind } from "@/lib/landing-data";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
@@ -21,29 +21,23 @@ export default function AudienceIconRow({
   );
   function centerCard(card: HTMLButtonElement, behavior: ScrollBehavior = "smooth") {
     const container = carouselRef.current;
-    if (!container) return Promise.resolve();
+    if (!container) return;
     const containerBounds = container.getBoundingClientRect();
     const cardBounds = card.getBoundingClientRect();
     const distanceFromCenter = cardBounds.left + cardBounds.width / 2 - (containerBounds.left + containerBounds.width / 2);
-    if (behavior !== "smooth" || Math.abs(distanceFromCenter) < 1) {
-      container.scrollBy({ left: distanceFromCenter, behavior });
-      return Promise.resolve();
-    }
-
-    return new Promise<void>((resolve) => {
-      let settled = false;
-      const finish = () => {
-        if (settled) return;
-        settled = true;
-        container.removeEventListener("scrollend", finish);
-        window.clearTimeout(timeout);
-        resolve();
-      };
-      const timeout = window.setTimeout(finish, 650);
-      container.addEventListener("scrollend", finish, { once: true });
-      container.scrollBy({ left: distanceFromCenter, behavior });
-    });
+    if (Math.abs(distanceFromCenter) >= 1) container.scrollBy({ left: distanceFromCenter, behavior });
   }
+
+  useEffect(() => {
+    if (!selected) return;
+    const firstFrame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const card = carouselRef.current?.querySelector<HTMLButtonElement>(`[data-audience-kind="${selected}"]`);
+        if (card) centerCard(card);
+      });
+    });
+    return () => window.cancelAnimationFrame(firstFrame);
+  }, [selected]);
 
   function scrollToCard(direction: -1 | 1) {
     const cards = Array.from(carouselRef.current?.querySelectorAll<HTMLButtonElement>("[data-audience-card]") ?? []);
@@ -57,8 +51,9 @@ export default function AudienceIconRow({
       const bestCenter = cards[best].getBoundingClientRect().left + cards[best].clientWidth / 2;
       return Math.abs(cardCenter - center) < Math.abs(bestCenter - center) ? index : best;
     }, 0);
-    const target = cards[Math.max(0, Math.min(cards.length - 1, current + direction))];
-    if (target) void centerCard(target);
+    const targetIndex = (current + direction + cards.length) % cards.length;
+    const target = cards[targetIndex];
+    if (target) centerCard(target, current + direction === cards.length || current + direction === -1 ? "auto" : "smooth");
   }
 
   function startDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -96,8 +91,13 @@ export default function AudienceIconRow({
         const isSelected = a.kind === selected;
         return (
           <button data-audience-card
+            data-audience-kind={a.kind}
             key={`${a.id}-${i}`}
-            onClick={(event) => { if (suppressClick.current) return; void centerCard(event.currentTarget).then(() => onSelect(a.kind)); }}
+            onClick={(event) => {
+              if (suppressClick.current) return;
+              if (selected === a.kind) centerCard(event.currentTarget);
+              else onSelect(a.kind);
+            }}
             className={`flex h-40 w-28 shrink-0 snap-center cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border py-5 transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none md:h-auto md:w-auto md:min-h-36 md:py-6 lg:min-h-44 lg:gap-3 lg:py-8 xl:min-h-48 xl:py-10 2xl:min-h-56 2xl:gap-4 2xl:py-12 ${
               isSelected ? "bg-raz-teal border-raz-teal text-white" : "bg-white border-gray-100 text-gray-800"
             }`}
