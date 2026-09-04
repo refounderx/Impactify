@@ -60,15 +60,12 @@ html { font-size: 16px; }
   #main-content { padding-bottom: 4rem; }
 }
 
-/* The landing footer lives inside the shared content frame. On desktop only,
-   let its background reach the viewport edges without introducing a mobile
-   horizontal overflow. */
-@media (min-width: 1024px) {
+/* The landing footer lives inside the shared content frame. Extend only its
+   paint area on desktop, leaving its layout width unchanged. */
+@media (min-width: 1024px) and (hover: hover) {
   .landing-footer {
-    position: relative;
-    left: 50%;
-    width: 100vw;
-    transform: translateX(-50%);
+    box-shadow: 0 0 0 100vmax #1A1A2E;
+    clip-path: inset(0 -100vmax);
   }
 }
 
