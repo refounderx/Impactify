@@ -36,12 +36,13 @@ export default function AudienceFilterOverlay({
         onClick={onClose}
         aria-label={t("landing.filter.close")}
       />
-      <div className={`relative left-1/2 z-50 mt-8 w-[calc(100%-2rem)] -translate-x-1/2 rounded-2xl bg-white p-8 shadow-2xl ${overlayWidth}`}>
-        <div className="mb-5 flex justify-end">
-          <button onClick={onClose} className="interactive-control flex items-center gap-1 text-sm text-gray-600" aria-label={t("landing.filter.close")}>
-            <X size={20} /> <EditableText tKey="landing.filter.close" />
-          </button>
-        </div>
+      <div className="relative z-50 mt-8 grid w-full place-items-center px-4">
+        <div className={`w-full rounded-2xl bg-white p-8 shadow-2xl ${overlayWidth}`}>
+          <div className="mb-5 flex justify-end">
+            <button onClick={onClose} className="interactive-control flex items-center gap-1 text-sm text-gray-600" aria-label={t("landing.filter.close")}>
+              <X size={20} /> <EditableText tKey="landing.filter.close" />
+            </button>
+          </div>
           <h2 className="text-2xl font-bold text-raz-teal text-center mb-8">
             <EditableText tKey="landing.filter.heading" /> <EditableText tKey={`landing.aud.${kind}.plural`} />
           </h2>
@@ -60,6 +61,7 @@ export default function AudienceFilterOverlay({
               />
             ))}
           </div>
+        </div>
       </div>
 
       {selectedProduct && <LiveProductDonationModal product={selectedProduct} otherProducts={products.filter((product) => product !== selectedProduct)} onChooseProduct={setSelectedProduct} onContinue={() => router.push(`/donate/${selectedProduct.campaignId}/payment?amount=${selectedProduct.price}&product_id=${selectedProduct.productId}`)} onClose={() => setSelectedProduct(null)} />}
