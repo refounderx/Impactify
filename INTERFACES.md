@@ -81,6 +81,8 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | `set_community_campaign(campaign_id, action)` | Community owner only | Creates/cancels a pending join request or pauses/resumes the caller's own active campaign relationship |
 | `get_discoverable_products(categories?)` | Anonymous or authenticated | Returns non-demo active campaign products ordered by completed donated units; exposes product/campaign display fields and aggregate count only, never donor or payment data |
 | `get_discoverable_products_for_audience(audience)` | Anonymous or authenticated | Returns non-demo active products explicitly linked to one home-page audience, ordered by completed donated units |
+| `get_public_organization_donations(org_id)` | Anonymous or authenticated | Returns at most 12 recent completed donation amounts and timestamps for the organization's active campaigns; never exposes donor identity, message, payment, or receipt data |
+| `get_public_organization_communities(org_id)` | Anonymous or authenticated | Returns public details for communities with an active relationship to an active campaign of the organization |
 | `get_public_impact_stats()` | Anonymous or authenticated | Read-only, platform-wide aggregate counts and completed donation total for the landing page; never returns donation, payment, or donor rows |
 | `get_ngo_payment_connections()` | NGO owner only | Returns only the caller's Cardcom/Grow terminal metadata; never returns provider credentials, card data, or payment tokens |
 | `start_ngo_payment_connection(provider, terminal_id)` | NGO owner only | Registers or updates the caller's Cardcom/Grow terminal identifier and keeps it in setup-required state until server-side verification is implemented |
@@ -114,6 +116,7 @@ Query errors and empty results are returned to callers; active runtime paths do 
 | `getNgoUpdates()` / `saveNgoUpdate()` / `manageNgoUpdate()` | NGO owner | Persistent update rows and tenant-safe mutations | `ngo_updates`, `system_updates` |
 | `getCommunityCampaignStatuses()` / `setCommunityCampaign()` | Community owner | Persistent join-request status and participation controls | `community_campaigns` |
 | `getPublicImpactStats()` | No | Landing-page aggregate impact metrics plus up to six public organization names | `get_public_impact_stats`, `organizations` |
+| `getPublicOrganizationDonations()` / `getPublicOrganizationCommunities()` | No | Privacy-safe public activity for the organization profile's Donors and Communities tabs | public organization activity RPCs |
 | `getNgoPaymentConnections()` / `startNgoPaymentConnection()` | NGO owner | Tenant-scoped Cardcom/Grow terminal metadata; no credentials, card data, or tokens | `org_payment_connections` |
 
 ### `site_datasets`
@@ -296,3 +299,4 @@ RLS: public read; insert/update require an authenticated `admin` profile. Read v
 | `supabase/migrations/20260830143000_org_payment_connections.sql` | Adds NGO-scoped Cardcom/Grow terminal registry and tenant-derived setup RPCs | Apply through Supabase SQL Editor before enabling the profile connection UI |
 | `supabase/migrations/20260830170000_security_hardening.sql` | Removes direct financial/campaign mutations, hides token/referral columns, and adds narrow donor RPCs | Applied through Supabase SQL Editor on 2026-08-30; privilege verification returned `false, false, true, true, false, false` for direct donation insert, direct recurring update, the two approved RPCs, token read, and referral-code read |
 | `supabase/migrations/20260904100000_add_tenant_brand_colors.sql` | Adds a validated leading brand color to communities and extends NGO/community signup RPCs to persist it | Apply through Supabase SQL Editor before deploying the signup color picker |
+| `supabase/migrations/20260904110000_public_organization_activity.sql` | Adds privacy-safe public activity RPCs for organization pages | Apply through Supabase SQL Editor before deploying the public organization profile tabs |

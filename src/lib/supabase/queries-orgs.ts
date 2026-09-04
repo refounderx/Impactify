@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/client";
 import { toUIOrg } from "@/lib/supabase/query-helpers";
 
+export type PublicOrganizationDonation = { amount: number; createdAt: string };
+export type PublicOrganizationCommunity = { id: string; name: string; nameEn?: string; color: string; totalRaised: number };
+
 const PUBLIC_ORG_COLUMNS = "id,name,name_en,initials,color,description,description_en,goals,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,activity_area,phone,video_gradient,created_at";
 
 export async function getOrganizations() {
@@ -24,6 +27,28 @@ export async function getOrgById(id: string) {
   } catch (error) {
     console.error("Unable to load organization", error);
     return null;
+  }
+}
+
+export async function getPublicOrganizationDonations(orgId: string): Promise<PublicOrganizationDonation[]> {
+  try {
+    const { data, error } = await createClient().rpc("get_public_organization_donations", { p_org_id: orgId });
+    if (error) throw error;
+    return (data ?? []).map((item) => ({ amount: Number(item.amount), createdAt: item.created_at }));
+  } catch (error) {
+    console.error("Unable to load public organization donations", error);
+    return [];
+  }
+}
+
+export async function getPublicOrganizationCommunities(orgId: string): Promise<PublicOrganizationCommunity[]> {
+  try {
+    const { data, error } = await createClient().rpc("get_public_organization_communities", { p_org_id: orgId });
+    if (error) throw error;
+    return (data ?? []).map((item) => ({ id: item.community_id, name: item.community_name, nameEn: item.community_name_en ?? undefined, color: item.community_color, totalRaised: Number(item.community_total_raised) }));
+  } catch (error) {
+    console.error("Unable to load public organization communities", error);
+    return [];
   }
 }
 

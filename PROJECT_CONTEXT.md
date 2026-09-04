@@ -32,6 +32,7 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 - Campaign search with live text filter + category filter
 - Campaign detail (video/image hero, progress, donate-amount popup, 3 quick-donate products, donors/communities/story/org tabs)
 - Product detail (`/product/[id]?campaign_id=…`) — opened from a product-card body; shows product, nonprofit and campaign context/progress, then opens the donation popup only from its CTA
+- Public organization profile (`/organization/[id]`) — opened from a product's nonprofit name; presents a featured active campaign, donation products, and tabs for privacy-safe recent donation totals, active partner communities, campaign story, and organization details
 - Public non-profit profile (`/nonprofit/[id]`) — org video, verification/founding/CEO/volunteer/address info, product quantity picker with running total, one-click donate that skips straight to payment
 - Donation flow: amount selection → hosted-payment readiness screen; completed-payment simulation and thank-you confirmation are development-only until the PSP is connected
 - Non-Profit admin panel (`/nonprofit/*`, teal sidebar shell) — campaigns dashboard (table) + campaigns grid (donut-chart cards), searchable/filterable products-management table with tenant-scoped creation/editing + products grid (donut-chart cards), donations table, updates/alerts table with trigger/schedule tabs; replaces the old single-page NP dashboard

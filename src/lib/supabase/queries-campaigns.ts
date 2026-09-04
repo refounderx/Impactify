@@ -155,6 +155,29 @@ export async function getCampaignsByOrg(orgId: string) {
   }
 }
 
+export async function getPublicCampaignsByOrg(orgId: string) {
+  try {
+    const sb = createClient();
+    const { data, error } = await sb
+      .from("campaigns")
+      .select(CAMPAIGN_WITH_ORG)
+      .eq("org_id", orgId)
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+    if (error || !data) return [];
+
+    const [productMap, progressMap] = await Promise.all([attachProductIds(sb, data.map((campaign) => campaign.id)), getCampaignProgressMap(sb, data.map((campaign) => campaign.id))]);
+    return data.map((row) => {
+      const campaign = toUICampaign(row as CampaignWithOrg, progressMap.get(row.id));
+      campaign.productIds = productMap[row.id] ?? [];
+      return campaign;
+    });
+  } catch (error) {
+    console.error("Unable to load public organization campaigns", error);
+    return [];
+  }
+}
+
 export async function getProducts() {
   try {
     const sb = createClient();

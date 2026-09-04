@@ -353,6 +353,8 @@ export interface Database {
       invite_communities_to_campaign: { Args: { p_campaign_id: string; p_community_ids: string[] }; Returns: number };
       get_discoverable_products: { Args: { p_categories?: string[] | null }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; image_url: string | null; video_url: string | null; donation_count: number }[] };
       get_discoverable_products_for_audience: { Args: { p_audience: string }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; image_url: string | null; video_url: string | null; donation_count: number }[] };
+      get_public_organization_donations: { Args: { p_org_id: string }; Returns: { amount: number; created_at: string }[] };
+      get_public_organization_communities: { Args: { p_org_id: string }; Returns: { community_id: string; community_name: string; community_name_en: string | null; community_color: string; community_total_raised: number }[] };
       manage_ngo_campaign_request: { Args: { p_community_id: string; p_campaign_id: string; p_action: string }; Returns: string };
       set_my_recurring_donation_status: { Args: { p_recurring_id: string; p_status: string }; Returns: undefined };
       add_my_payment_method: { Args: { p_brand: string; p_last_four: string }; Returns: { id: string; brand: string; last_four: string }[] };
