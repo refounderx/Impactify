@@ -51,7 +51,7 @@ export default function Hero() {
   const [soldierCard, elderlyCard, childCard] = cards;
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-14">
+    <section className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-6 py-14">
       <div className="grid min-w-0 items-center gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-16" dir="ltr">
         <div className="order-1 text-right md:order-2" dir={lang === "he" ? "rtl" : "ltr"}>
           <EditableText tKey="landing.hero.title" as="h1" className="mb-6 block text-4xl font-bold leading-tight text-gray-900 sm:text-5xl xl:text-6xl" />
