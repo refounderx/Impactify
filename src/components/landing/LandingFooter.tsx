@@ -12,7 +12,7 @@ export default function LandingFooter() {
   const { lang } = useLang();
   const socialLinks = data?.socialLinks ?? [];
   return (
-    <footer className="bg-raz-dark text-white">
+    <footer className="bg-raz-dark text-white md:relative md:left-1/2 md:w-screen md:-translate-x-1/2">
       <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8 text-sm">
         <div className="flex flex-col gap-2 text-gray-300">
           <span><EditableText tKey="landing.footer.lorem" /></span>
