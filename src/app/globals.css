@@ -60,6 +60,30 @@ html { font-size: 16px; }
   #main-content { padding-bottom: 4rem; }
 }
 
+/* Mobile must never inherit a horizontal viewport from a full-bleed section.
+   Scrollable data tables retain their own local overflow containers. */
+@media (max-width: 767px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .site-frame,
+  #main-content,
+  .landing-footer {
+    max-width: 100%;
+  }
+
+  .landing-footer {
+    width: 100%;
+    overflow-x: hidden;
+    box-shadow: none;
+    clip-path: none;
+  }
+}
+
 /* The landing footer lives inside the shared content frame. Extend only its
    paint area on mouse-driven desktop displays, leaving mobile untouched. */
 @media (min-width: 1024px) and (pointer: fine) and (hover: hover) {
