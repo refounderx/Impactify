@@ -60,6 +60,18 @@ html { font-size: 16px; }
   #main-content { padding-bottom: 4rem; }
 }
 
+/* The landing footer lives inside the shared content frame. On desktop only,
+   let its background reach the viewport edges without introducing a mobile
+   horizontal overflow. */
+@media (min-width: 1024px) {
+  .landing-footer {
+    position: relative;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+  }
+}
+
 /* LTR override: when html[dir=ltr], inputs should align start (left) not force-right */
 html[dir="ltr"] input,
 html[dir="ltr"] textarea {
