@@ -3,7 +3,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCampaignById } from "@/lib/supabase/queries";
 import { formatNIS } from "@/lib/mock-data";
-import { RotateCcw, Heart, ArrowRight } from "lucide-react";
+import { RotateCcw, Heart, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
 
@@ -41,8 +41,8 @@ export default function AmountPage({ params, searchParams }: { params: Promise<{
       {/* Header */}
       <div className="bg-raz-teal px-6 pt-6 pb-10">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <button onClick={() => router.back()} className="text-white/70 hover:text-white">
-            <ArrowRight size={24} />
+          <button type="button" onClick={() => router.back()} aria-label={lang === "en" ? "Back" : "חזרה"} className="interactive-control group flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-white/80 transition-all hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/15 hover:text-white focus-visible:outline-white">
+            {lang === "en" ? <ArrowLeft size={22} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={22} className="transition-transform group-hover:translate-x-0.5" />}
           </button>
           <h1 className="text-white font-bold text-xl"><EditableText tKey="amount.title" /></h1>
         </div>

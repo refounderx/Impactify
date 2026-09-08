@@ -3,7 +3,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { getCampaignById } from "@/lib/supabase/queries";
 import { formatNIS } from "@/lib/mock-data";
-import { Shield, Lock, ArrowRight } from "lucide-react";
+import { Shield, Lock, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import EditableText from "@/components/admin/EditableText";
 
@@ -42,8 +42,8 @@ export default function PaymentPage({
       {/* Header */}
       <div className="bg-raz-dark px-6 pt-6 pb-10">
         <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <button onClick={() => router.back()} className="text-gray-400 hover:text-white">
-            <ArrowRight size={24} />
+          <button type="button" onClick={() => router.back()} aria-label={lang === "en" ? "Back" : "חזרה"} className="interactive-control group flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-gray-300 transition-all hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/15 hover:text-white focus-visible:outline-white">
+            {lang === "en" ? <ArrowLeft size={22} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={22} className="transition-transform group-hover:translate-x-0.5" />}
           </button>
           <h1 className="text-white font-bold text-xl"><EditableText tKey="payment.title" /></h1>
         </div>

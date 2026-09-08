@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import BottomNav from "@/components/layout/BottomNav";
 import PublicOrganizationHero from "@/components/organization/PublicOrganizationHero";
@@ -36,7 +36,10 @@ export default function OrganizationPage() {
 
   return <main className="min-h-screen bg-white pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
-      <button type="button" onClick={() => router.back()} className="interactive-control group inline-flex min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md"><ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />{lang === "en" ? "Back" : "חזרה"}</button>
+      <button type="button" onClick={() => router.back()} className="interactive-control group inline-flex min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md" aria-label={lang === "en" ? "Back" : "חזרה"}>
+        {lang === "en" ? <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />}
+        {lang === "en" ? "Back" : "חזרה"}
+      </button>
       <div className="mt-6 grid gap-10 lg:grid-cols-[1.05fr_.95fr]" dir="ltr">
         <section dir={lang === "en" ? "ltr" : "rtl"} className="min-w-0">
           <p className="text-sm font-bold" style={{ color: org.color }}>{lang === "en" ? "About the nonprofit" : "על העמותה"}</p>

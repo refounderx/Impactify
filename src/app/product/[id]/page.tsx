@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Building2, Heart, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Heart, Play } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import BottomNav from "@/components/layout/BottomNav";
 import LiveProductDonationModal from "@/components/landing/LiveProductDonationModal";
@@ -47,7 +47,10 @@ export default function ProductDetailPage() {
 
   return <main className="min-h-screen bg-raz-surface pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
-      <button type="button" onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm font-bold text-raz-teal"><ArrowRight size={18} />{lang === "en" ? "Back" : "חזרה"}</button>
+      <button type="button" onClick={() => router.back()} className="interactive-control group inline-flex min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md" aria-label={lang === "en" ? "Back" : "חזרה"}>
+        {lang === "en" ? <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />}
+        {lang === "en" ? "Back" : "חזרה"}
+      </button>
       <div className="mt-6 grid gap-8 rounded-[2rem] bg-white p-6 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] md:p-10">
         <div className="relative flex min-h-80 items-center justify-center overflow-hidden rounded-3xl bg-slate-50">
           {video?.kind === "embed" && preferences.marketing ? <iframe src={video.url} title={title} className="absolute inset-0 h-full w-full bg-black" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
