@@ -17,7 +17,9 @@ $$;
 revoke all on function public.get_product_progress(uuid[]) from public, anon, authenticated;
 grant execute on function public.get_product_progress(uuid[]) to anon, authenticated;
 
-create or replace function public.get_discoverable_products(p_categories text[] default null)
+-- The result shape intentionally changes: products no longer have one canonical campaign.
+drop function if exists public.get_discoverable_products(text[]);
+create function public.get_discoverable_products(p_categories text[] default null)
 returns table (product_id uuid, campaign_id uuid, category text, name text, name_en text, description text, description_en text, price numeric, emoji text, donation_count bigint)
 language sql stable security definer set search_path = public as $$
   select p.id, null::uuid, coalesce((select pha.audience from public.product_home_audiences pha where pha.product_id = p.id limit 1), 'general'),
@@ -28,7 +30,8 @@ language sql stable security definer set search_path = public as $$
   group by p.id order by coalesce(sum(d.quantity) filter (where d.status = 'completed'), 0) desc, p.created_at desc;
 $$;
 
-create or replace function public.get_discoverable_products_for_audience(p_audience text)
+drop function if exists public.get_discoverable_products_for_audience(text);
+create function public.get_discoverable_products_for_audience(p_audience text)
 returns table (product_id uuid, campaign_id uuid, category text, name text, name_en text, description text, description_en text, price numeric, emoji text, donation_count bigint)
 language sql stable security definer set search_path = public as $$
   select p.id, null::uuid, pha.audience, p.name, p.name_en, p.description, p.description_en, p.price, p.emoji,
