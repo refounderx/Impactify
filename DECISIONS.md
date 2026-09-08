@@ -387,3 +387,12 @@
 **Context:** The public `TopNav` was hidden at mobile widths while dashboard and public pages used different navigation containers. Some footers were placed inside scrolling content, so they were not visible until the user reached the bottom of the page.
 **Rationale:** One route- and role-aware chrome keeps the logo, language control, notification entry point, profile access, and primary navigation consistently visible without duplicating navigation inside community or NGO dashboards. The campaign wizard, onboarding, and authentication remain immersive flows.
 **Consequences:** New mobile pages should use the shared chrome by default. Do not add a page-local mobile header or bottom navigation unless the route is intentionally immersive; preserve bottom content clearance above the fixed footer.
+
+---
+
+## 2026-09-08 — Products are independently fundable; campaigns attribute product donations
+
+**Decision:** A donation may reference a product without a campaign. `campaign_products.required_quantity` records the quantity target for each product within a campaign; public discovery aggregates product donations across direct and campaign-attributed donations.
+**Context:** Donors choose concrete needs/products, while campaigns are externally promoted collections of products rather than the primary discovery flow.
+**Rationale:** This keeps the donation unit and its cumulative impact stable when a product appears in multiple campaigns, while preserving campaign/community attribution where a referral context exists.
+**Consequences:** The product-first migration must be applied before direct-product UI routes are enabled in production. The donation API continues to derive prices from the database and validates a campaign-product link only when a campaign ID is supplied.

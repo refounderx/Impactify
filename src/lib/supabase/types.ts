@@ -120,7 +120,7 @@ export interface Database {
         Row: {
           id: string;
           donor_id: string | null;
-          campaign_id: string;
+          campaign_id: string | null;
           org_id: string;
           amount: number;
           currency: string;

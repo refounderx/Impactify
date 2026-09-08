@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Online payment processing is not configured yet" }, { status: 503 });
   }
 
-  const campaign_id = typeof body.campaign_id === "string" ? body.campaign_id : "";
+  const campaign_id = typeof body.campaign_id === "string" ? body.campaign_id : null;
   const org_id = typeof body.org_id === "string" ? body.org_id : "";
   const amount = body.amount;
   const is_recurring = body.is_recurring;
@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
   const requestedCommunityId = typeof body.community_id === "string" ? body.community_id : null;
 
   // Validate inputs at trust boundary
-  if (!UUID_RE.test(campaign_id ?? "") || !UUID_RE.test(org_id ?? "")) {
-    return NextResponse.json({ error: "campaign_id and org_id required" }, { status: 400 });
+  if (!UUID_RE.test(org_id ?? "") || (campaign_id !== null && !UUID_RE.test(campaign_id))) {
+    return NextResponse.json({ error: "Valid organization and campaign reference required" }, { status: 400 });
   }
   if (requestedCommunityId !== null && !UUID_RE.test(requestedCommunityId)) {
     return NextResponse.json({ error: "Invalid community link" }, { status: 400 });
@@ -86,10 +86,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sign in is required for recurring donations" }, { status: 401 });
   }
 
-  const { data: campaign, error: campaignError } = await sb.from("campaigns")
-    .select("id, org_id, status").eq("id", campaign_id).eq("status", "active").single();
-  if (campaignError || !campaign || campaign.org_id !== org_id) {
-    return NextResponse.json({ error: "Campaign and organization do not match" }, { status: 400 });
+  const { data: campaign, error: campaignError } = campaign_id
+    ? await sb.from("campaigns").select("id, org_id, status").eq("id", campaign_id).eq("status", "active").single()
+    : { data: null, error: null };
+  if (campaignError || (campaign && campaign.org_id !== org_id) || (!campaign_id && !productId)) {
+    return NextResponse.json({ error: "Campaign or product donation reference is required" }, { status: 400 });
   }
 
   const receiptId = `R-${new Date().getFullYear()}-${randomBytes(8).toString("hex").toUpperCase()}`;
@@ -97,11 +98,11 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient();
   let recordedAmount = parsed;
   if (productId) {
-    const [{ data: product, error: productError }, { data: campaignProduct, error: campaignProductError }] = await Promise.all([
+    const [{ data: product, error: productError }, campaignProductResult] = await Promise.all([
       admin.from("products").select("id,org_id,price,active").eq("id", productId).maybeSingle(),
-      admin.from("campaign_products").select("product_id").eq("campaign_id", campaign_id).eq("product_id", productId).maybeSingle(),
+      campaign_id ? admin.from("campaign_products").select("product_id").eq("campaign_id", campaign_id).eq("product_id", productId).maybeSingle() : Promise.resolve({ data: null, error: null }),
     ]);
-    if (productError || campaignProductError || !product || !campaignProduct || !product.active || product.org_id !== org_id) {
+    if (productError || campaignProductResult.error || !product || (campaign_id && !campaignProductResult.data) || !product.active || product.org_id !== org_id) {
       return NextResponse.json({ error: "Product is not available for this campaign" }, { status: 400 });
     }
     recordedAmount = Number(product.price) * donationQuantity;
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
 
   // A community share link takes precedence over a donor's profile affiliation.
   // It may only attribute a donation to a community actively linked to this campaign.
-  if (requestedCommunityId) {
+  if (requestedCommunityId && campaign_id) {
     const { data: membership, error: membershipError } = await admin
       .from("community_campaigns")
       .select("community_id")
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
     if (donorProfileError) return NextResponse.json({ error: "Unable to identify donor community" }, { status: 500 });
 
     donorName = donorProfile?.full_name?.trim() || null;
-    if (!communityId && donorProfile?.community_id) {
+    if (!communityId && donorProfile?.community_id && campaign_id) {
       const { data: membership, error: membershipError } = await admin
         .from("community_campaigns")
         .select("community_id")
@@ -180,7 +181,7 @@ export async function POST(request: NextRequest) {
   }
 
   // If recurring, also create a recurring_donations row (requires auth)
-  if (recurring && user?.id) {
+  if (recurring && user?.id && campaign_id) {
     const { error: recurringError } = await admin.from("recurring_donations").insert({
       donor_id: user.id,
       campaign_id,
