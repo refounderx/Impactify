@@ -29,8 +29,8 @@ export default function CampaignTabs({ campaignId, story, orgBio }: CampaignTabs
   ];
 
   return (
-    <div className="rounded-2xl bg-white p-4 sm:p-6">
-      <div className="mb-5 flex flex-wrap justify-end gap-1 border-b border-slate-200 px-1">
+    <div className="rounded-2xl bg-white p-4 sm:p-6" dir={lang === "en" ? "ltr" : "rtl"}>
+      <div className="mb-5 flex flex-wrap justify-start gap-1 border-b border-slate-200 px-1">
         {tabs.map((tb) => (
           <button
             key={tb.id}
