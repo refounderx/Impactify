@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { getCommunityAdminData } from "@/lib/supabase/queries-community-admin";
+import type { Campaign, Community } from "@/lib/supabase/types";
 
 export async function getCommunityDashboardData() {
   try {
@@ -49,6 +50,38 @@ export async function getCommunities() {
     return data ?? [];
   } catch (error) {
     console.error("Unable to load communities", error);
+    return [];
+  }
+}
+
+/** Public community profile data only; never use the authenticated dashboard query here. */
+export async function getPublicCommunityById(id: string): Promise<Community | null> {
+  try {
+    const { data, error } = await createClient().from("communities")
+      .select("id,name,name_en,description,color,total_raised,donors_count,created_at")
+      .eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? { ...data, manager_id: null, referral_code: null } as Community : null;
+  } catch (error) {
+    console.error("Unable to load public community", error);
+    return null;
+  }
+}
+
+export async function getPublicCommunityCampaigns(communityId: string): Promise<Campaign[]> {
+  try {
+    const sb = createClient();
+    const { data: memberships, error: membershipError } = await sb.from("community_campaigns")
+      .select("campaign_id").eq("community_id", communityId).eq("status", "active");
+    if (membershipError) throw membershipError;
+    const campaignIds = (memberships ?? []).map((item) => item.campaign_id);
+    if (!campaignIds.length) return [];
+    const { data, error } = await sb.from("campaigns").select("*").in("id", campaignIds)
+      .eq("status", "active").order("updated_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as Campaign[];
+  } catch (error) {
+    console.error("Unable to load public community campaigns", error);
     return [];
   }
 }
