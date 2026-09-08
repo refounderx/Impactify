@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { X } from "lucide-react";
-import { useNgoAdminView } from "@/hooks/useNgoAdminView";
 import WizardShell from "@/components/wizard/WizardShell";
 import {
   Step0, Step1, Step2, PreviewPanel,
@@ -21,20 +20,23 @@ export type NewUpdateDraft = {
   imageName: string | null;
 };
 
+export type UpdateTargetOption = { id: string; name: string; nameEn: string };
+
 interface Props {
   lang: string;
   t: (k: string) => string;
   onClose: () => void;
   onCreate: (draft: NewUpdateDraft) => void;
   initialDraft?: NewUpdateDraft;
+  targetOptions?: Partial<Record<Audience, UpdateTargetOption[]>>;
+  audiences?: Audience[];
   busy?: boolean;
   error?: string;
 }
 
 const STEP_COUNT = 3;
 
-export default function CreateUpdateWizard({ lang, t, onClose, onCreate, initialDraft, busy = false, error = "" }: Props) {
-  const { data } = useNgoAdminView();
+export default function CreateUpdateWizard({ lang, t, onClose, onCreate, initialDraft, targetOptions = {}, audiences = ["campaigns", "products", "all"], busy = false, error = "" }: Props) {
   const [step, setStep] = useState(0);
   const [audience, setAudience] = useState<Audience>(initialDraft?.audience ?? "campaigns");
   const [targetIds, setTargetIds] = useState<string[]>(initialDraft?.targetIds ?? []);
@@ -47,7 +49,7 @@ export default function CreateUpdateWizard({ lang, t, onClose, onCreate, initial
   const [cta, setCta] = useState<Cta>(initialDraft?.cta ?? "none");
   const [imageName, setImageName] = useState<string | null>(initialDraft?.imageName ?? null);
 
-  const targetOptions = audience === "products" ? (data?.adminProductRows ?? []) : (data?.adminCampaignRows ?? []);
+  const selectedTargetOptions = targetOptions[audience] ?? [];
 
   function toggleTarget(id: string) {
     setTargetIds((ids) => (ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id]));
@@ -105,7 +107,7 @@ export default function CreateUpdateWizard({ lang, t, onClose, onCreate, initial
               t={t} lang={lang}
               audience={audience} setAudience={setAudience}
               targetIds={targetIds} toggleTarget={toggleTarget}
-              targetOptions={targetOptions}
+              targetOptions={selectedTargetOptions} audiences={audiences}
             />
           )}
           {step === 1 && (

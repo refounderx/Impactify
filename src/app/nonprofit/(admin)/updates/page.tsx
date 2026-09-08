@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Eye, MoreVertical, Pencil, Plus, Search } from "lucide-react";
 import CreateUpdateWizard, { type NewUpdateDraft } from "@/components/nonprofit-admin/CreateUpdateWizard";
 import { useLang } from "@/contexts/LanguageContext";
+import { useNgoAdminView } from "@/hooks/useNgoAdminView";
 import type { AdminUpdateRow } from "@/lib/nonprofit-admin-data";
 import { getNgoUpdates, manageNgoUpdate, saveNgoUpdate, type NgoUpdate, type NgoUpdateDraft } from "@/lib/supabase/queries-updates";
 
@@ -27,6 +28,7 @@ function toViewRow(row: NgoUpdate): ViewRow {
 
 export default function NgoUpdatesPage() {
   const { lang, t } = useLang();
+  const { data: adminData } = useNgoAdminView();
   const [mode, setMode] = useState<UpdateMode>("trigger");
   const [rows, setRows] = useState<ViewRow[]>([]);
   const [query, setQuery] = useState("");
@@ -94,7 +96,7 @@ export default function NgoUpdatesPage() {
         <div className="overflow-x-auto"><table className="w-full min-w-[920px] text-sm"><thead className="text-raz-teal"><tr className="border-b border-gray-200"><Header>{lang === "en" ? "Update type" : "סוג התראה"}</Header><Header>{lang === "en" ? "Quantity" : "כמות"}</Header><Header>{mode === "trigger" ? t("adm.tabTrigger") : t("adm.tabSchedule")}</Header><Header>{mode === "trigger" ? (lang === "en" ? "Offset" : "השהיה") : (lang === "en" ? "Day" : "יום")}</Header><Header>{lang === "en" ? "Date / time" : "תאריך / שעה"}</Header><Header>{lang === "en" ? "Sent so far" : "נשלחה עד כה"}</Header><Header>{lang === "en" ? "Edit" : "עריכה"}</Header><Header>{lang === "en" ? "Actions" : "פעולות"}</Header></tr></thead><tbody>{visibleRows.map((row) => <tr key={row.id} className={`border-b border-gray-200 text-gray-800 hover:bg-gray-50/70 ${row.paused ? "opacity-55" : ""}`}><Cell bold>{lang === "en" ? row.categoryEn : row.category}{row.paused && <span className="ms-2 rounded-full bg-gray-100 px-2 py-0.5 text-[10px]">{lang === "en" ? "Paused" : "מושהה"}</span>}{row.sent && <span className="ms-2 rounded-full bg-green-50 px-2 py-0.5 text-[10px] text-green-700">{lang === "en" ? "Sent" : "נשלח"}</span>}</Cell><Cell>{row.quantity}</Cell><Cell>{lang === "en" ? row.triggerEn : row.trigger}</Cell><Cell>{lang === "en" ? row.timeOffsetEn : row.timeOffset}</Cell><Cell>{row.date}</Cell><Cell>{row.sentSoFar}</Cell><td className="px-4 py-4"><IconButton label={lang === "en" ? "Edit update" : "עריכת עדכון"} onClick={() => { setEditingId(row.id); setWizardOpen(true); }}><Pencil size={16} /></IconButton></td><td className="relative px-4 py-4"><IconButton label={lang === "en" ? "Update actions" : "פעולות עדכון"} onClick={() => setMenuId(menuId === row.id ? null : row.id)}><MoreVertical size={17} /></IconButton>{menuId === row.id && <div className="absolute end-4 top-14 z-20 w-36 rounded-xl border border-gray-100 bg-white py-1 text-xs shadow-xl"><button disabled={busy} onClick={() => void runAction(row, "duplicate")} className="block w-full px-4 py-2 text-start hover:bg-gray-50 disabled:opacity-50">{lang === "en" ? "Duplicate" : "שכפול"}</button>{!row.sent && <button disabled={busy} onClick={() => void runAction(row, row.paused ? "resume" : "pause")} className="block w-full px-4 py-2 text-start hover:bg-gray-50 disabled:opacity-50">{row.paused ? (lang === "en" ? "Resume" : "הפעלה") : (lang === "en" ? "Pause" : "השהיה")}</button>}<button disabled={busy} onClick={() => void runAction(row, "delete")} className="block w-full px-4 py-2 text-start text-red-600 hover:bg-red-50 disabled:opacity-50">{lang === "en" ? "Remove" : "הסרה"}</button></div>}</td></tr>)}</tbody></table></div>
         {visibleRows.length === 0 && <div className="py-14 text-center"><p className="font-bold text-gray-700">{lang === "en" ? "No updates match this view" : "אין עדכונים שמתאימים לתצוגה"}</p><p className="mt-1 text-sm text-gray-400">{lang === "en" ? "Change the filter or create a new update." : "אפשר לשנות את הסינון או ליצור עדכון חדש."}</p></div>}
       </section>
-      {wizardOpen && <CreateUpdateWizard lang={lang} t={t} initialDraft={rows.find((row) => row.id === editingId)?.draft} busy={busy} error={error} onClose={() => { setWizardOpen(false); setEditingId(null); setError(""); }} onCreate={(draft) => void addUpdate(draft)} />}
+      {wizardOpen && <CreateUpdateWizard lang={lang} t={t} initialDraft={rows.find((row) => row.id === editingId)?.draft} targetOptions={{ campaigns: adminData?.adminCampaignRows, products: adminData?.adminProductRows }} busy={busy} error={error} onClose={() => { setWizardOpen(false); setEditingId(null); setError(""); }} onCreate={(draft) => void addUpdate(draft)} />}
     </div>
   );
 }

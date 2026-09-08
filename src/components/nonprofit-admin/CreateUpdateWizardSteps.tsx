@@ -1,6 +1,6 @@
 "use client";
 import { Check, ChevronRight, Image as ImageIcon, Video, X } from "lucide-react";
-import type { AdminProductRow, AdminCampaignRow } from "@/lib/nonprofit-admin-data";
+import type { UpdateTargetOption } from "./CreateUpdateWizard";
 
 export type Audience = "products" | "campaigns" | "all";
 export type Timing = "now" | "scheduled" | "trigger";
@@ -18,19 +18,18 @@ export function RadioRow({ label, checked, onSelect }: { label: string; checked:
   );
 }
 
-export function Step0({ t, lang, audience, setAudience, targetIds, toggleTarget, targetOptions }: {
+export function Step0({ t, lang, audience, setAudience, targetIds, toggleTarget, targetOptions, audiences }: {
   t: (k: string) => string; lang: string;
   audience: Audience; setAudience: (a: Audience) => void;
   targetIds: string[]; toggleTarget: (id: string) => void;
-  targetOptions: AdminProductRow[] | AdminCampaignRow[];
+  targetOptions: UpdateTargetOption[]; audiences: Audience[];
 }) {
+  const labels: Record<Audience, string> = { campaigns: t("adm.uw.recipientCampaigns"), products: t("adm.uw.recipientProducts"), all: t("adm.uw.recipientAll") };
   return (
     <div className="max-w-xl">
       <p className="text-sm font-bold text-gray-700 mb-2">{t("adm.uw.recipientsQuestion")}</p>
       <div className="flex flex-wrap gap-5 mb-5">
-        <RadioRow label={t("adm.uw.recipientCampaigns")} checked={audience === "campaigns"} onSelect={() => setAudience("campaigns")} />
-        <RadioRow label={t("adm.uw.recipientProducts")} checked={audience === "products"} onSelect={() => setAudience("products")} />
-        <RadioRow label={t("adm.uw.recipientAll")} checked={audience === "all"} onSelect={() => setAudience("all")} />
+        {audiences.map((item) => <RadioRow key={item} label={labels[item]} checked={audience === item} onSelect={() => setAudience(item)} />)}
       </div>
 
       {audience !== "all" && (

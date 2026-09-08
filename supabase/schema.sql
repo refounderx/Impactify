@@ -464,6 +464,7 @@ create table if not exists public.system_updates (
   id               uuid primary key default gen_random_uuid(),
   donor_id         uuid references auth.users(id) on delete cascade,
   org_id           uuid references public.organizations(id),
+  community_id     uuid references public.communities(id),
   title            text not null,
   title_en         text,
   detail           text,

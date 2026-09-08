@@ -1,42 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bell, Check, Clock3, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { MoreVertical, Pencil, Plus } from "lucide-react";
+import CreateUpdateWizard, { type NewUpdateDraft } from "@/components/nonprofit-admin/CreateUpdateWizard";
 import { useLang } from "@/contexts/LanguageContext";
-import { decidePartnershipRequest, getPartnershipNotifications, getPartnershipRequests, type PartnershipNotification, type PartnershipRequest } from "@/lib/supabase/queries-partnerships";
+import { useCommunityAdminView } from "@/hooks/useCommunityAdminView";
+import { getCommunityUpdates, manageCommunityUpdate, saveCommunityUpdate, type CommunityUpdate } from "@/lib/supabase/queries-community-updates";
+import type { NgoUpdateDraft } from "@/lib/supabase/queries-updates";
+
+type ViewRow = CommunityUpdate & { draft: NgoUpdateDraft };
+
+function toViewRow(row: CommunityUpdate): ViewRow {
+  return { ...row, draft: { audience: row.audience, targetIds: row.target_ids, channels: { push: row.channels.includes("push"), email: row.channels.includes("email"), sms: row.channels.includes("sms") }, timing: row.timing, scheduledAt: row.scheduled_at ? row.scheduled_at.slice(0, 16) : "", trigger: row.trigger_type ?? "donation", title: row.title, body: row.body, cta: row.cta, imageName: row.image_name } };
+}
 
 export default function CommunityUpdatesPage() {
-  const { lang } = useLang();
-  const [inbox, setInbox] = useState<PartnershipRequest[]>([]);
-  const [backlog, setBacklog] = useState<PartnershipRequest[]>([]);
-  const [notifications, setNotifications] = useState<PartnershipNotification[]>([]);
-  const [busy, setBusy] = useState<string | null>(null);
+  const { lang, t } = useLang();
+  const { data: communityData } = useCommunityAdminView();
+  const [rows, setRows] = useState<ViewRow[]>([]);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [menuId, setMenuId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function load() {
+    try { setRows((await getCommunityUpdates()).map(toViewRow)); setError(""); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load community updates"); }
+  }
+  useEffect(() => { void load(); }, []);
+
+  async function save(draft: NewUpdateDraft) {
+    setBusy(true); setError("");
     try {
-      const [nextInbox, nextBacklog, nextNotifications] = await Promise.all([getPartnershipRequests("inbox"), getPartnershipRequests("backlog"), getPartnershipNotifications()]);
-      setInbox(nextInbox); setBacklog(nextBacklog); setNotifications(nextNotifications);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load partnership requests"); }
-  }
-  useEffect(() => { const timer = window.setTimeout(() => { void load(); }, 0); return () => window.clearTimeout(timer); }, []);
-
-  async function decide(request: PartnershipRequest, action: "approve" | "reject") {
-    setBusy(request.id); setError("");
-    try { await decidePartnershipRequest(request.id, action); await load(); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save decision"); }
-    finally { setBusy(null); }
+      await saveCommunityUpdate({ ...draft, audience: draft.audience === "all" ? "all" : "campaigns", targetIds: draft.audience === "all" ? [] : draft.targetIds }, editingId);
+      setWizardOpen(false); setEditingId(null); await load();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save community update"); }
+    finally { setBusy(false); }
   }
 
-  return <div className="mx-auto max-w-5xl space-y-8">
-    <header><p className="text-sm font-bold text-raz-teal">{lang === "en" ? "Calm partnership inbox" : "תיבת שותפויות רגועה"}</p><h1 className="mt-2 text-3xl font-black text-raz-dark">{lang === "en" ? "Partnership requests" : "בקשות שותפות"}</h1><p className="mt-2 text-slate-500">{lang === "en" ? "Review up to three invitations at a time. The queue stays available when you want to look ahead." : "בודקים עד שלוש הזמנות בכל פעם. התור המלא זמין כשרוצים להביט קדימה."}</p></header>
-    {error && <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>}
-    {notifications[0] && <div className="flex items-center gap-3 rounded-2xl border border-raz-teal/20 bg-raz-teal/5 p-4 text-sm text-raz-dark"><Bell className="text-raz-teal" size={20} /><span>{lang === "en" ? `${notifications[0].total_waiting} requests are waiting; ${notifications[0].new_waiting} are new.` : `ממתינות ${notifications[0].total_waiting} בקשות, מתוכן ${notifications[0].new_waiting} חדשות.`}</span></div>}
-    <section><h2 className="mb-4 text-xl font-black text-raz-dark">{lang === "en" ? "Your active review" : "בתיבה הפעילה"}</h2><div className="grid gap-4 md:grid-cols-3">{inbox.map((request) => <RequestCard key={request.id} request={request} busy={busy === request.id} lang={lang} onDecide={decide} />)}{Array.from({ length: Math.max(0, 3 - inbox.length) }, (_, index) => <div key={index} className="flex min-h-48 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">{lang === "en" ? "A free review slot" : "מקום פנוי בתיבה"}</div>)}</div></section>
-    <section><div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-black text-raz-dark">{lang === "en" ? "Outreach backlog" : "תור הממתינים"}</h2><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">{backlog.length}</span></div>{backlog.length ? <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">{backlog.map((request) => <div key={request.id} className="flex items-center justify-between gap-4 border-b border-slate-100 p-4 last:border-0"><div><p className="font-bold text-raz-dark">{request.org_name}</p><p className="mt-1 text-sm text-slate-500">{request.campaign_title}</p></div><button type="button" onClick={() => void decide(request, "approve")} disabled={busy === request.id} className="interactive-control rounded-xl border border-raz-teal px-4 py-2 text-sm font-bold text-raz-teal">{lang === "en" ? "Approve now" : "אישור מיידי"}</button></div>)}</div> : <p className="rounded-2xl bg-slate-50 p-5 text-sm text-slate-500">{lang === "en" ? "Nothing else is waiting." : "אין בקשות נוספות בתור."}</p>}</section>
+  async function manage(row: ViewRow, action: "duplicate" | "pause" | "resume" | "delete") {
+    setBusy(true); setMenuId(null); setError("");
+    try { await manageCommunityUpdate(row.id, action); await load(); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to update item"); }
+    finally { setBusy(false); }
+  }
+
+  const campaignOptions = useMemo(() => (communityData?.communityCampaignRows ?? []).map((campaign) => ({ id: campaign.id, name: campaign.name, nameEn: campaign.nameEn })), [communityData]);
+  return <div className="mx-auto w-full max-w-[1500px] pb-10">
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-5"><div><p className="mb-2 text-sm font-bold text-raz-teal">{lang === "en" ? "Keep your community donors informed" : "שומרים על קשר עם תורמי הקהילה"}</p><h1 className="text-4xl font-bold text-raz-dark md:text-6xl">{lang === "en" ? "Community updates" : "עדכוני קהילה"}</h1><p className="mt-2 text-slate-500">{lang === "en" ? "Send only to donors attributed to your community or its linked campaigns." : "שולחים רק לתורמים שמיוחסים לקהילה או לקמפיינים המקושרים אליה."}</p></div><button type="button" onClick={() => { setEditingId(null); setWizardOpen(true); }} className="flex min-h-11 items-center gap-2 rounded-xl bg-raz-teal px-6 py-3 font-bold text-white transition-transform hover:scale-[1.03]"><Plus size={18} />{lang === "en" ? "Create community update" : "יצירת עדכון קהילה"}</button></div>
+    {error && <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p>}
+    <section className="rounded-2xl bg-white px-5 py-6 shadow-sm md:px-8"><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-sm"><thead className="border-b border-gray-200 text-raz-teal"><tr><th className="px-4 py-4 text-start">{lang === "en" ? "Audience" : "קהל"}</th><th className="px-4 py-4 text-start">{lang === "en" ? "Message" : "הודעה"}</th><th className="px-4 py-4 text-start">{lang === "en" ? "Timing" : "תזמון"}</th><th className="px-4 py-4 text-start">{lang === "en" ? "Sent" : "נשלח"}</th><th className="px-4 py-4 text-start">{lang === "en" ? "Status" : "סטטוס"}</th><th className="px-4 py-4 text-start">{lang === "en" ? "Actions" : "פעולות"}</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id} className="border-b border-gray-200 text-gray-800"><td className="px-4 py-4 font-bold">{row.audience === "all" ? (lang === "en" ? "All community donors" : "כל תורמי הקהילה") : (lang === "en" ? `${row.target_ids.length} linked campaigns` : `${row.target_ids.length} קמפיינים מקושרים`)}</td><td className="px-4 py-4"><p className="font-bold">{row.title}</p><p className="mt-1 line-clamp-1 text-xs text-gray-500">{row.body}</p></td><td className="px-4 py-4">{row.timing === "now" ? (lang === "en" ? "Immediate" : "מיידי") : row.timing === "scheduled" ? (lang === "en" ? "Scheduled" : "מתוזמן") : (lang === "en" ? "Trigger" : "טריגר")}</td><td className="px-4 py-4">{row.sent_so_far}</td><td className="px-4 py-4">{row.status === "sent" ? (lang === "en" ? "Sent" : "נשלח") : row.status === "paused" ? (lang === "en" ? "Paused" : "מושהה") : (lang === "en" ? "Active" : "פעיל")}</td><td className="relative px-4 py-4"><button type="button" onClick={() => { setEditingId(row.id); setWizardOpen(true); }} className="me-2 rounded-full bg-raz-teal p-2 text-white" aria-label={lang === "en" ? "Edit" : "עריכה"}><Pencil size={15} /></button><button type="button" onClick={() => setMenuId(menuId === row.id ? null : row.id)} className="rounded-full bg-slate-100 p-2 text-slate-600" aria-label={lang === "en" ? "More actions" : "פעולות נוספות"}><MoreVertical size={15} /></button>{menuId === row.id && <div className="absolute end-4 top-14 z-20 w-36 rounded-xl border border-gray-100 bg-white py-1 text-xs shadow-xl"><button disabled={busy} onClick={() => void manage(row, "duplicate")} className="block w-full px-4 py-2 text-start hover:bg-gray-50">{lang === "en" ? "Duplicate" : "שכפול"}</button>{row.status !== "sent" && <button disabled={busy} onClick={() => void manage(row, row.status === "paused" ? "resume" : "pause")} className="block w-full px-4 py-2 text-start hover:bg-gray-50">{row.status === "paused" ? (lang === "en" ? "Resume" : "הפעלה") : (lang === "en" ? "Pause" : "השהיה")}</button>}<button disabled={busy} onClick={() => void manage(row, "delete")} className="block w-full px-4 py-2 text-start text-red-600 hover:bg-red-50">{lang === "en" ? "Remove" : "הסרה"}</button></div>}</td></tr>)}</tbody></table></div>{rows.length === 0 && <div className="py-14 text-center"><p className="font-bold text-gray-700">{lang === "en" ? "No community updates yet" : "אין עדיין עדכוני קהילה"}</p><p className="mt-1 text-sm text-gray-400">{lang === "en" ? "Create an update for your linked campaign donors." : "אפשר ליצור עדכון לתורמי הקמפיינים המקושרים."}</p></div>}</section>
+    {wizardOpen && <CreateUpdateWizard lang={lang} t={t} initialDraft={rows.find((row) => row.id === editingId)?.draft} targetOptions={{ campaigns: campaignOptions }} audiences={["campaigns", "all"]} busy={busy} error={error} onClose={() => { setWizardOpen(false); setEditingId(null); setError(""); }} onCreate={(draft) => void save(draft)} />}
   </div>;
-}
-
-function RequestCard({ request, busy, lang, onDecide }: { request: PartnershipRequest; busy: boolean; lang: "he" | "en"; onDecide: (request: PartnershipRequest, action: "approve" | "reject") => Promise<void> }) {
-  return <article className="onboarding-card min-h-48 rounded-2xl border border-slate-200 bg-white p-5"><Clock3 className="text-raz-teal" size={22} /><h3 className="mt-5 font-black text-raz-dark">{request.org_name}</h3><p className="mt-1 text-sm text-slate-500">{request.campaign_title}</p><div className="mt-5 flex gap-2"><button type="button" onClick={() => void onDecide(request, "reject")} disabled={busy} className="interactive-control inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600" aria-label={lang === "en" ? "Reject" : "דחייה"}><X size={18} /></button><button type="button" onClick={() => void onDecide(request, "approve")} disabled={busy} className="interactive-control flex-1 rounded-xl bg-raz-teal px-3 text-sm font-bold text-white"><Check className="mx-auto" size={18} /></button></div></article>;
 }

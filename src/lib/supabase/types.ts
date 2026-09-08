@@ -232,6 +232,12 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["ngo_updates"]["Insert"]>;
         Relationships: [{ foreignKeyName: "ngo_updates_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }];
       };
+      community_updates: {
+        Row: { id: string; community_id: string; audience: "all" | "campaigns"; target_ids: string[]; channels: string[]; timing: "now" | "scheduled" | "trigger"; scheduled_at: string | null; trigger_type: "donation" | "quantity" | "days" | null; title: string; body: string; cta: "none" | "addProduct" | "priceQty"; image_name: string | null; status: "active" | "paused" | "sent"; sent_so_far: number; created_at: string; updated_at: string };
+        Insert: Omit<Database["public"]["Tables"]["community_updates"]["Row"], "id" | "created_at" | "updated_at"> & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["community_updates"]["Insert"]>;
+        Relationships: [{ foreignKeyName: "community_updates_community_id_fkey"; columns: ["community_id"]; isOneToOne: false; referencedRelation: "communities"; referencedColumns: ["id"] }];
+      };
       payment_methods: {
         Row: { id: string; donor_id: string | null; brand: string; last_four: string; psp_token: string | null; created_at: string };
         Insert: { id?: string; donor_id?: string | null; brand: string; last_four: string; psp_token?: string | null; created_at?: string };
@@ -260,7 +266,7 @@ export interface Database {
         Relationships: [{ foreignKeyName: "profile_special_days_profile_id_fkey"; columns: ["profile_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }];
       };
       system_updates: {
-        Row: { id: string; donor_id: string | null; org_id: string | null; title: string; title_en: string | null; detail: string | null; detail_en: string | null; status: string; action_label: string | null; action_label_en: string | null; created_at: string };
+        Row: { id: string; donor_id: string | null; org_id: string | null; community_id: string | null; title: string; title_en: string | null; detail: string | null; detail_en: string | null; status: string; action_label: string | null; action_label_en: string | null; created_at: string };
         Insert: Partial<Database["public"]["Tables"]["system_updates"]["Row"]> & { title: string };
         Update: Partial<Database["public"]["Tables"]["system_updates"]["Row"]>;
         Relationships: [];
@@ -345,6 +351,8 @@ export interface Database {
         Returns: string;
       };
       manage_ngo_update: { Args: { p_update_id: string; p_action: string }; Returns: string };
+      save_community_update: { Args: { p_update_id: string | null; p_audience: string; p_target_ids: string[]; p_channels: string[]; p_timing: string; p_scheduled_at: string | null; p_trigger_type: string | null; p_title: string; p_body: string; p_cta: string; p_image_name: string | null }; Returns: string };
+      manage_community_update: { Args: { p_update_id: string; p_action: string }; Returns: string };
       set_community_campaign: { Args: { p_campaign_id: string; p_action: string }; Returns: string };
       create_partnership_request: { Args: { p_campaign_id: string; p_initiator_type: string; p_community_id?: string | null }; Returns: string };
       decide_partnership_request: { Args: { p_request_id: string; p_action: string }; Returns: string };

@@ -254,6 +254,9 @@ RLS: readable when `donor_id = auth.uid()` or `donor_id is null`. Surfaced in th
 
 RLS: NGO owners can read only their organization's rows. All writes use the tenant-derived `save_ngo_update` and `manage_ngo_update` RPCs.
 
+### `community_updates`
+Community-authored messages mirror the NGO update lifecycle but are tenant-scoped to `community_id`. A community owner can target all donors attributed to their community or a selected set of their active/paused linked campaigns; product and organization targeting are intentionally unavailable. Immediate Push delivery writes recipient rows to `system_updates` with `community_id`, so the community remains the sender of record. All writes go through `save_community_update` and `manage_community_update`, which derive the community from `auth.uid()` and validate every target campaign membership.
+
 ### `community_campaigns`
 | Column | Type | Notes |
 |---|---|---|
@@ -309,3 +312,4 @@ RLS: public read; insert/update require an authenticated `admin` profile. Read v
 | `supabase/migrations/20260908133000_product_and_campaign_product_targets.sql` | Adds `products.global_target_quantity`; campaign creation/update now require product quantities and derive the campaign monetary goal server-side; adds product-in-campaign progress RPC | Apply through Supabase SQL Editor before deploying this product/campaign target UI |
 | `supabase/migrations/20260908140000_product_period_targets.sql` | Adds annual, monthly, or deadline target windows to standalone products and updates product progress/create/update RPCs | Apply through Supabase SQL Editor after `20260908133000_product_and_campaign_product_targets.sql` |
 | `supabase/migrations/20260908141000_fix_campaign_community_invites.sql` | Makes campaign bulk invitations create partnership-queue requests rather than obsolete pending community links | Apply through Supabase SQL Editor after the partnership queue migration |
+| `supabase/migrations/20260908150000_community_updates.sql` | Adds community-authored updates, tenant-derived delivery RPCs, and sender attribution on recipient updates | Apply through Supabase SQL Editor after the updates and community-campaign migrations |
