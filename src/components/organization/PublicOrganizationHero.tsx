@@ -2,24 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Heart } from "lucide-react";
-import ProductCard from "@/components/landing/ProductCard";
+import { BadgeCheck } from "lucide-react";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { campaignTargetLabel } from "@/lib/campaign-target";
 import { formatNIS } from "@/lib/mock-data";
-import type { getProductsByIds, getPublicCampaignsByOrg } from "@/lib/supabase/queries";
+import type { getPublicCampaignsByOrg } from "@/lib/supabase/queries";
 
 type Campaign = Awaited<ReturnType<typeof getPublicCampaignsByOrg>>[number];
-type Product = Awaited<ReturnType<typeof getProductsByIds>>[number];
-
 type Props = {
   organization: { id: string; initials: string; color: string; verified: boolean; name: string; nameEn?: string };
   campaign: Campaign;
-  products: Product[];
   lang: "he" | "en";
 };
 
-export default function PublicOrganizationHero({ organization, campaign, products, lang }: Props) {
+export default function PublicOrganizationHero({ organization, campaign, lang }: Props) {
   const isEnglish = lang === "en";
   const orgName = isEnglish ? (organization.nameEn ?? organization.name) : organization.name;
   const title = isEnglish ? (campaign.titleEn ?? campaign.title) : campaign.title;
@@ -41,11 +37,7 @@ export default function PublicOrganizationHero({ organization, campaign, product
           <Link href={`/campaign/${campaign.id}`} className="interactive-control inline-flex min-h-11 items-center justify-center rounded-full px-6 py-3 text-sm font-bold text-white" style={{ backgroundColor: organization.color }}>{isEnglish ? "Campaign page" : "לעמוד הקמפיין"}</Link>
         </div>
       </section>
-
-      <section className="mt-8"><div className="flex items-center justify-between gap-4"><div><p className="text-sm font-bold" style={{ color: organization.color }}>{isEnglish ? "Ways to help" : "דרכים לתרום"}</p><h2 className="mt-1 text-3xl font-extrabold text-raz-dark">{isEnglish ? "Choose the impact you create" : "בחרו את ההשפעה שלכם"}</h2></div>{organization.verified && <span className="inline-flex items-center gap-1 text-xs font-bold text-raz-teal"><BadgeCheck size={17} />{isEnglish ? "Verified nonprofit" : "עמותה מאומתת"}</span>}</div>
-        {products.length > 0 && <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{products.map((product) => <ProductCard key={product.id} title={isEnglish ? (product.nameEn ?? product.name) : product.name} price={product.price} emoji={product.emoji} imageUrl={product.imageUrl} videoUrl={product.videoUrl} donationCount={campaign.donors} onOpenDetails={() => { window.location.href = `/product/${product.id}?campaign_id=${campaign.id}`; }} onChoose={() => { window.location.href = `/product/${product.id}?campaign_id=${campaign.id}`; }} />)}</div>}
-        <p className="mt-4 text-center text-sm font-bold text-slate-500"><Heart className="me-1 inline text-pink-500" size={16} fill="currentColor" />{campaign.donors.toLocaleString()} {isEnglish ? "people have already chosen to donate" : "כבר בחרו לתרום"}</p>
-      </section>
+      {organization.verified && <p className="mt-6 text-center text-xs font-bold text-raz-teal"><BadgeCheck className="me-1 inline" size={16} />{isEnglish ? "Verified nonprofit" : "עמותה מאומתת"}</p>}
     </>
   );
 }

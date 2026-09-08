@@ -40,8 +40,8 @@ export default function OrganizationPage() {
   return <main className="min-h-screen bg-raz-surface pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
       <button type="button" onClick={() => router.back()} className="interactive-control inline-flex min-h-11 items-center gap-2 text-sm font-bold text-raz-teal"><ArrowRight size={18} />{lang === "en" ? "Back" : "חזרה"}</button>
-      <div className="mt-5"><PublicOrganizationHero organization={org} campaign={campaign} products={products} lang={lang} /></div>
-      <OrganizationProfileTabs donations={donations} communities={communities} campaignStory={lang === "en" ? (campaign.storyEn ?? campaign.story) : campaign.story} organization={org} lang={lang} />
+      <div className="mt-5"><PublicOrganizationHero organization={org} campaign={campaign} lang={lang} /></div>
+      <OrganizationProfileTabs donations={donations} communities={communities} products={products} campaignId={campaign.id} campaignDonors={campaign.donors} organization={org} lang={lang} />
     </div>
     <BottomNav variant="donor" />
   </main>;
