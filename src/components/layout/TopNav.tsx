@@ -46,10 +46,9 @@ export default function TopNav() {
     : "/my-donations";
 
   const donorLinks = [
-    { key: "nav.home", href: "/" },
+    { key: "nav.homeToday", href: "/" },
     { key: "nav.search", href: "/search" },
-    ...(user && profile ? [{ key: "nav.dashboard", href: dashboardHref }] : []),
-    { key: "nav.profile", href: profileHref },
+    ...(user && profile ? [{ key: "nav.personalArea", href: dashboardHref }] : []),
   ];
   const nonprofitLinks = [
     { key: "nav.dashboard", href: "/nonprofit" },
