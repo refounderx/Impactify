@@ -25,8 +25,8 @@ export default function AudienceFilterOverlay({
     void getDiscoverableProductsForAudience(kind).then(setProducts);
   }, [kind]);
 
-  const overlayWidth = products.length === 1 ? "max-w-[20rem]" : products.length === 2 ? "max-w-[39rem]" : "max-w-6xl";
-  const gridColumns = products.length === 1 ? "grid-cols-1" : products.length === 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4";
+  const overlayWidth = products.length === 1 ? "max-w-[20rem]" : products.length === 2 ? "max-w-[39rem]" : products.length === 3 ? "max-w-[59rem]" : "max-w-6xl";
+  const gridColumns = products.length === 1 ? "grid-cols-1" : products.length === 2 ? "grid-cols-2" : products.length === 3 ? "grid-cols-2 md:grid-cols-3" : "grid-cols-2 md:grid-cols-4";
 
   return (
     <>
