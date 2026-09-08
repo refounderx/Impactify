@@ -29,14 +29,14 @@ export default function CampaignTabs({ campaignId, story, orgBio }: CampaignTabs
   ];
 
   return (
-    <div className="bg-white rounded-2xl p-5">
-      <div className="flex flex-wrap gap-1 border-b border-gray-100 mb-4 -mx-1">
+    <div className="rounded-2xl bg-white p-4 sm:p-6">
+      <div className="mb-5 flex flex-wrap justify-end gap-1 border-b border-slate-200 px-1">
         {tabs.map((tb) => (
           <button
             key={tb.id}
             onClick={() => setTab(tb.id)}
             className={`px-3 py-2.5 text-sm font-bold rounded-t-lg transition-colors ${
-              tab === tb.id ? "text-raz-teal border-b-2 border-raz-teal" : "text-gray-400 hover:text-gray-600"
+              tab === tb.id ? "border-b-2 border-raz-teal text-raz-teal" : "text-gray-400 hover:text-gray-600"
             }`}
           >
             {tb.label}
@@ -45,9 +45,9 @@ export default function CampaignTabs({ campaignId, story, orgBio }: CampaignTabs
       </div>
 
       {tab === "donors" && (
-        donors.length ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        donors.length ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {donors.map((d) => (
-            <div key={d.id} className="flex items-start gap-3 bg-gray-50 rounded-xl p-3">
+            <div key={d.id} className="flex items-start gap-3 rounded-xl border border-slate-100 bg-white p-3 shadow-sm">
               <div className="w-9 h-9 rounded-full bg-raz-teal/15 flex items-center justify-center text-raz-teal font-bold text-sm flex-shrink-0">
                 {d.anonymous ? "?" : d.name.slice(0, 1)}
               </div>

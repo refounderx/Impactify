@@ -16,6 +16,7 @@ import { getCampaignVideoSource } from "@/lib/campaign-media";
 import { sharePage } from "@/lib/share";
 import { useCookieConsent } from "@/contexts/CookieConsentContext";
 import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-target";
+import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -44,7 +45,7 @@ export default function CampaignDetail() {
   }, [id]);
 
   if (loading) return (
-    <div className="flex flex-col min-h-screen bg-raz-surface">
+    <div className="flex min-h-screen flex-col bg-white">
       <div className="bg-gray-200 animate-pulse h-64 md:h-80" />
       <div className="max-w-5xl mx-auto w-full px-6 py-6">
         <div className="bg-white rounded-2xl h-40 animate-pulse mb-4" />
@@ -89,9 +90,11 @@ export default function CampaignDetail() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-raz-surface">
-      {/* Hero: campaign video/image selected in the campaign wizard */}
-      <div className={`bg-gradient-to-br ${campaign.gradient} h-64 md:h-80 flex items-center justify-center relative overflow-visible`}>
+    <div className="flex min-h-screen flex-col bg-white">
+      <main className="mx-auto w-full max-w-6xl px-5 pb-12 pt-8 md:px-8 md:pt-12">
+      {/* The campaign's visual story leads the page; campaign data stays immediately below it. */}
+      <div className="relative">
+      <div className={`relative flex min-h-[19rem] items-center justify-center overflow-hidden rounded-[1.75rem] bg-gradient-to-br sm:min-h-[24rem] md:min-h-[28rem] ${campaign.gradient}`}>
         {video?.kind === "embed" && preferences.marketing ? (
           <iframe
             src={video.url}
@@ -117,16 +120,22 @@ export default function CampaignDetail() {
         ) : (
           <span className="text-8xl md:text-9xl opacity-40">{campaign.emoji}</span>
         )}
-        <button type="button" onClick={() => router.back()} className="micro-hint micro-hint-below absolute top-4 start-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.back")}>
+        <div className="absolute inset-0 bg-gradient-to-t from-raz-dark/70 via-raz-dark/10 to-transparent" />
+        <div className="absolute inset-x-5 bottom-6 z-10 text-white sm:inset-x-10 sm:bottom-10" dir={lang === "en" ? "ltr" : "rtl"}>
+          <p className="mb-2 text-sm font-bold text-white/85 sm:text-base">{orgName}</p>
+          <h1 className="max-w-3xl text-3xl font-extrabold leading-tight drop-shadow-sm sm:text-5xl md:text-6xl">{title}</h1>
+        </div>
+        <button type="button" onClick={() => router.back()} className="micro-hint micro-hint-below absolute start-4 top-4 z-20 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm hover:bg-white/30" aria-label={t("hint.back")}>
           <ArrowRight size={20} />
         </button>
-        <button type="button" onClick={() => void sharePage(title).then((result) => setShareNotice(result === "copied" ? (lang === "en" ? "Link copied" : "הקישור הועתק") : ""))} className="micro-hint micro-hint-below absolute top-4 end-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-sm" aria-label={t("hint.share")}>
+        <button type="button" onClick={() => void sharePage(title).then((result) => setShareNotice(result === "copied" ? (lang === "en" ? "Link copied" : "הקישור הועתק") : ""))} className="micro-hint micro-hint-below absolute end-4 top-4 z-20 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm hover:bg-white/30" aria-label={t("hint.share")}>
           <Share2 size={20} />
         </button>
         {shareNotice && <span role="status" className="absolute end-4 top-14 rounded-full bg-white px-3 py-1 text-xs font-bold text-raz-dark">{shareNotice}</span>}
+      </div>
         {/* Organization logo, or initials only when no logo has been uploaded. */}
         <div
-          className="absolute -bottom-7 start-6 z-10 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white text-lg font-bold text-white shadow-md"
+          className="absolute -top-6 start-6 z-30 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white text-lg font-bold text-white shadow-md sm:h-20 sm:w-20"
           style={{ backgroundColor: org?.color ?? "#00B5AD" }}
         >
           {org?.logo_url ? (
@@ -136,34 +145,32 @@ export default function CampaignDetail() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto w-full px-6 pt-10 pb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-gray-600 font-medium">{orgName}</span>
-          {org?.verified && (
-            <span className="bg-raz-teal/10 text-raz-teal text-xs px-2 py-0.5 rounded-full ms-1"><EditableText tKey="campaign.orgVerified" /></span>
-          )}
-        </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 leading-snug mb-6">{title}</h1>
-
-        {/* Progress, set as goal in the campaign wizard */}
-        <div className="mb-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-bold text-gray-800 font-numeric text-lg">{formatNIS(campaign.raised)}</span>
-            <span className="font-bold text-raz-teal text-lg">{pct}%</span>
+      <section className="mx-auto max-w-5xl px-1 pt-8 md:pt-10" dir={lang === "en" ? "ltr" : "rtl"}>
+        {/* Progress, set as goal in the campaign wizard. */}
+        <div className="mb-7">
+          <div className="mb-3 flex items-end justify-between gap-4">
+            <p className="text-sm font-medium text-slate-500"><EditableText tKey="campaign.goalLabel" /> {formatNIS(campaign.goal)}</p>
+            <div className="flex items-baseline gap-3 font-numeric" style={{ color: org?.color ?? "#00B5AD" }}>
+              <span className="text-2xl font-extrabold sm:text-3xl">{pct}%</span>
+              <span className="h-6 w-px bg-current opacity-30" />
+              <span className="text-2xl font-extrabold sm:text-3xl">{formatNIS(campaign.raised)}</span>
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-            <div className="bg-raz-teal rounded-full h-full transition-all duration-500" style={{ width: `${pct}%` }} />
+          <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: org?.color ?? "#00B5AD" }} />
           </div>
-          <p className="text-sm text-gray-400 mt-1.5"><EditableText tKey="campaign.goalLabel" /> {formatNIS(campaign.goal)}</p>
-          <p className="mt-1 text-sm font-bold text-raz-teal">{campaignTargetLabel(campaign, lang)}</p>
-          <p className="mt-1 text-xs text-gray-400">{campaignTimeRemaining(campaign, lang)}</p>
+          <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs sm:text-sm">
+            <p className="font-bold" style={{ color: org?.color ?? "#00B5AD" }}>{campaignTargetLabel(campaign, lang)}</p>
+            <p className="text-slate-400">{campaignTimeRemaining(campaign, lang)}</p>
+          </div>
         </div>
 
         {/* Opens the donation-amount popup */}
-        <div className="flex justify-center mb-8">
+        <div className="mb-10 flex justify-center">
           <button
             onClick={() => { setSelectedProduct(null); setShowModal(true); }}
-            className="bg-raz-teal text-white rounded-full px-8 py-3.5 font-bold text-lg hover:bg-raz-teal-dark transition-colors shadow-sm"
+            className="rounded-full px-9 py-3 text-sm font-bold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+            style={{ backgroundColor: org?.color ?? "#00B5AD" }}
           >
             <EditableText tKey="campaign.chooseAmount" />
           </button>
@@ -171,7 +178,9 @@ export default function CampaignDetail() {
 
         {/* 3 products chosen by the org admin when creating the campaign */}
         {products.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <section className="mx-auto mb-12 max-w-4xl">
+            <h2 className="mb-5 text-center text-xl font-extrabold text-raz-dark sm:text-2xl">{lang === "en" ? "Choose the impact you want to make" : "בחרו את התרומה שתרצו לאפשר"}</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {campaignProducts.slice(0, 3).map((p) => (
               <ProductCard
                 key={p.productId}
@@ -186,15 +195,19 @@ export default function CampaignDetail() {
               />
             ))}
           </div>
+          </section>
         )}
 
         {/* Tabs: donors / communities invited by the org / campaign story / about the org */}
+        <section className="rounded-[1.75rem] bg-slate-50 p-3 sm:p-6">
         <CampaignTabs
           campaignId={campaign.id}
           story={story}
           orgBio={orgBio ?? ""}
         />
-      </div>
+        </section>
+      </section>
+      </main>
 
       {showModal && !selectedProduct && (
         <DonateAmountModal
@@ -209,6 +222,7 @@ export default function CampaignDetail() {
       )}
       {selectedProduct && <LiveProductDonationModal product={selectedProduct} otherProducts={campaignProducts.filter((product) => product.productId !== selectedProduct.productId)} onChooseProduct={setSelectedProduct} onContinue={() => continueWithProduct(selectedProduct)} onClose={() => setSelectedProduct(null)} />}
 
+      <LandingFooter />
       <BottomNav variant="donor" />
     </div>
   );
