@@ -10,15 +10,9 @@ import AudienceFilterOverlay from "./AudienceFilterOverlay";
 import EditableText from "@/components/admin/EditableText";
 
 function Badge({ text, lang }: { text: string; lang: string }) {
-  const hebrewCountCaption = lang === "he" ? text.match(/^(\d[\d,.]*)\s+(.+)$/) : null;
-
   return (
-    <span className="absolute bottom-0 left-1/2 z-10 flex min-h-8 w-[86%] -translate-x-1/2 items-center justify-center rounded-lg border border-gray-100 bg-white px-2.5 py-1 text-[11px] font-medium leading-tight text-gray-700 shadow-sm text-center">
-      {hebrewCountCaption ? (
-        <span dir="rtl">
-          {hebrewCountCaption[2]} <bdi dir="ltr">{hebrewCountCaption[1]}</bdi>
-        </span>
-      ) : text}
+    <span dir={lang === "he" ? "rtl" : "ltr"} className="absolute bottom-0 left-1/2 z-10 flex min-h-8 w-[86%] -translate-x-1/2 items-center justify-center rounded-lg border border-gray-100 bg-white px-2.5 py-1 text-[11px] font-medium leading-tight text-gray-700 shadow-sm text-center">
+      {text}
     </span>
   );
 }
