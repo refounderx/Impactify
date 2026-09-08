@@ -56,7 +56,7 @@ export default function AudienceFilterOverlay({
                 imageUrl={p.imageUrl}
                 videoUrl={p.videoUrl}
                 donationCount={p.donationCount}
-                onOpenDetails={() => router.push(`/product/${p.productId}?campaign_id=${p.campaignId}`)}
+                onOpenDetails={() => router.push(`/product/${p.productId}`)}
                 onChoose={() => setSelectedProduct(p)}
               />
             ))}
@@ -64,7 +64,7 @@ export default function AudienceFilterOverlay({
         </div>
       </div>
 
-      {selectedProduct && <LiveProductDonationModal product={selectedProduct} otherProducts={products.filter((product) => product !== selectedProduct)} onChooseProduct={setSelectedProduct} onContinue={() => router.push(`/donate/${selectedProduct.campaignId}/payment?amount=${selectedProduct.price}&product_id=${selectedProduct.productId}`)} onClose={() => setSelectedProduct(null)} />}
+      {selectedProduct && <LiveProductDonationModal product={selectedProduct} otherProducts={products.filter((product) => product !== selectedProduct)} onChooseProduct={setSelectedProduct} onContinue={() => router.push(`/donate/${selectedProduct.productId}/payment?direct_product=1&amount=${selectedProduct.price}&product_id=${selectedProduct.productId}`)} onClose={() => setSelectedProduct(null)} />}
 
     </>
   );

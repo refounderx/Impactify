@@ -69,6 +69,7 @@ export function toUIOrg(row: PublicOrganization) {
 export function toUIProduct(row: Product) {
   return {
     id: row.id,
+    orgId: row.org_id,
     name: row.name,
     nameEn: row.name_en ?? undefined,
     price: Number(row.price),

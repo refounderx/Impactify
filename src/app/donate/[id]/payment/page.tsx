@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { getCampaignById } from "@/lib/supabase/queries";
+import { getCampaignById, getProductsByIds } from "@/lib/supabase/queries";
+import { getOrgById } from "@/lib/supabase/queries-orgs";
 import { formatNIS } from "@/lib/mock-data";
 import { Shield, Lock, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
@@ -12,30 +13,34 @@ export default function PaymentPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ amount?: string; product_id?: string; recurring?: string; community_id?: string }>;
+  searchParams: Promise<{ amount?: string; product_id?: string; recurring?: string; community_id?: string; direct_product?: string }>;
 }) {
   const { id } = use(params);
-  const { amount: amountParam, product_id: productId, recurring: recurringParam, community_id: communityId } = use(searchParams);
+  const { amount: amountParam, product_id: productId, recurring: recurringParam, community_id: communityId, direct_product: directProduct } = use(searchParams);
   const router = useRouter();
   const { lang } = useLang();
   const [campaignData, setCampaignData] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
+  const [productData, setProductData] = useState<Awaited<ReturnType<typeof getProductsByIds>>[number] | null>(null);
+  const [directOrg, setDirectOrg] = useState<Awaited<ReturnType<typeof getOrgById>>>(null);
   const [submitting, setSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState("");
 
   useEffect(() => {
-    getCampaignById(id).then((c) => { if (c) setCampaignData(c); });
-  }, [id]);
+    if (directProduct === "1") { getProductsByIds([productId ?? id]).then(async ([product]) => { setProductData(product ?? null); if (product?.orgId) setDirectOrg(await getOrgById(product.orgId)); }); }
+    else getCampaignById(id).then((c) => { if (c) setCampaignData(c); });
+  }, [id, productId, directProduct]);
 
-  if (!campaignData) return <div className="min-h-screen bg-raz-surface animate-pulse" />;
+  if ((directProduct === "1" && !productData) || (directProduct !== "1" && !campaignData)) return <div className="min-h-screen bg-raz-surface animate-pulse" />;
   const campaign = campaignData;
-  const org = campaign._org;
+  const org = campaign?._org ?? directOrg;
   const amount = parseInt(amountParam ?? "100") || 100;
   const isRecurring = recurringParam === "1";
   const isSimulation = process.env.NODE_ENV === "development";
   const orgName = lang === "en"
-    ? (org?.name_en ?? org?.name)
+    ? ((org as { name_en?: string; nameEn?: string; name?: string } | null)?.name_en ?? (org as { nameEn?: string } | null)?.nameEn ?? org?.name)
     : org?.name;
-  const campaignTitle = lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title;
+  const campaignTitle = campaign ? (lang === "en" ? (campaign.titleEn ?? campaign.title) : campaign.title) : (lang === "en" ? (productData?.nameEn ?? productData?.name) : productData?.name);
+  const gradient = campaign?.gradient ?? "from-teal-400 to-blue-400";
 
   return (
     <div className="flex flex-col min-h-screen bg-raz-surface">
@@ -83,7 +88,7 @@ export default function PaymentPage({
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl p-5 sticky top-24">
               <h3 className="font-bold text-gray-700 mb-4"><EditableText tKey="payment.summary" /></h3>
-              <div className={`bg-gradient-to-br ${campaign.gradient} rounded-xl p-4 text-white mb-4`}>
+              <div className={`bg-gradient-to-br ${gradient} rounded-xl p-4 text-white mb-4`}>
                 <p className="text-white/80 text-sm">{orgName}</p>
                 <p className="font-bold mt-1">{campaignTitle}</p>
                 <p className="text-3xl font-bold font-numeric mt-3">{formatNIS(amount)}</p>
@@ -95,16 +100,16 @@ export default function PaymentPage({
                   setPaymentError("");
                   const orgId = (campaign as {org_id?:string})?.org_id
                     ?? (campaign as {orgId?:string})?.orgId
-                    ?? org?.id ?? "";
+                    ?? org?.id ?? productData?.orgId ?? "";
                   try {
                     const response = await fetch("/api/donations", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ campaign_id: campaign.id, org_id: orgId, amount, is_recurring: isRecurring, product_id: productId ?? undefined, quantity: productId ? 1 : undefined, community_id: communityId ?? undefined, simulation: isSimulation }),
+                      body: JSON.stringify({ campaign_id: campaign?.id, org_id: orgId, amount, is_recurring: isRecurring, product_id: directProduct === "1" ? productData?.id : productId ?? undefined, quantity: (directProduct === "1" || productId) ? 1 : undefined, community_id: communityId ?? undefined, simulation: isSimulation }),
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.error ?? "Donation could not be saved");
-                    router.push(`/donate/${campaign.id}/thanks?id=${result.donation.id}&receipt=${encodeURIComponent(result.receiptId)}`);
+                    router.push(`/donate/${id}/thanks?id=${result.donation.id}&receipt=${encodeURIComponent(result.receiptId)}`);
                   } catch (error) {
                     setPaymentError(error instanceof Error ? error.message : "Donation could not be saved");
                     setSubmitting(false);

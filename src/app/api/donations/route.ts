@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
   const sb = createAdminClient();
   const { data, error } = await sb
     .from("donations")
-    .select("id, amount, receipt_id, receipt_url, created_at, campaign_id, campaigns(title, title_en, gradient, emoji), organizations(name, name_en)")
+    .select("id, amount, receipt_id, receipt_url, created_at, campaign_id, product_id, campaigns(title, title_en, gradient, emoji), products(name, name_en), organizations(name, name_en)")
     .eq("id", id)
     .eq("receipt_id", receiptId)
     .single();

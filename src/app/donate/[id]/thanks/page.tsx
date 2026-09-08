@@ -15,8 +15,10 @@ type Confirmation = {
   receipt_id: string;
   receipt_url: string | null;
   created_at: string;
-  campaign_id: string;
+  campaign_id: string | null;
+  product_id: string | null;
   campaigns: { title: string; title_en: string | null; gradient: string; emoji: string } | null;
+  products: { name: string; name_en: string | null } | null;
   organizations: { name: string; name_en: string | null } | null;
 };
 
@@ -44,11 +46,11 @@ export default function ThanksPage() {
   if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
   if (!donation) return <div className="min-h-screen bg-raz-surface animate-pulse" />;
 
-  const campaignTitle = lang === "en" ? (donation.campaigns?.title_en ?? donation.campaigns?.title) : donation.campaigns?.title;
+  const campaignTitle = lang === "en" ? (donation.campaigns?.title_en ?? donation.campaigns?.title ?? donation.products?.name_en ?? donation.products?.name) : (donation.campaigns?.title ?? donation.products?.name);
   const orgName = lang === "en" ? (donation.organizations?.name_en ?? donation.organizations?.name) : donation.organizations?.name;
   const date = new Date(donation.created_at).toLocaleDateString(lang === "en" ? "en-GB" : "he-IL");
-  const shareText = lang === "en" ? `I donated ${formatNIS(Number(donation.amount))} to ${campaignTitle} through Impactify` : `תרמתי ${formatNIS(Number(donation.amount))} לקמפיין ${campaignTitle} דרך Impactify`;
-  const shareUrl = `/campaign/${donation.campaign_id}`;
+  const shareText = lang === "en" ? `I donated ${formatNIS(Number(donation.amount))} to ${campaignTitle} through Impactify` : `תרמתי ${formatNIS(Number(donation.amount))} ל${campaignTitle} דרך Impactify`;
+  const shareUrl = donation.campaign_id ? `/campaign/${donation.campaign_id}` : `/product/${donation.product_id}`;
   const openShare = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 
   return (
