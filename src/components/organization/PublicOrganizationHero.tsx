@@ -1,16 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { BadgeCheck, Play } from "lucide-react";
-import ProgressBar from "@/components/ui/ProgressBar";
-import { campaignTargetLabel } from "@/lib/campaign-target";
-import { formatNIS } from "@/lib/mock-data";
 import type { getPublicCampaignsByOrg } from "@/lib/supabase/queries";
 
 type Campaign = Awaited<ReturnType<typeof getPublicCampaignsByOrg>>[number];
 type Props = {
-  organization: { id: string; initials: string; color: string; verified: boolean; name: string; nameEn?: string };
+  organization: { id: string; initials: string; color: string; verified: boolean; name: string; nameEn?: string; logo_url?: string; founded?: string; foundedEn?: string; ceo?: string; ceoEn?: string; volunteers?: number; address?: string; addressEn?: string; phone?: string };
   campaign: Campaign;
   lang: "he" | "en";
 };
@@ -32,12 +28,13 @@ export default function PublicOrganizationHero({ organization, campaign, lang }:
             <div><p className="text-sm font-bold text-white/80">{isEnglish ? "Current campaign" : "הקמפיין הפעיל"}</p><p className="mt-1 text-xl font-extrabold leading-tight sm:text-3xl">{title}</p></div>
           </div>
         </div>
-        <div className="grid gap-6 p-6 sm:grid-cols-[1fr_auto] sm:items-end sm:p-8">
-          <div><div className="flex flex-wrap items-baseline justify-between gap-3"><span className="text-3xl font-extrabold text-raz-dark">{formatNIS(campaign.raised)}</span><span className="font-bold" style={{ color: organization.color }}>{Math.min(100, Math.round((campaign.raised / campaign.goal) * 100))}%</span></div><div className="mt-3"><ProgressBar raised={campaign.raised} goal={campaign.goal} /></div><p className="mt-2 text-sm text-slate-500">{campaignTargetLabel(campaign, lang)}</p></div>
-          <Link href={`/campaign/${campaign.id}`} className="interactive-control inline-flex min-h-11 items-center justify-center rounded-full px-6 py-3 text-sm font-bold text-white" style={{ backgroundColor: organization.color }}>{isEnglish ? "Campaign page" : "לעמוד הקמפיין"}</Link>
-        </div>
       </section>
-      {organization.verified && <p className="mt-6 text-center text-xs font-bold text-raz-teal"><BadgeCheck className="me-1 inline" size={16} />{isEnglish ? "Verified nonprofit" : "עמותה מאומתת"}</p>}
+      <section className="mt-6 rounded-[1.5rem] border bg-white p-5 shadow-sm sm:p-6" style={{ borderColor: organization.color }}>
+        <div className="flex items-center gap-4"><span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-2xl font-black shadow-md" style={{ color: organization.color }}>{organization.logo_url ? <Image src={organization.logo_url} alt={orgName} width={80} height={80} className="h-full w-full object-cover" /> : organization.initials}</span><div><h2 className="text-xl font-extrabold text-raz-dark">{orgName}</h2>{organization.verified && <p className="mt-1 text-xs font-bold text-raz-teal"><BadgeCheck className="me-1 inline" size={15} />{isEnglish ? "Verified nonprofit" : "עמותה מאומתת"}</p>}</div></div>
+        <dl className="mt-6 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">{organization.founded && <Detail label={isEnglish ? "Founded" : "נוסדה"} value={isEnglish ? (organization.foundedEn ?? organization.founded) : organization.founded} />}{organization.ceo && <Detail label={isEnglish ? "CEO" : "מנכ״ל/ית"} value={isEnglish ? (organization.ceoEn ?? organization.ceo) : organization.ceo} />}{organization.volunteers !== undefined && <Detail label={isEnglish ? "Volunteers" : "מתנדבים"} value={organization.volunteers.toLocaleString()} />}{organization.address && <Detail label={isEnglish ? "Address" : "כתובת"} value={isEnglish ? (organization.addressEn ?? organization.address) : organization.address} />}{organization.phone && <Detail label={isEnglish ? "Phone" : "טלפון"} value={organization.phone} />}</dl>
+      </section>
     </>
   );
 }
+
+function Detail({ label, value }: { label: string; value: string }) { return <div className="flex items-baseline justify-between gap-3"><dt className="text-slate-400">{label}</dt><dd className="text-end font-bold text-slate-700">{value}</dd></div>; }

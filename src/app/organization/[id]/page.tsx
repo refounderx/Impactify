@@ -7,7 +7,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import PublicOrganizationHero from "@/components/organization/PublicOrganizationHero";
 import OrganizationProfileTabs from "@/components/organization/OrganizationProfileTabs";
 import { useLang } from "@/contexts/LanguageContext";
-import { getProductsByIds, getPublicCampaignsByOrg, getOrgById, getPublicOrganizationCommunities, getPublicOrganizationDonations } from "@/lib/supabase/queries";
+import { getProductsByIds, getPublicCampaignsByOrg, getOrgById } from "@/lib/supabase/queries";
 
 export default function OrganizationPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,16 +16,12 @@ export default function OrganizationPage() {
   const [org, setOrg] = useState<Awaited<ReturnType<typeof getOrgById>>>(null);
   const [campaigns, setCampaigns] = useState<Awaited<ReturnType<typeof getPublicCampaignsByOrg>>>([]);
   const [products, setProducts] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
-  const [donations, setDonations] = useState<Awaited<ReturnType<typeof getPublicOrganizationDonations>>>([]);
-  const [communities, setCommunities] = useState<Awaited<ReturnType<typeof getPublicOrganizationCommunities>>>([]);
 
   useEffect(() => {
     if (!id) return;
-    void Promise.all([getOrgById(id), getPublicCampaignsByOrg(id), getPublicOrganizationDonations(id), getPublicOrganizationCommunities(id)]).then(async ([organization, organizationCampaigns, publicDonations, publicCommunities]) => {
+    void Promise.all([getOrgById(id), getPublicCampaignsByOrg(id)]).then(async ([organization, organizationCampaigns]) => {
       setOrg(organization);
       setCampaigns(organizationCampaigns);
-      setDonations(publicDonations);
-      setCommunities(publicCommunities);
       const productIds = organizationCampaigns[0]?.productIds.slice(0, 3) ?? [];
       if (productIds.length) setProducts(await getProductsByIds(productIds));
     });
@@ -46,7 +42,7 @@ export default function OrganizationPage() {
           <p className="text-sm font-bold" style={{ color: org.color }}>{lang === "en" ? "About the nonprofit" : "על העמותה"}</p>
           <h1 className="mt-2 text-4xl font-extrabold leading-tight text-raz-dark sm:text-5xl">{orgName}</h1>
           {orgBio && <p className="mt-5 max-w-2xl whitespace-pre-line text-base leading-8 text-slate-600">{orgBio}</p>}
-          <OrganizationProfileTabs donations={donations} communities={communities} products={products} campaignId={campaign.id} campaignDonors={campaign.donors} organization={org} lang={lang} />
+          <OrganizationProfileTabs products={products} campaignId={campaign.id} campaignDonors={campaign.donors} organization={org} lang={lang} />
         </section>
         <aside className="min-w-0" dir={lang === "en" ? "ltr" : "rtl"}><PublicOrganizationHero organization={org} campaign={campaign} lang={lang} /></aside>
       </div>
