@@ -396,3 +396,12 @@
 **Context:** Donors choose concrete needs/products, while campaigns are externally promoted collections of products rather than the primary discovery flow.
 **Rationale:** This keeps the donation unit and its cumulative impact stable when a product appears in multiple campaigns, while preserving campaign/community attribution where a referral context exists.
 **Consequences:** The product-first migration must be applied before direct-product UI routes are enabled in production. The donation API continues to derive prices from the database and validates a campaign-product link only when a campaign ID is supplied.
+
+---
+
+## 2026-09-08 — Product and campaign targets use separate scopes
+
+**Decision:** Each product owns a global unit target, while each campaign stores a required quantity for every selected product. The campaign's monetary goal is derived server-side from the selected products' current prices and required quantities.
+**Context:** A standalone product can receive direct donations and may be used in multiple campaigns, so global product progress cannot represent a particular campaign's need.
+**Rationale:** Separate scopes let a product page present the relevant goal for its entry context without letting a client submit an arbitrary campaign target.
+**Consequences:** Creating or updating a campaign requires at least one product and one positive quantity per selected product. The public product page calls distinct RPCs for global and campaign-scoped progress.

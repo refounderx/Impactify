@@ -116,6 +116,7 @@ export type AdminProductRow = {
   description: string;
   descriptionEn: string;
   emoji: string;
+  globalTargetQuantity: number;
   active: boolean;
 };
 
@@ -134,6 +135,7 @@ export const adminProductRows: AdminProductRow[] = Array.from({ length: 6 }).map
   description: "",
   descriptionEn: "",
   emoji: "💙",
+  globalTargetQuantity: 1,
   active: true,
 }));
 

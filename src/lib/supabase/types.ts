@@ -100,17 +100,18 @@ export interface Database {
           emoji: string | null;
           image_url: string | null;
           video_url: string | null;
+          global_target_quantity: number;
           active: boolean;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["products"]["Row"], "id" | "created_at">;
+        Insert: Omit<Database["public"]["Tables"]["products"]["Row"], "id" | "created_at" | "global_target_quantity"> & { global_target_quantity?: number };
         Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
         Relationships: [];
       };
       campaign_products: {
-        Row: { campaign_id: string; product_id: string };
-        Insert: Database["public"]["Tables"]["campaign_products"]["Row"];
-        Update: never;
+        Row: { campaign_id: string; product_id: string; required_quantity: number };
+        Insert: Omit<Database["public"]["Tables"]["campaign_products"]["Row"], "required_quantity"> & { required_quantity?: number };
+        Update: Partial<Database["public"]["Tables"]["campaign_products"]["Insert"]>;
         Relationships: [
           { foreignKeyName: "campaign_products_campaign_id_fkey"; columns: ["campaign_id"]; isOneToOne: false; referencedRelation: "campaigns"; referencedColumns: ["id"] },
           { foreignKeyName: "campaign_products_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] },
@@ -367,6 +368,7 @@ export interface Database {
           p_description_en: string | null;
           p_price: number;
           p_emoji: string | null;
+          p_global_target_quantity?: number;
         };
         Returns: string;
       };
@@ -387,6 +389,7 @@ export interface Database {
           p_goal: number;
           p_end_date: string | null;
           p_product_ids?: string[];
+          p_product_quantities?: number[];
           p_hero_image_url?: string | null;
           p_video_url?: string | null;
           p_goal_type?: CampaignGoalType;
@@ -403,6 +406,7 @@ export interface Database {
           p_goal: number;
           p_end_date: string | null;
           p_product_ids?: string[];
+          p_product_quantities?: number[];
           p_hero_image_url?: string | null;
           p_video_url?: string | null;
           p_goal_type?: CampaignGoalType;
@@ -412,6 +416,14 @@ export interface Database {
       get_campaign_progress: {
         Args: { p_campaign_ids: string[] };
         Returns: { campaign_id: string; goal_type: CampaignGoalType; period_start: string; period_end: string | null; raised: number; donors_count: number }[];
+      };
+      get_product_progress: {
+        Args: { p_product_ids: string[] };
+        Returns: { product_id: string; raised: number; donated_quantity: number; donors_count: number }[];
+      };
+      get_campaign_product_progress: {
+        Args: { p_campaign_id: string; p_product_id: string };
+        Returns: { required_quantity: number; donated_quantity: number; raised: number }[];
       };
       update_ngo_product: {
         Args: {
@@ -423,6 +435,7 @@ export interface Database {
           p_price: number;
           p_emoji: string | null;
           p_active: boolean;
+          p_global_target_quantity: number;
         };
         Returns: string;
       };

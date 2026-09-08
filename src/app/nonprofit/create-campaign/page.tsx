@@ -69,6 +69,7 @@ export default function CreateCampaignPage() {
     story: "",
     videoUrl: "",
     selectedProducts: [] as string[],
+    productQuantities: {} as Record<string, number>,
   });
   const categoryOptions = form.category && !categories.includes(form.category)
     ? [form.category, ...categories]
@@ -99,6 +100,9 @@ export default function CreateCampaignPage() {
           selectedProducts: result.campaignProducts
             .filter((row) => row.campaign_id === campaign.id)
             .map((row) => row.product_id),
+          productQuantities: Object.fromEntries(result.campaignProducts
+            .filter((row) => row.campaign_id === campaign.id)
+            .map((row) => [row.product_id, row.required_quantity ?? 1])),
         });
         setExistingImageUrl(campaign.hero_image_url);
         setSelectedCommunityIds(result.communityCampaigns.filter((row) => row.campaign_id === campaign.id).map((row) => row.community_id));
@@ -114,9 +118,9 @@ export default function CreateCampaignPage() {
 
   async function saveCampaign() {
     setPublishError("");
-    const goal = Number(form.goal);
-    if (!form.title.trim() || !form.category || !goal || goal <= 0) {
-      setPublishError(lang === "en" ? "Title, category and a positive goal are required." : "נדרשים שם, קטגוריה ויעד חיובי.");
+    const goal = campaignGoal;
+    if (!form.title.trim() || !form.category || !goal || goal <= 0 || form.selectedProducts.length === 0) {
+      setPublishError(lang === "en" ? "Title, category and at least one campaign product are required." : "נדרשים שם, קטגוריה ולפחות מוצר אחד בקמפיין.");
       return;
     }
     if (form.goalType === "deadline" && !form.endDate) {
@@ -149,6 +153,7 @@ export default function CreateCampaignPage() {
       p_title: form.title.trim(), p_short_desc: form.shortDesc.trim(), p_story: form.story.trim(),
       p_category: form.category, p_goal: goal, p_goal_type: form.goalType, p_end_date: form.goalType === "deadline" ? form.endDate : null,
       p_product_ids: form.selectedProducts,
+      p_product_quantities: form.selectedProducts.map((productId) => form.productQuantities[productId] ?? 1),
       p_hero_image_url: uploadedImage?.publicUrl ?? existingImageUrl,
       p_video_url: videoUrl,
     };
@@ -182,13 +187,25 @@ export default function CreateCampaignPage() {
   function back() { setStep((s) => Math.max(s - 1, 0)); }
 
   function toggleProduct(id: string) {
-    setForm((f) => ({
-      ...f,
-      selectedProducts: f.selectedProducts.includes(id)
-        ? f.selectedProducts.filter((p) => p !== id)
-        : [...f.selectedProducts, id],
-    }));
+    setForm((f) => {
+      const selected = f.selectedProducts.includes(id);
+      const { [id]: removedQuantity, ...remainingQuantities } = f.productQuantities;
+      return {
+        ...f,
+        selectedProducts: selected ? f.selectedProducts.filter((productId) => productId !== id) : [...f.selectedProducts, id],
+        productQuantities: selected ? remainingQuantities : { ...f.productQuantities, [id]: 1 },
+      };
+    });
   }
+
+  function setProductQuantity(id: string, quantity: number) {
+    setForm((current) => ({ ...current, productQuantities: { ...current.productQuantities, [id]: Math.max(1, Math.floor(quantity) || 1) } }));
+  }
+
+  const campaignGoal = form.selectedProducts.reduce((total, productId) => {
+    const product = products.find((candidate) => candidate.id === productId);
+    return total + Number(product?.price ?? 0) * (form.productQuantities[productId] ?? 1);
+  }, 0);
 
   if (loadingCampaign) {
     return <div className="min-h-screen bg-[#eef0f1] p-10 text-center text-sm text-gray-500">{lang === "en" ? "Loading campaign…" : "טוען קמפיין…"}</div>;
@@ -270,9 +287,9 @@ export default function CreateCampaignPage() {
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-xs text-gray-500 mb-1 block">יעד גיוס (₪)</label>
-                <input type="number" value={form.goal} onChange={(e) => setForm({...form, goal: e.target.value})}
-                  placeholder="25000" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-raz-teal font-numeric text-right bg-white" />
+                <label className="text-xs text-gray-500 mb-1 block">יעד הקמפיין (₪)</label>
+                <output className="block w-full rounded-xl border border-gray-200 bg-slate-50 px-3 py-2.5 text-right text-sm font-bold text-raz-teal font-numeric">₪{campaignGoal.toLocaleString("he-IL")}</output>
+                <p className="mt-1 text-xs text-slate-400">מחושב לפי המוצרים והכמויות בשלב הבא</p>
               </div>
               {form.goalType === "deadline" && <div className="flex-1">
                 <label className="text-xs text-gray-500 mb-1 block">תאריך סיום</label>
@@ -330,10 +347,12 @@ export default function CreateCampaignPage() {
                 </Link>
               </div>
             )}
-            {products.map((p) => (
-              <button key={p.id} type="button" onClick={() => toggleProduct(p.id)} aria-pressed={form.selectedProducts.includes(p.id)}
+            {products.map((p) => {
+              const selected = form.selectedProducts.includes(p.id);
+              return <div key={p.id} className="rounded-2xl bg-white">
+              <button type="button" onClick={() => toggleProduct(p.id)} aria-pressed={selected}
                 className={`interactive-control w-full bg-white rounded-2xl p-3 flex items-center gap-3 border text-start transition-colors ${
-                  form.selectedProducts.includes(p.id) ? "border-raz-teal shadow-sm" : "border-slate-200 hover:border-raz-teal/50"
+                  selected ? "border-raz-teal shadow-sm" : "border-slate-200 hover:border-raz-teal/50"
                 }`}
               >
                 <span className="text-3xl">{p.emoji}</span>
@@ -343,12 +362,17 @@ export default function CreateCampaignPage() {
                 </div>
                 <div className="text-end">
                   <p className="font-bold text-raz-teal text-sm font-numeric">₪{p.price}</p>
-                  {form.selectedProducts.includes(p.id) && (
+                  {selected && (
                     <span className="text-raz-teal"><Check size={16} /></span>
                   )}
                 </div>
               </button>
-            ))}
+              {selected && <label className="flex items-center justify-between gap-3 border-x border-b border-raz-teal/30 px-4 py-3 text-sm font-bold text-slate-600">
+                <span>{lang === "en" ? "Campaign target quantity" : "כמות נדרשת בקמפיין"}</span>
+                <input type="number" min="1" max="10000000" step="1" value={form.productQuantities[p.id] ?? 1} onChange={(event) => setProductQuantity(p.id, Number(event.target.value))} className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-center font-numeric outline-none focus:border-raz-teal" dir="ltr" />
+              </label>}
+              </div>;
+            })}
           </div>
         )}
 
@@ -385,7 +409,7 @@ export default function CreateCampaignPage() {
             <p className="text-sm text-gray-500">{isEditing ? "השינויים יעודכנו בקמפיין הקיים" : "הקמפיין יועלה לפלטפורמה ויהיה זמין לתרומות מיידית"}</p>
             <div className="bg-gray-50 rounded-2xl p-4 text-sm text-right w-full">
               <div className="flex justify-between mb-2"><span className="text-gray-500">שם:</span><span className="font-medium">{form.title || "ארוחות חמות לקשישים"}</span></div>
-              <div className="flex justify-between mb-2"><span className="text-gray-500">יעד:</span><span className="font-medium font-numeric">₪{form.goal || "25,000"} · {form.goalType === "monthly" ? "חודשי" : form.goalType === "annual" ? "שנתי" : "עד תאריך"}</span></div>
+              <div className="flex justify-between mb-2"><span className="text-gray-500">יעד:</span><span className="font-medium font-numeric">₪{campaignGoal.toLocaleString("he-IL")} · {form.goalType === "monthly" ? "חודשי" : form.goalType === "annual" ? "שנתי" : "עד תאריך"}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">מוצרים:</span><span className="font-medium">{form.selectedProducts.length}</span></div>
             </div>
             {publishError && <p className="w-full text-sm text-red-600" role="alert">{publishError}</p>}

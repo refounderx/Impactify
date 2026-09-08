@@ -12,7 +12,7 @@ export type NgoAdminData = {
   products: Product[];
   donations: NgoDonation[];
   communities: Community[];
-  campaignProducts: { campaign_id: string; product_id: string }[];
+  campaignProducts: { campaign_id: string; product_id: string; required_quantity: number }[];
   communityCampaigns: { community_id: string; campaign_id: string; status: "active" | "paused" }[];
 };
 
@@ -23,6 +23,7 @@ export type NewNgoProduct = {
   descriptionEn: string;
   price: number;
   emoji: string;
+  globalTargetQuantity: number;
 };
 
 export type NgoProductUpdate = NewNgoProduct & { id: string; active: boolean };
@@ -81,7 +82,7 @@ export async function getNgoAdminData(): Promise<NgoAdminData> {
     sb.from("products").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
     sb.from("donations").select("id,donor_id,campaign_id,org_id,amount,currency,status,is_recurring,dedication_name,dedication_message,donor_name,community_id,last_four,card_brand,receipt_id,receipt_url,created_at,product_id,donation_type,quantity,campaigns(title,title_en),products(name,name_en)")
       .eq("org_id", orgId).order("created_at", { ascending: false }),
-    sb.from("campaign_products").select("campaign_id, product_id"),
+    sb.from("campaign_products").select("campaign_id, product_id, required_quantity"),
     sb.rpc("get_ngo_community_links"),
   ]);
   const error = organization.error ?? campaigns.error ?? products.error ?? donations.error ?? campaignProducts.error ?? communityLinks.error;
@@ -112,6 +113,7 @@ export async function createNgoProduct(product: NewNgoProduct): Promise<string> 
     p_description_en: product.descriptionEn || null,
     p_price: product.price,
     p_emoji: product.emoji || null,
+    p_global_target_quantity: product.globalTargetQuantity,
   });
   if (error) throw new Error(error.message);
   return data;
@@ -128,6 +130,7 @@ export async function updateNgoProduct(product: NgoProductUpdate): Promise<strin
     p_price: product.price,
     p_emoji: product.emoji || null,
     p_active: product.active,
+    p_global_target_quantity: product.globalTargetQuantity,
   });
   if (error) throw new Error(error.message);
   return data;

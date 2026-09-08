@@ -13,7 +13,7 @@ import { useCookieConsent } from "@/contexts/CookieConsentContext";
 import { getCampaignVideoSource } from "@/lib/campaign-media";
 import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-target";
 import { formatNIS, percent } from "@/lib/mock-data";
-import { getCampaignById, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
+import { getCampaignById, getCampaignProductProgress, getProductProgress, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
 import { getOrgById } from "@/lib/supabase/queries-orgs";
 
 export default function ProductDetailPage() {
@@ -27,12 +27,16 @@ export default function ProductDetailPage() {
   const [directOrg, setDirectOrg] = useState<Awaited<ReturnType<typeof getOrgById>>>(null);
   const [related, setRelated] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
   const [showDonation, setShowDonation] = useState(false);
+  const [globalProgress, setGlobalProgress] = useState<Awaited<ReturnType<typeof getProductProgress>>>(null);
+  const [campaignProductProgress, setCampaignProductProgress] = useState<Awaited<ReturnType<typeof getCampaignProductProgress>>>(null);
 
   useEffect(() => {
     if (!id) return;
-    void Promise.all([getProductsByIds([id]), campaignId ? getCampaignById(campaignId) : Promise.resolve(null)]).then(async ([products, currentCampaign]) => {
+    void Promise.all([getProductsByIds([id]), getProductProgress(id), campaignId ? getCampaignById(campaignId) : Promise.resolve(null)]).then(async ([products, currentGlobalProgress, currentCampaign]) => {
       setProduct(products[0] ?? null);
+      setGlobalProgress(currentGlobalProgress);
       setCampaign(currentCampaign);
+      setCampaignProductProgress(currentCampaign ? await getCampaignProductProgress(currentCampaign.id, id) : null);
       if (!currentCampaign && products[0]?.orgId) setDirectOrg(await getOrgById(products[0].orgId));
       if (currentCampaign?.productIds?.length) setRelated(await getProductsByIds(currentCampaign.productIds.filter((productId) => productId !== id)));
     });
@@ -47,6 +51,12 @@ export default function ProductDetailPage() {
   const brandColor = org?.color ?? "#00B5AD";
   const video = getCampaignVideoSource(product.videoUrl);
   const progress = campaign ? percent(campaign.raised, campaign.goal) : 0;
+  const globalTarget = product.globalTargetQuantity;
+  const globalQuantity = globalProgress?.donatedQuantity ?? 0;
+  const globalProgressPercent = percent(globalQuantity, globalTarget);
+  const currentCampaignQuantity = campaignProductProgress?.donatedQuantity ?? 0;
+  const currentCampaignTarget = campaignProductProgress?.requiredQuantity ?? 0;
+  const campaignProductPercent = currentCampaignTarget ? percent(currentCampaignQuantity, currentCampaignTarget) : 0;
   const detailProduct: DiscoverableProduct = { productId: product.id, campaignId: campaign?.id ?? "", category: campaign?.category ?? "product", name: product.name, nameEn: product.nameEn, description: product.description, descriptionEn: product.descriptionEn, price: product.price, emoji: product.emoji, imageUrl: product.imageUrl, videoUrl: product.videoUrl, donationCount: campaign?.donors ?? 0 };
 
   return <main className="min-h-screen bg-raz-surface pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
@@ -69,11 +79,12 @@ export default function ProductDetailPage() {
           <p className="mt-5 text-lg leading-8 text-slate-600">{description}</p>
           <p className="mt-7 text-5xl font-black text-raz-dark">{formatNIS(product.price)}</p>
           <button type="button" onClick={() => setShowDonation(true)} className="mt-7 w-full rounded-full py-4 text-lg font-black text-white shadow-[0_12px_24px_rgba(0,181,173,.25)]" style={{ backgroundColor: brandColor }}>{lang === "en" ? "Choose to donate" : "אני בוחר לתרום"}</button>
-          <p className="mt-3 text-center text-sm font-bold text-slate-500"><Heart className="me-1 inline text-pink-500" size={16} fill="currentColor" />{(campaign?.donors ?? 0).toLocaleString()} {lang === "en" ? "people have already donated" : "כבר בחרו לתרום"}</p>
+          <p className="mt-3 text-center text-sm font-bold text-slate-500"><Heart className="me-1 inline text-pink-500" size={16} fill="currentColor" />{(campaign?.donors ?? globalProgress?.donorsCount ?? 0).toLocaleString()} {lang === "en" ? "people have already donated" : "כבר בחרו לתרום"}</p>
           {org && <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-5"><Link href={`/organization/${org.id}`} className="rounded-full border px-4 py-2 text-sm font-bold" style={{ borderColor: brandColor, color: brandColor }}>{lang === "en" ? "About the nonprofit" : "לעמוד העמותה"}</Link></div>}
         </div>
       </div>
-      {campaign && <section className="mt-8 rounded-3xl bg-white p-7 shadow-sm md:p-10"><p className="text-sm font-bold text-raz-teal">{lang === "en" ? "Campaign progress" : "התקדמות הקמפיין"}</p><h2 className="mt-2 text-3xl font-extrabold text-raz-dark">{campaignTitle}</h2><div className="mt-6 flex items-center justify-between font-bold"><span>{formatNIS(campaign.raised)} {lang === "en" ? "raised" : "גויסו"}</span><span className="text-raz-teal">{progress}%</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-raz-teal" style={{ width: `${progress}%` }} /></div><p className="mt-2 text-sm text-slate-500">{campaignTargetLabel(campaign, lang)} · {lang === "en" ? `Goal: ${formatNIS(campaign.goal)}` : `יעד: ${formatNIS(campaign.goal)}`}</p><p className="mt-1 text-xs text-slate-400">{campaignTimeRemaining(campaign, lang)}</p></section>}
+      {campaign && <section className="mt-8 rounded-3xl bg-white p-7 shadow-sm md:p-10"><p className="text-sm font-bold text-raz-teal">{lang === "en" ? "This product in the campaign" : "המוצר הזה בקמפיין"}</p><h2 className="mt-2 text-3xl font-extrabold text-raz-dark">{campaignTitle}</h2><div className="mt-6 flex items-center justify-between font-bold"><span>{currentCampaignQuantity.toLocaleString()} {lang === "en" ? "units donated" : "יחידות נתרמו"}</span><span className="text-raz-teal">{campaignProductPercent}%</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-raz-teal" style={{ width: `${campaignProductPercent}%` }} /></div><p className="mt-2 text-sm text-slate-500">{lang === "en" ? `Campaign target: ${currentCampaignTarget.toLocaleString()} units` : `יעד המוצר בקמפיין: ${currentCampaignTarget.toLocaleString()} יחידות`}</p><div className="mt-7 border-t border-slate-100 pt-5"><div className="flex items-center justify-between font-bold"><span>{formatNIS(campaign.raised)} {lang === "en" ? "raised in campaign" : "גויסו בקמפיין"}</span><span className="text-raz-teal">{progress}%</span></div><p className="mt-2 text-xs text-slate-400">{campaignTargetLabel(campaign, lang)} · {campaignTimeRemaining(campaign, lang)}</p></div></section>}
+      {!campaign && <section className="mt-8 rounded-3xl bg-white p-7 shadow-sm md:p-10"><p className="text-sm font-bold" style={{ color: brandColor }}>{lang === "en" ? "Product progress" : "התקדמות המוצר"}</p><div className="mt-4 flex items-center justify-between font-bold"><span>{globalQuantity.toLocaleString()} {lang === "en" ? "units donated" : "יחידות נתרמו"}</span><span style={{ color: brandColor }}>{globalProgressPercent}%</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full" style={{ width: `${globalProgressPercent}%`, backgroundColor: brandColor }} /></div><p className="mt-2 text-sm text-slate-500">{lang === "en" ? `Global product target: ${globalTarget.toLocaleString()} units` : `היעד הגלובלי של המוצר: ${globalTarget.toLocaleString()} יחידות`}</p></section>}
       {!campaign && org && <section className="mt-8 rounded-3xl bg-white p-7 shadow-sm md:p-10"><p className="text-sm font-bold" style={{ color: brandColor }}>{lang === "en" ? "The nonprofit" : "העמותה"}</p><h2 className="mt-2 text-3xl font-extrabold text-raz-dark">{orgName}</h2><p className="mt-4 leading-8 text-slate-600">{lang === "en" ? ((org as { bioEn?: string; description_en?: string } | null)?.bioEn ?? (org as { description_en?: string } | null)?.description_en) : ((org as { bio?: string; description?: string } | null)?.bio ?? (org as { description?: string } | null)?.description)}</p><Link href={`/organization/${org.id}`} className="mt-5 inline-flex text-sm font-bold hover:underline" style={{ color: brandColor }}>{lang === "en" ? "Visit the nonprofit" : "לביקור בעמוד העמותה"}</Link></section>}
       {campaign && <section className="mt-8 rounded-3xl bg-white p-7 shadow-sm md:p-10"><div className="flex items-center justify-between gap-4"><div><p className="text-sm font-bold text-raz-teal">{lang === "en" ? "The nonprofit" : "העמותה"}</p><h2 className="mt-1 text-2xl font-extrabold text-raz-dark">{orgName}</h2></div>{org && <Link href={`/organization/${org.id}`} className="text-sm font-bold text-raz-teal hover:underline">{lang === "en" ? "View page" : "לפרופיל העמותה"}</Link>}</div><p className="mt-5 leading-8 text-slate-600">{lang === "en" ? ((org as { description_en?: string; bioEn?: string } | null)?.description_en ?? (org as { bioEn?: string } | null)?.bioEn) : ((org as { description?: string; bio?: string } | null)?.description ?? (org as { bio?: string } | null)?.bio)}</p><p className="mt-6 border-t border-slate-100 pt-6 leading-8 text-slate-600">{lang === "en" ? (campaign.storyEn ?? campaign.story) : campaign.story}</p></section>}
       {campaign && related.length > 0 && <section className="mt-8 rounded-3xl bg-white p-7 shadow-sm md:p-10"><p className="text-sm font-bold text-raz-teal">{lang === "en" ? "More ways to help" : "מוצרים נוספים מאותו קמפיין"}</p><h2 className="mt-2 text-3xl font-extrabold text-raz-dark">{lang === "en" ? "Other relevant products" : "אפשרויות תרומה נוספות"}</h2><div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{related.map((item) => <ProductCard key={item.id} title={lang === "en" ? (item.nameEn ?? item.name) : item.name} price={item.price} emoji={item.emoji} imageUrl={item.imageUrl} videoUrl={item.videoUrl} donationCount={campaign.donors} onOpenDetails={() => router.push(`/product/${item.id}?campaign_id=${campaign.id}`)} onChoose={() => router.push(`/product/${item.id}?campaign_id=${campaign.id}`)} />)}</div></section>}

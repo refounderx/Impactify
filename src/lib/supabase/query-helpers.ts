@@ -78,6 +78,7 @@ export function toUIProduct(row: Product) {
     emoji: row.emoji ?? "💙",
     imageUrl: row.image_url ?? undefined,
     videoUrl: row.video_url ?? undefined,
+    globalTargetQuantity: Number(row.global_target_quantity ?? 1),
   };
 }
 

@@ -53,21 +53,22 @@ export function useNgoAdminView() {
           communities: 0, unitPrice: Number(product.price), totalRaised: totals.amount,
           unitsDonated: totals.quantity, ownerInitials: initials,
           description: product.description ?? "", descriptionEn: product.description_en ?? "",
-          emoji: product.emoji ?? "💙", imageUrl: product.image_url ?? undefined, active: product.active };
+          emoji: product.emoji ?? "💙", imageUrl: product.image_url ?? undefined,
+          globalTargetQuantity: product.global_target_quantity, active: product.active };
       }),
       adminProductDetails: Object.fromEntries(products.map((product) => {
         const productDonations = donations.filter((donation) => donation.product_id === product.id);
         const donated = productDonations.reduce((sum, donation) => sum + donation.quantity, 0);
         const campaignOptions = campaigns.filter((campaign) => campaignProducts.some((link) => link.product_id === product.id && link.campaign_id === campaign.id)).map((campaign) => campaign.title);
         const monthly = months.map(([month, monthEn], index) => ({ month, monthEn, donated: productDonations.filter((donation) => new Date(donation.created_at).getMonth() === index).reduce((sum, donation) => sum + donation.quantity, 0), total: 0 }));
-        const detail: AdminProductDetail = { sku: product.id.slice(0, 8).toUpperCase(), year: String(new Date().getFullYear()), campaignOptions: campaignOptions.length ? campaignOptions : ["כל הקמפיינים"], selectedCampaign: campaignOptions[0] ?? "כל הקמפיינים", yearlyTotal: donated, monthly, donated, goal: donated };
+        const detail: AdminProductDetail = { sku: product.id.slice(0, 8).toUpperCase(), year: String(new Date().getFullYear()), campaignOptions: campaignOptions.length ? campaignOptions : ["כל הקמפיינים"], selectedCampaign: campaignOptions[0] ?? "כל הקמפיינים", yearlyTotal: donated, monthly, donated, goal: product.global_target_quantity };
         return [product.id, detail];
       })),
       adminProductCards: products.map((product) => {
         const donated = productDonationTotals.get(product.id)?.quantity ?? 0;
         return { id: product.id, name: product.name, nameEn: product.name_en ?? product.name,
           emoji: product.emoji ?? "💙", imageUrl: product.image_url ?? undefined, campaignsCount: campaignProducts.filter((row) => row.product_id === product.id).length,
-          donated, goal: Math.max(donated, 1) };
+          donated, goal: product.global_target_quantity };
       }),
       adminProductsTotalUnits: donations.reduce((sum, donation) => sum + donation.quantity, 0),
       adminProductsActiveCount: products.filter((product) => product.active).length,

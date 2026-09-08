@@ -19,6 +19,7 @@ export default function CreateProductModal({ onClose, onCreated, product }: {
     name: product?.name ?? "",
     nameEn: product?.nameEn ?? "",
     price: product?.unitPrice ? String(product.unitPrice) : "",
+    globalTargetQuantity: String(product?.globalTargetQuantity ?? 1),
     emoji: product?.emoji ?? "",
   });
 
@@ -34,6 +35,7 @@ export default function CreateProductModal({ onClose, onCreated, product }: {
         description: String(form.get("description") ?? ""),
         descriptionEn: String(form.get("descriptionEn") ?? ""),
         price: Number(form.get("price")),
+        globalTargetQuantity: Number(form.get("globalTargetQuantity")),
         emoji: String(form.get("emoji") ?? ""),
       };
       if (product) await updateNgoProduct({ ...values, id: product.id, active: form.get("active") === "on" });
@@ -77,6 +79,10 @@ export default function CreateProductModal({ onClose, onCreated, product }: {
           <label className="text-sm font-medium text-gray-700">
             {lang === "en" ? "Unit price (₪)" : "מחיר ליחידה (₪)"}
             <input name="price" type="number" required min="0.01" max="10000000" step="0.01" value={preview.price} onChange={(event) => setPreview((current) => ({ ...current, price: event.target.value }))} className={`interactive-field ${inputClass} mt-1`} dir="ltr" />
+          </label>
+          <label className="text-sm font-medium text-gray-700">
+            {lang === "en" ? "Standalone product target (units)" : "יעד גלובלי למוצר (יחידות)"}
+            <input name="globalTargetQuantity" type="number" required min="1" max="10000000" step="1" value={preview.globalTargetQuantity} onChange={(event) => setPreview((current) => ({ ...current, globalTargetQuantity: event.target.value }))} className={`interactive-field ${inputClass} mt-1`} dir="ltr" />
           </label>
           <label className="text-sm font-medium text-gray-700">
             {lang === "en" ? "Emoji" : "אימוג׳י"}

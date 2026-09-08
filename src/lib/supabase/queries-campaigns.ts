@@ -132,6 +132,35 @@ export async function getProductsByIds(ids: string[]) {
   }
 }
 
+export type ProductProgress = { raised: number; donatedQuantity: number; donorsCount: number };
+export type CampaignProductProgress = { requiredQuantity: number; donatedQuantity: number; raised: number };
+
+export async function getProductProgress(productId: string): Promise<ProductProgress | null> {
+  try {
+    const sb = createClient();
+    const { data, error } = await sb.rpc("get_product_progress", { p_product_ids: [productId] });
+    if (error) throw error;
+    const progress = data?.[0];
+    return progress ? { raised: Number(progress.raised), donatedQuantity: Number(progress.donated_quantity), donorsCount: Number(progress.donors_count) } : null;
+  } catch (error) {
+    console.error("Unable to load product progress", error);
+    return null;
+  }
+}
+
+export async function getCampaignProductProgress(campaignId: string, productId: string): Promise<CampaignProductProgress | null> {
+  try {
+    const sb = createClient();
+    const { data, error } = await sb.rpc("get_campaign_product_progress", { p_campaign_id: campaignId, p_product_id: productId });
+    if (error) throw error;
+    const progress = data?.[0];
+    return progress ? { requiredQuantity: Number(progress.required_quantity), donatedQuantity: Number(progress.donated_quantity), raised: Number(progress.raised) } : null;
+  } catch (error) {
+    console.error("Unable to load campaign product progress", error);
+    return null;
+  }
+}
+
 export async function getCampaignsByOrg(orgId: string) {
   try {
     const sb = createClient();
