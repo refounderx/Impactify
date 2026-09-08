@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Play } from "lucide-react";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { campaignTargetLabel } from "@/lib/campaign-target";
 import { formatNIS } from "@/lib/mock-data";
@@ -26,10 +26,10 @@ export default function PublicOrganizationHero({ organization, campaign, lang }:
         <div className="relative min-h-[18rem] overflow-hidden bg-raz-dark sm:min-h-[24rem]">
           {campaign.heroImageUrl && <Image src={campaign.heroImageUrl} alt="" fill priority className="object-cover opacity-70" sizes="(max-width: 768px) 100vw, 1200px" />}
           <div className={`absolute inset-0 bg-gradient-to-t ${campaign.heroImageUrl ? "from-raz-dark via-raz-dark/45" : campaign.gradient}`} />
-          <div className="relative flex min-h-[18rem] flex-col justify-end p-6 text-white sm:min-h-[24rem] sm:p-10">
-            <div className="mb-auto flex items-center gap-3"><span className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-white text-lg font-black shadow-lg" style={{ color: organization.color }}>{organization.initials}</span><span className="text-sm font-bold">{orgName}</span></div>
-            <p className="text-sm font-bold text-white/80">{isEnglish ? "Current campaign" : "הקמפיין הפעיל"}</p>
-            <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-6xl">{title}</h1>
+          <div className="relative flex min-h-[18rem] flex-col justify-between p-6 text-white sm:min-h-[24rem] sm:p-8">
+            <div className="flex items-center gap-3"><span className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-white text-lg font-black shadow-lg" style={{ color: organization.color }}>{organization.initials}</span><span className="text-sm font-bold">{orgName}</span></div>
+            {campaign.videoUrl && <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-2 border-white/80 bg-raz-dark/35 text-white backdrop-blur-sm"><Play size={34} fill="currentColor" /></span>}
+            <div><p className="text-sm font-bold text-white/80">{isEnglish ? "Current campaign" : "הקמפיין הפעיל"}</p><p className="mt-1 text-xl font-extrabold leading-tight sm:text-3xl">{title}</p></div>
           </div>
         </div>
         <div className="grid gap-6 p-6 sm:grid-cols-[1fr_auto] sm:items-end sm:p-8">

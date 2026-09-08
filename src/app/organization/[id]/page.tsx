@@ -35,13 +35,21 @@ export default function OrganizationPage() {
 
   const campaign = campaigns[0];
   const orgName = lang === "en" ? (org.nameEn ?? org.name) : org.name;
+  const orgBio = lang === "en" ? (org.bioEn ?? org.bio) : org.bio;
   if (!campaign) return <main className="min-h-screen bg-raz-surface px-6 py-16" dir={lang === "en" ? "ltr" : "rtl"}><div className="mx-auto max-w-3xl rounded-[2rem] bg-white p-10 text-center shadow-sm"><h1 className="text-3xl font-extrabold text-raz-dark">{orgName}</h1><p className="mt-4 text-slate-500">{lang === "en" ? "There are no active campaigns right now." : "אין כרגע קמפיינים פעילים בעמותה."}</p></div><BottomNav variant="donor" /></main>;
 
-  return <main className="min-h-screen bg-raz-surface pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
+  return <main className="min-h-screen bg-white pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
-      <button type="button" onClick={() => router.back()} className="interactive-control inline-flex min-h-11 items-center gap-2 text-sm font-bold text-raz-teal"><ArrowRight size={18} />{lang === "en" ? "Back" : "חזרה"}</button>
-      <div className="mt-5"><PublicOrganizationHero organization={org} campaign={campaign} lang={lang} /></div>
-      <OrganizationProfileTabs donations={donations} communities={communities} products={products} campaignId={campaign.id} campaignDonors={campaign.donors} organization={org} lang={lang} />
+      <button type="button" onClick={() => router.back()} className="interactive-control group inline-flex min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md"><ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />{lang === "en" ? "Back" : "חזרה"}</button>
+      <div className="mt-6 grid gap-10 lg:grid-cols-[1.05fr_.95fr]" dir="ltr">
+        <section dir={lang === "en" ? "ltr" : "rtl"} className="min-w-0">
+          <p className="text-sm font-bold" style={{ color: org.color }}>{lang === "en" ? "About the nonprofit" : "על העמותה"}</p>
+          <h1 className="mt-2 text-4xl font-extrabold leading-tight text-raz-dark sm:text-5xl">{orgName}</h1>
+          {orgBio && <p className="mt-5 max-w-2xl whitespace-pre-line text-base leading-8 text-slate-600">{orgBio}</p>}
+          <OrganizationProfileTabs donations={donations} communities={communities} products={products} campaignId={campaign.id} campaignDonors={campaign.donors} organization={org} lang={lang} />
+        </section>
+        <aside className="min-w-0" dir={lang === "en" ? "ltr" : "rtl"}><PublicOrganizationHero organization={org} campaign={campaign} lang={lang} /></aside>
+      </div>
     </div>
     <BottomNav variant="donor" />
   </main>;

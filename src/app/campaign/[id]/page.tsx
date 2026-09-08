@@ -8,7 +8,7 @@ import LiveProductDonationModal from "@/components/landing/LiveProductDonationMo
 import CampaignTabs from "@/components/campaign/CampaignTabs";
 import { getCampaignById, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
 import { formatNIS, percent } from "@/lib/mock-data";
-import { Share2, ArrowRight } from "lucide-react";
+import { Share2, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import EditableText from "@/components/admin/EditableText";
@@ -92,6 +92,10 @@ export default function CampaignDetail() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <main className="mx-auto w-full max-w-6xl px-5 pb-12 pt-8 md:px-8 md:pt-12">
+      <button type="button" onClick={() => router.back()} className="interactive-control group mb-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md" aria-label={t("hint.back")}>
+        {lang === "en" ? <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />}
+        {lang === "en" ? "Back" : "חזרה"}
+      </button>
       {/* The campaign's visual story leads the page; campaign data stays immediately below it. */}
       <div className="relative">
       <div className={`relative flex min-h-[19rem] items-center justify-center overflow-hidden rounded-[1.75rem] bg-gradient-to-br sm:min-h-[24rem] md:min-h-[28rem] ${campaign.gradient}`}>
@@ -125,9 +129,6 @@ export default function CampaignDetail() {
           <p className="mb-2 text-sm font-bold text-white/85 sm:text-base">{orgName}</p>
           <h1 className="max-w-3xl text-3xl font-extrabold leading-tight drop-shadow-sm sm:text-5xl md:text-6xl">{title}</h1>
         </div>
-        <button type="button" onClick={() => router.back()} className="micro-hint micro-hint-below absolute start-4 top-4 z-20 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm hover:bg-white/30" aria-label={t("hint.back")}>
-          <ArrowRight size={20} />
-        </button>
         <button type="button" onClick={() => void sharePage(title).then((result) => setShareNotice(result === "copied" ? (lang === "en" ? "Link copied" : "הקישור הועתק") : ""))} className="micro-hint micro-hint-below absolute end-4 top-4 z-20 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm hover:bg-white/30" aria-label={t("hint.share")}>
           <Share2 size={20} />
         </button>
