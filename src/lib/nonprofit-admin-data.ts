@@ -117,6 +117,8 @@ export type AdminProductRow = {
   descriptionEn: string;
   emoji: string;
   globalTargetQuantity: number;
+  globalTargetGoalType: "deadline" | "monthly" | "annual";
+  globalTargetEndDate: string | null;
   active: boolean;
 };
 
@@ -136,6 +138,8 @@ export const adminProductRows: AdminProductRow[] = Array.from({ length: 6 }).map
   descriptionEn: "",
   emoji: "💙",
   globalTargetQuantity: 1,
+  globalTargetGoalType: "annual",
+  globalTargetEndDate: null,
   active: true,
 }));
 

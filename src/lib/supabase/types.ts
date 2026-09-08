@@ -101,10 +101,12 @@ export interface Database {
           image_url: string | null;
           video_url: string | null;
           global_target_quantity: number;
+          global_target_goal_type: CampaignGoalType;
+          global_target_end_date: string | null;
           active: boolean;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["products"]["Row"], "id" | "created_at" | "global_target_quantity"> & { global_target_quantity?: number };
+        Insert: Omit<Database["public"]["Tables"]["products"]["Row"], "id" | "created_at" | "global_target_quantity" | "global_target_goal_type" | "global_target_end_date"> & { global_target_quantity?: number; global_target_goal_type?: CampaignGoalType; global_target_end_date?: string | null };
         Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
         Relationships: [];
       };
@@ -369,6 +371,8 @@ export interface Database {
           p_price: number;
           p_emoji: string | null;
           p_global_target_quantity?: number;
+          p_global_target_goal_type?: CampaignGoalType;
+          p_global_target_end_date?: string | null;
         };
         Returns: string;
       };
@@ -419,7 +423,7 @@ export interface Database {
       };
       get_product_progress: {
         Args: { p_product_ids: string[] };
-        Returns: { product_id: string; raised: number; donated_quantity: number; donors_count: number }[];
+        Returns: { product_id: string; goal_type: CampaignGoalType; period_start: string; period_end: string | null; raised: number; donated_quantity: number; donors_count: number }[];
       };
       get_campaign_product_progress: {
         Args: { p_campaign_id: string; p_product_id: string };
@@ -436,6 +440,8 @@ export interface Database {
           p_emoji: string | null;
           p_active: boolean;
           p_global_target_quantity: number;
+          p_global_target_goal_type: CampaignGoalType;
+          p_global_target_end_date: string | null;
         };
         Returns: string;
       };

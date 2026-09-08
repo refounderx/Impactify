@@ -79,6 +79,8 @@ export function toUIProduct(row: Product) {
     imageUrl: row.image_url ?? undefined,
     videoUrl: row.video_url ?? undefined,
     globalTargetQuantity: Number(row.global_target_quantity ?? 1),
+    globalTargetGoalType: row.global_target_goal_type ?? "annual",
+    globalTargetEndDate: row.global_target_end_date ?? undefined,
   };
 }
 

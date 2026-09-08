@@ -132,7 +132,7 @@ export async function getProductsByIds(ids: string[]) {
   }
 }
 
-export type ProductProgress = { raised: number; donatedQuantity: number; donorsCount: number };
+export type ProductProgress = { goalType: "deadline" | "monthly" | "annual"; periodStart: string; periodEnd: string | null; raised: number; donatedQuantity: number; donorsCount: number };
 export type CampaignProductProgress = { requiredQuantity: number; donatedQuantity: number; raised: number };
 
 export async function getProductProgress(productId: string): Promise<ProductProgress | null> {
@@ -141,7 +141,7 @@ export async function getProductProgress(productId: string): Promise<ProductProg
     const { data, error } = await sb.rpc("get_product_progress", { p_product_ids: [productId] });
     if (error) throw error;
     const progress = data?.[0];
-    return progress ? { raised: Number(progress.raised), donatedQuantity: Number(progress.donated_quantity), donorsCount: Number(progress.donors_count) } : null;
+    return progress ? { goalType: progress.goal_type, periodStart: progress.period_start, periodEnd: progress.period_end, raised: Number(progress.raised), donatedQuantity: Number(progress.donated_quantity), donorsCount: Number(progress.donors_count) } : null;
   } catch (error) {
     console.error("Unable to load product progress", error);
     return null;

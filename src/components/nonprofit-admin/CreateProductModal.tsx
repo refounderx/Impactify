@@ -20,6 +20,8 @@ export default function CreateProductModal({ onClose, onCreated, product }: {
     nameEn: product?.nameEn ?? "",
     price: product?.unitPrice ? String(product.unitPrice) : "",
     globalTargetQuantity: String(product?.globalTargetQuantity ?? 1),
+    globalTargetGoalType: product?.globalTargetGoalType ?? "annual" as "deadline" | "monthly" | "annual",
+    globalTargetEndDate: product?.globalTargetEndDate ?? "",
     emoji: product?.emoji ?? "",
   });
 
@@ -36,6 +38,8 @@ export default function CreateProductModal({ onClose, onCreated, product }: {
         descriptionEn: String(form.get("descriptionEn") ?? ""),
         price: Number(form.get("price")),
         globalTargetQuantity: Number(form.get("globalTargetQuantity")),
+        globalTargetGoalType: String(form.get("globalTargetGoalType")) as "deadline" | "monthly" | "annual",
+        globalTargetEndDate: String(form.get("globalTargetEndDate") ?? "") || null,
         emoji: String(form.get("emoji") ?? ""),
       };
       if (product) await updateNgoProduct({ ...values, id: product.id, active: form.get("active") === "on" });
@@ -84,6 +88,18 @@ export default function CreateProductModal({ onClose, onCreated, product }: {
             {lang === "en" ? "Standalone product target (units)" : "יעד גלובלי למוצר (יחידות)"}
             <input name="globalTargetQuantity" type="number" required min="1" max="10000000" step="1" value={preview.globalTargetQuantity} onChange={(event) => setPreview((current) => ({ ...current, globalTargetQuantity: event.target.value }))} className={`interactive-field ${inputClass} mt-1`} dir="ltr" />
           </label>
+          <label className="text-sm font-medium text-gray-700">
+            {lang === "en" ? "Standalone target period" : "מחזור היעד הגלובלי"}
+            <select name="globalTargetGoalType" value={preview.globalTargetGoalType} onChange={(event) => setPreview((current) => ({ ...current, globalTargetGoalType: event.target.value as "deadline" | "monthly" | "annual", globalTargetEndDate: event.target.value === "deadline" ? current.globalTargetEndDate : "" }))} className={`interactive-field ${inputClass} mt-1`}>
+              <option value="annual">{lang === "en" ? "Annual" : "שנתי"}</option>
+              <option value="monthly">{lang === "en" ? "Monthly" : "חודשי"}</option>
+              <option value="deadline">{lang === "en" ? "Until a date" : "עד תאריך"}</option>
+            </select>
+          </label>
+          {preview.globalTargetGoalType === "deadline" && <label className="text-sm font-medium text-gray-700 sm:col-span-2">
+            {lang === "en" ? "Target end date" : "תאריך סיום היעד"}
+            <input name="globalTargetEndDate" type="date" required value={preview.globalTargetEndDate} onChange={(event) => setPreview((current) => ({ ...current, globalTargetEndDate: event.target.value }))} className={`interactive-field ${inputClass} mt-1`} dir="ltr" />
+          </label>}
           <label className="text-sm font-medium text-gray-700">
             {lang === "en" ? "Emoji" : "אימוג׳י"}
             <input name="emoji" maxLength={16} placeholder="💙" value={preview.emoji} onChange={(event) => setPreview((current) => ({ ...current, emoji: event.target.value }))} className={`interactive-field ${inputClass} mt-1`} />

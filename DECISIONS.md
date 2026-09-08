@@ -401,7 +401,7 @@
 
 ## 2026-09-08 — Product and campaign targets use separate scopes
 
-**Decision:** Each product owns a global unit target, while each campaign stores a required quantity for every selected product. The campaign's monetary goal is derived server-side from the selected products' current prices and required quantities.
+**Decision:** Each product owns a global unit target with an annual, monthly, or deadline window, while each campaign stores a required quantity for every selected product. The campaign's monetary goal is derived server-side from the selected products' current prices and required quantities.
 **Context:** A standalone product can receive direct donations and may be used in multiple campaigns, so global product progress cannot represent a particular campaign's need.
 **Rationale:** Separate scopes let a product page present the relevant goal for its entry context without letting a client submit an arbitrary campaign target.
-**Consequences:** Creating or updating a campaign requires at least one product and one positive quantity per selected product. The public product page calls distinct RPCs for global and campaign-scoped progress.
+**Consequences:** Creating or updating a campaign requires at least one product and one positive quantity per selected product. The public product page calls distinct RPCs for period-aware global and campaign-scoped progress.

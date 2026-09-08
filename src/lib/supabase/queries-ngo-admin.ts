@@ -24,6 +24,8 @@ export type NewNgoProduct = {
   price: number;
   emoji: string;
   globalTargetQuantity: number;
+  globalTargetGoalType: "deadline" | "monthly" | "annual";
+  globalTargetEndDate: string | null;
 };
 
 export type NgoProductUpdate = NewNgoProduct & { id: string; active: boolean };
@@ -114,6 +116,8 @@ export async function createNgoProduct(product: NewNgoProduct): Promise<string> 
     p_price: product.price,
     p_emoji: product.emoji || null,
     p_global_target_quantity: product.globalTargetQuantity,
+    p_global_target_goal_type: product.globalTargetGoalType,
+    p_global_target_end_date: product.globalTargetEndDate,
   });
   if (error) throw new Error(error.message);
   return data;
@@ -131,6 +135,8 @@ export async function updateNgoProduct(product: NgoProductUpdate): Promise<strin
     p_emoji: product.emoji || null,
     p_active: product.active,
     p_global_target_quantity: product.globalTargetQuantity,
+    p_global_target_goal_type: product.globalTargetGoalType,
+    p_global_target_end_date: product.globalTargetEndDate,
   });
   if (error) throw new Error(error.message);
   return data;

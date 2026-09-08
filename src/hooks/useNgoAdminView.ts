@@ -54,7 +54,9 @@ export function useNgoAdminView() {
           unitsDonated: totals.quantity, ownerInitials: initials,
           description: product.description ?? "", descriptionEn: product.description_en ?? "",
           emoji: product.emoji ?? "💙", imageUrl: product.image_url ?? undefined,
-          globalTargetQuantity: product.global_target_quantity, active: product.active };
+          globalTargetQuantity: product.global_target_quantity,
+          globalTargetGoalType: product.global_target_goal_type,
+          globalTargetEndDate: product.global_target_end_date, active: product.active };
       }),
       adminProductDetails: Object.fromEntries(products.map((product) => {
         const productDonations = donations.filter((donation) => donation.product_id === product.id);
