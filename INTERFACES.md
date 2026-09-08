@@ -292,6 +292,10 @@ RLS: public read; insert/update require an authenticated `admin` profile. Read v
 
 ## SQL Files
 
+## QA fixture command
+
+`scripts/create-product-campaign-fixture.cjs` creates an isolated, `[QA]`-prefixed organization, two independently fundable annual-target products, an active campaign with different per-product quantity targets, completed direct/campaign donations, and one queued partnership request per existing community. It reads `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from the untracked local `.env.local`, never prints the key, and prints the public campaign/product URLs plus the aggregate-progress RPC results for manual verification. Run it only against a disposable or approved Supabase environment; fixtures are intentionally retained for inspection.
+
 | File | Purpose | When to run |
 |---|---|---|
 | `supabase/schema.sql` | Creates all tables, enums, RLS policies, triggers, indexes | Once on new project |
