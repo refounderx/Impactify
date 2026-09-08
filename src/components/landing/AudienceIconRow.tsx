@@ -95,6 +95,7 @@ export default function AudienceIconRow({
   }
 
   function startDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (window.matchMedia("(min-width: 768px)").matches) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
     const container = event.currentTarget;
     drag.current = { pointerId: event.pointerId, startX: event.clientX, scrollLeft: container.scrollLeft, moved: false };
@@ -102,6 +103,7 @@ export default function AudienceIconRow({
   }
 
   function moveDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (window.matchMedia("(min-width: 768px)").matches) return;
     const currentDrag = drag.current;
     if (!currentDrag || currentDrag.pointerId !== event.pointerId) return;
     const distance = event.clientX - currentDrag.startX;
@@ -110,6 +112,7 @@ export default function AudienceIconRow({
   }
 
   function endDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (window.matchMedia("(min-width: 768px)").matches) return;
     const currentDrag = drag.current;
     if (!currentDrag || currentDrag.pointerId !== event.pointerId) return;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
