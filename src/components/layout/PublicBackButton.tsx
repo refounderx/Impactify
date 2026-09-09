@@ -13,7 +13,7 @@ export default function PublicBackButton() {
   return <button
     type="button"
     onClick={() => router.back()}
-    className="interactive-control group hidden min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md md:absolute md:top-0 md:inline-flex md:[inset-inline-start:calc((100%-100vw)/2+3rem)]"
+    className="interactive-control group hidden min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md md:absolute md:top-0 md:inline-flex md:[inset-inline-start:calc((100%-100vw)/2+10vw+0.375rem)]"
     aria-label={isEnglish ? "Back" : "חזרה"}
   >
     {isEnglish ? <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />}
