@@ -48,7 +48,7 @@ export default function LiveProductDonationModal({
               <h2 className="text-xl font-black leading-tight text-raz-dark sm:text-2xl">{title}</h2>
               {description && <p className="mt-2 text-sm leading-5 text-slate-500">{description}</p>}
               <p className="mt-3 text-4xl font-black tracking-tight text-raz-dark">{formatNIS(product.price)}</p>
-              <p className="mt-1 text-xs font-bold text-slate-500"><span className="text-pink-500">♥</span> {product.donationCount.toLocaleString()} {lang === "en" ? "people chose this gift" : "תורמים כבר בחרו במתנה הזאת"}</p>
+              <p className="mt-1 text-xs font-bold text-slate-500"><span className="text-pink-500">♥</span> {product.donationCount.toLocaleString()} {lang === "en" ? "people chose to donate" : "תורמים כבר בחרו לתרום"}</p>
             </div>
           </div>
         </div>
