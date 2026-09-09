@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Play } from "lucide-react";
 import { formatNIS } from "@/lib/mock-data";
 import EditableText from "@/components/admin/EditableText";
+import DonationSocialProof from "@/components/donations/DonationSocialProof";
 
 export default function ProductCard({
   title,
@@ -52,7 +53,7 @@ export default function ProductCard({
           <EditableText tKey="landing.products.ctaBuy" />
         </button>
       )}
-      {donationCount !== undefined && <p className="mt-2 text-xs font-bold text-slate-600"><span className="text-pink-500">♥</span> {donationCount.toLocaleString()} {" "}כבר בחרו לתרום</p>}</div>
+      {donationCount !== undefined && <DonationSocialProof count={donationCount} className="mt-2 block text-xs font-bold text-slate-600" />}</div>
     </div>
   );
 }

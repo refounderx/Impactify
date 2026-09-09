@@ -1,8 +1,9 @@
 "use client";
 import { useState, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatNIS } from "@/lib/mock-data";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
+import DonationSocialProof from "@/components/donations/DonationSocialProof";
 
 interface Props {
   onClose: () => void;
@@ -146,8 +147,7 @@ export default function NewDonationPopup({ onClose, lang, t }: Props) {
                       {lang === "en" ? "I choose to donate" : "אני בוחר לתרום"}
                     </button>
                     <div className="flex items-center justify-center gap-1">
-                      <Heart size={10} className="text-red-400 fill-red-400" />
-                      <span className="text-xs text-gray-400">257 {lang === "en" ? "donated" : "כבר בחרו לתרום"}</span>
+                      <DonationSocialProof count={257} iconSize={10} className="text-xs text-gray-400" />
                     </div>
                   </div>
                 </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Building2, Heart, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Play } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import BottomNav from "@/components/layout/BottomNav";
 import LiveProductDonationModal from "@/components/landing/LiveProductDonationModal";
@@ -15,6 +15,7 @@ import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-targe
 import { formatNIS, percent } from "@/lib/mock-data";
 import { getCampaignById, getCampaignProductProgress, getProductProgress, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
 import { getOrgById } from "@/lib/supabase/queries-orgs";
+import DonationSocialProof from "@/components/donations/DonationSocialProof";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -81,7 +82,7 @@ export default function ProductDetailPage() {
           <p className="mt-5 text-lg leading-8 text-slate-600">{description}</p>
           <p className="mt-7 text-5xl font-black text-raz-dark">{formatNIS(product.price)}</p>
           <button type="button" onClick={() => setShowDonation(true)} className="mt-7 w-full rounded-full py-4 text-lg font-black text-white shadow-[0_12px_24px_rgba(0,181,173,.25)]" style={{ backgroundColor: brandColor }}>{lang === "en" ? "Choose to donate" : "אני בוחר לתרום"}</button>
-          <p className="mt-3 text-center text-sm font-bold text-slate-500"><Heart className="me-1 inline text-pink-500" size={16} fill="currentColor" />{(campaign?.donors ?? globalProgress?.donorsCount ?? 0).toLocaleString()} {lang === "en" ? "people have already donated" : "כבר בחרו לתרום"}</p>
+          <DonationSocialProof count={campaign?.donors ?? globalProgress?.donorsCount ?? 0} iconSize={16} className="mt-3 block text-center text-sm font-bold text-slate-500" />
           {org && <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-5"><Link href={`/organization/${org.id}`} className="rounded-full border px-4 py-2 text-sm font-bold" style={{ borderColor: brandColor, color: brandColor }}>{lang === "en" ? "About the nonprofit" : "לעמוד העמותה"}</Link></div>}
         </div>
       </div>
