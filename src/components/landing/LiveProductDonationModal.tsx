@@ -36,8 +36,8 @@ export default function LiveProductDonationModal({
   useEffect(() => { void getCampaignById(product.campaignId).then(setCampaign); }, [product.campaignId]);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-raz-dark/85 p-4 backdrop-blur-[2px]" onClick={onClose}>
-      <section className="my-auto w-full max-w-[34rem] overflow-hidden rounded-[2rem] bg-white shadow-[0_28px_80px_rgba(10,15,35,0.45)]" dir={lang === "en" ? "ltr" : "rtl"} onClick={(event) => event.stopPropagation()}>
+    <div className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-raz-dark/85 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur-[2px] sm:items-center sm:p-4" onClick={onClose}>
+      <section className="my-auto max-h-[calc(100dvh-7rem)] w-full max-w-[34rem] overflow-y-auto rounded-[2rem] bg-white shadow-[0_28px_80px_rgba(10,15,35,0.45)] sm:max-h-[calc(100dvh-2rem)]" dir={lang === "en" ? "ltr" : "rtl"} onClick={(event) => event.stopPropagation()}>
         <div className="relative px-6 pb-5 pt-6 sm:px-9">
           <button type="button" onClick={onClose} className="absolute start-3 top-3 z-10 rounded-full p-2 text-slate-300 transition hover:bg-slate-100 hover:text-slate-700" aria-label={t("hint.close")}><X size={25} /></button>
           {video?.kind === "embed" && preferences.marketing && <iframe src={video.url} title={title} className="relative mt-5 aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-inner" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />}
@@ -73,7 +73,12 @@ export default function LiveProductDonationModal({
           <p className="mt-1 text-xs text-slate-400">{campaignTimeRemaining(campaign, lang)}</p>
         </div>}
 
-        {otherProducts.length > 0 && <div className="px-6 py-6 sm:px-9">
+        <div className="border-t border-slate-100 px-6 py-6 sm:px-9">
+          <div className="mx-auto max-w-xs rounded-2xl bg-slate-50 px-5 py-3 text-center"><span className="text-xs font-bold text-slate-500">{lang === "en" ? "Total" : "סה״כ"}</span><span className="ms-3 text-4xl font-black text-raz-dark">{formatNIS(product.price)}</span></div>
+          <button type="button" onClick={onContinue} className="mt-4 w-full rounded-full bg-raz-teal py-3.5 text-base font-black text-white shadow-[0_10px_20px_rgba(0,181,173,0.25)] transition hover:-translate-y-0.5 hover:bg-raz-teal-dark">{lang === "en" ? "Choose to donate" : "אני בוחר לתרום"}</button>
+        </div>
+
+        {otherProducts.length > 0 && <div className="border-t border-slate-100 px-6 py-6 sm:px-9">
           <p className="mb-4 text-center text-sm font-black text-raz-dark">{lang === "en" ? "Other donors also chose" : "תורמים אחרים בחרו גם במוצרים האלה"}</p>
           <div className="grid grid-cols-3 gap-3">
             {otherProducts.slice(0, 3).map((other) => (
@@ -84,11 +89,6 @@ export default function LiveProductDonationModal({
             ))}
           </div>
         </div>}
-
-        <div className="border-t border-slate-100 px-6 py-6 sm:px-9">
-          <div className="mx-auto max-w-xs rounded-2xl bg-slate-50 px-5 py-3 text-center"><span className="text-xs font-bold text-slate-500">{lang === "en" ? "Total" : "סה״כ"}</span><span className="ms-3 text-4xl font-black text-raz-dark">{formatNIS(product.price)}</span></div>
-          <button type="button" onClick={onContinue} className="mt-4 w-full rounded-full bg-raz-teal py-3.5 text-base font-black text-white shadow-[0_10px_20px_rgba(0,181,173,0.25)] transition hover:-translate-y-0.5 hover:bg-raz-teal-dark">{lang === "en" ? "Choose to donate" : "אני בוחר לתרום"}</button>
-        </div>
       </section>
     </div>
   );
