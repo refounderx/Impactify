@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import BottomNav from "@/components/layout/BottomNav";
 import PublicCommunityHero from "@/components/community/PublicCommunityHero";
 import PublicCommunityProfileTabs from "@/components/community/PublicCommunityProfileTabs";
 import { useLang } from "@/contexts/LanguageContext";
 import { getPublicCommunityById, getPublicCommunityCampaigns } from "@/lib/supabase/queries";
+import PublicBackButton from "@/components/layout/PublicBackButton";
 
 export default function PublicCommunityPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,8 +28,10 @@ export default function PublicCommunityPage() {
 
   return <main className="min-h-screen bg-white pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
-      <button type="button" onClick={() => router.back()} className="interactive-control group inline-flex min-h-11 items-center gap-2 rounded-full border bg-white px-4 text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md" style={{ color: community.color, borderColor: `${community.color}44` }} aria-label={lang === "en" ? "Back" : "חזרה"}>{lang === "en" ? <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />}{lang === "en" ? "Back" : "חזרה"}</button>
-      <div className="mt-6 grid gap-10 lg:grid-cols-[1.05fr_.95fr]" dir="ltr"><section dir={lang === "en" ? "ltr" : "rtl"} className="min-w-0"><p className="text-sm font-bold" style={{ color: community.color }}>{lang === "en" ? "Community profile" : "פרופיל קהילה"}</p><h1 className="mt-2 text-4xl font-extrabold leading-tight text-raz-dark sm:text-5xl">{name}</h1><p className="mt-5 max-w-2xl text-base leading-8 text-slate-600">{lang === "en" ? "A community built around shared giving and measurable impact." : "קהילה שנבנתה סביב נתינה משותפת והשפעה שאפשר לראות."}</p><PublicCommunityProfileTabs community={community} campaigns={campaigns} lang={lang} /></section><aside className="min-w-0" dir={lang === "en" ? "ltr" : "rtl"}><PublicCommunityHero community={community} campaign={campaigns[0]} lang={lang} /></aside></div>
+      <div className="md:flex md:items-start md:gap-4">
+      <PublicBackButton />
+      <div className="min-w-0 flex-1 grid gap-10 lg:grid-cols-[1.05fr_.95fr]" dir="ltr"><section dir={lang === "en" ? "ltr" : "rtl"} className="min-w-0"><p className="text-sm font-bold" style={{ color: community.color }}>{lang === "en" ? "Community profile" : "פרופיל קהילה"}</p><h1 className="mt-2 text-4xl font-extrabold leading-tight text-raz-dark sm:text-5xl">{name}</h1><p className="mt-5 max-w-2xl text-base leading-8 text-slate-600">{lang === "en" ? "A community built around shared giving and measurable impact." : "קהילה שנבנתה סביב נתינה משותפת והשפעה שאפשר לראות."}</p><PublicCommunityProfileTabs community={community} campaigns={campaigns} lang={lang} /></section><aside className="min-w-0" dir={lang === "en" ? "ltr" : "rtl"}><PublicCommunityHero community={community} campaign={campaigns[0]} lang={lang} /></aside></div>
+      </div>
     </div>
     <BottomNav variant="donor" />
   </main>;

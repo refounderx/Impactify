@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Building2, Play } from "lucide-react";
+import { Building2, Play } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import BottomNav from "@/components/layout/BottomNav";
 import LiveProductDonationModal from "@/components/landing/LiveProductDonationModal";
@@ -16,6 +16,7 @@ import { formatNIS, percent } from "@/lib/mock-data";
 import { getCampaignById, getCampaignProductProgress, getProductProgress, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
 import { getOrgById } from "@/lib/supabase/queries-orgs";
 import DonationSocialProof from "@/components/donations/DonationSocialProof";
+import PublicBackButton from "@/components/layout/PublicBackButton";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -64,11 +65,9 @@ export default function ProductDetailPage() {
 
   return <main className="min-h-screen bg-raz-surface pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
-      <button type="button" onClick={() => router.back()} className="interactive-control group inline-flex min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md" aria-label={lang === "en" ? "Back" : "חזרה"}>
-        {lang === "en" ? <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />}
-        {lang === "en" ? "Back" : "חזרה"}
-      </button>
-      <div className="mt-6 grid gap-8 rounded-[2rem] bg-white p-6 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] md:p-10">
+      <div className="md:flex md:items-start md:gap-4">
+      <PublicBackButton />
+      <div className="min-w-0 flex-1 grid gap-8 rounded-[2rem] bg-white p-6 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] md:p-10">
         <div className="relative flex min-h-80 items-center justify-center overflow-hidden rounded-3xl bg-slate-50">
           {video?.kind === "embed" && preferences.marketing ? <iframe src={video.url} title={title} className="absolute inset-0 h-full w-full bg-black" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
             : video?.kind === "video" ? <video src={video.url} controls playsInline className="absolute inset-0 h-full w-full bg-black object-contain" />
@@ -85,6 +84,7 @@ export default function ProductDetailPage() {
           <DonationSocialProof count={campaign?.donors ?? globalProgress?.donorsCount ?? 0} iconSize={16} className="mt-3 block text-center text-sm font-bold text-slate-500" />
           {org && <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-5"><Link href={`/organization/${org.id}`} className="rounded-full border px-4 py-2 text-sm font-bold" style={{ borderColor: brandColor, color: brandColor }}>{lang === "en" ? "About the nonprofit" : "לעמוד העמותה"}</Link></div>}
         </div>
+      </div>
       </div>
       {campaign && <section className="mt-8 rounded-3xl bg-white p-7 shadow-sm md:p-10"><p className="text-sm font-bold text-raz-teal">{lang === "en" ? "This product in the campaign" : "המוצר הזה בקמפיין"}</p><h2 className="mt-2 text-3xl font-extrabold text-raz-dark">{campaignTitle}</h2><div className="mt-6 flex items-center justify-between font-bold"><span>{currentCampaignQuantity.toLocaleString()} {lang === "en" ? "units donated" : "יחידות נתרמו"}</span><span className="text-raz-teal">{campaignProductPercent}%</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-raz-teal" style={{ width: `${campaignProductPercent}%` }} /></div><p className="mt-2 text-sm text-slate-500">{lang === "en" ? `Campaign target: ${currentCampaignTarget.toLocaleString()} units` : `יעד המוצר בקמפיין: ${currentCampaignTarget.toLocaleString()} יחידות`}</p><div className="mt-7 border-t border-slate-100 pt-5"><div className="flex items-center justify-between font-bold"><span>{formatNIS(campaign.raised)} {lang === "en" ? "raised in campaign" : "גויסו בקמפיין"}</span><span className="text-raz-teal">{progress}%</span></div><p className="mt-2 text-xs text-slate-400">{campaignTargetLabel(campaign, lang)} · {campaignTimeRemaining(campaign, lang)}</p></div></section>}
       {!campaign && <section className="mt-8 rounded-3xl bg-white p-7 shadow-sm md:p-10"><p className="text-sm font-bold" style={{ color: brandColor }}>{lang === "en" ? "Product progress" : "התקדמות המוצר"}</p><div className="mt-4 flex items-center justify-between font-bold"><span>{globalQuantity.toLocaleString()} {lang === "en" ? "units donated" : "יחידות נתרמו"}</span><span style={{ color: brandColor }}>{globalProgressPercent}%</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full" style={{ width: `${globalProgressPercent}%`, backgroundColor: brandColor }} /></div><p className="mt-2 text-sm text-slate-500">{globalTargetLabel} · {lang === "en" ? `${globalTarget.toLocaleString()} units` : `${globalTarget.toLocaleString()} יחידות`}</p><p className="mt-1 text-xs text-slate-400">{globalTimeRemaining}</p></section>}

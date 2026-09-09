@@ -8,7 +8,7 @@ import LiveProductDonationModal from "@/components/landing/LiveProductDonationMo
 import CampaignTabs from "@/components/campaign/CampaignTabs";
 import { getCampaignById, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
 import { formatNIS, percent } from "@/lib/mock-data";
-import { Share2, ArrowLeft, ArrowRight } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import EditableText from "@/components/admin/EditableText";
@@ -17,6 +17,7 @@ import { sharePage } from "@/lib/share";
 import { useCookieConsent } from "@/contexts/CookieConsentContext";
 import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-target";
 import LandingFooter from "@/components/landing/LandingFooter";
+import PublicBackButton from "@/components/layout/PublicBackButton";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -92,12 +93,10 @@ export default function CampaignDetail() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <main className="mx-auto w-full max-w-6xl px-5 pb-12 pt-8 md:px-8 md:pt-12">
-      <button type="button" onClick={() => router.back()} className="interactive-control group mb-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md" aria-label={t("hint.back")}>
-        {lang === "en" ? <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />}
-        {lang === "en" ? "Back" : "חזרה"}
-      </button>
+      <div className="md:flex md:items-start md:gap-4" dir={lang === "en" ? "ltr" : "rtl"}>
+      <PublicBackButton />
       {/* The campaign's visual story leads the page; campaign data stays immediately below it. */}
-      <div className="relative">
+      <div className="relative min-w-0 flex-1">
       <div className={`relative flex min-h-[19rem] items-center justify-center overflow-hidden rounded-[1.75rem] bg-gradient-to-br sm:min-h-[24rem] md:min-h-[28rem] ${campaign.gradient}`}>
         {video?.kind === "embed" && preferences.marketing ? (
           <iframe
@@ -144,6 +143,7 @@ export default function CampaignDetail() {
             <img src={org.logo_url} alt={orgName ?? ""} className="h-full w-full object-cover" />
           ) : org?.initials}
         </div>
+      </div>
       </div>
 
       <section className="mx-auto max-w-5xl px-1 pt-8 md:pt-10" dir={lang === "en" ? "ltr" : "rtl"}>
