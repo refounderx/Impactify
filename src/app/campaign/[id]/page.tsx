@@ -93,10 +93,10 @@ export default function CampaignDetail() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <main className="mx-auto w-full max-w-6xl px-5 pb-12 pt-8 md:px-8 md:pt-12">
-      <div className="md:flex md:items-start md:gap-4" dir={lang === "en" ? "ltr" : "rtl"}>
+      <div className="relative" dir={lang === "en" ? "ltr" : "rtl"}>
       <PublicBackButton />
       {/* The campaign's visual story leads the page; campaign data stays immediately below it. */}
-      <div className="relative min-w-0 flex-1">
+      <div className="relative">
       <div className={`relative flex min-h-[19rem] items-center justify-center overflow-hidden rounded-[1.75rem] bg-gradient-to-br sm:min-h-[24rem] md:min-h-[28rem] ${campaign.gradient}`}>
         {video?.kind === "embed" && preferences.marketing ? (
           <iframe

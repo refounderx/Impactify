@@ -65,9 +65,9 @@ export default function ProductDetailPage() {
 
   return <main className="min-h-screen bg-raz-surface pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
-      <div className="md:flex md:items-start md:gap-4">
+      <div className="relative">
       <PublicBackButton />
-      <div className="min-w-0 flex-1 grid gap-8 rounded-[2rem] bg-white p-6 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] md:p-10">
+      <div className="grid gap-8 rounded-[2rem] bg-white p-6 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] md:p-10">
         <div className="relative flex min-h-80 items-center justify-center overflow-hidden rounded-3xl bg-slate-50">
           {video?.kind === "embed" && preferences.marketing ? <iframe src={video.url} title={title} className="absolute inset-0 h-full w-full bg-black" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
             : video?.kind === "video" ? <video src={video.url} controls playsInline className="absolute inset-0 h-full w-full bg-black object-contain" />

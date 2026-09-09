@@ -35,9 +35,9 @@ export default function OrganizationPage() {
 
   return <main className="min-h-screen bg-white pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
-      <div className="md:flex md:items-start md:gap-4">
+      <div className="relative">
       <PublicBackButton />
-      <div className="min-w-0 flex-1 grid gap-10 lg:grid-cols-[1.05fr_.95fr]" dir="ltr">
+      <div className="grid gap-10 lg:grid-cols-[1.05fr_.95fr]" dir="ltr">
         <section dir={lang === "en" ? "ltr" : "rtl"} className="min-w-0">
           <p className="text-sm font-bold" style={{ color: org.color }}>{lang === "en" ? "About the nonprofit" : "על העמותה"}</p>
           <h1 className="mt-2 text-4xl font-extrabold leading-tight text-raz-dark sm:text-5xl">{orgName}</h1>
