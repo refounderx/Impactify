@@ -13,8 +13,7 @@ export function campaignTargetLabel(campaign: CampaignTarget, lang: "he" | "en")
 }
 
 export function campaignTimeRemaining(campaign: CampaignTarget, lang: "he" | "en") {
-  if (campaign.goalType === "monthly") return lang === "en" ? "Resets at the start of every month" : "מתאפס בתחילת כל חודש";
-  if (campaign.goalType === "annual") return lang === "en" ? "Resets at the start of every year" : "מתאפס בתחילת כל שנה";
+  if (campaign.goalType === "monthly" || campaign.goalType === "annual") return "";
   if (typeof campaign.daysLeft !== "number") return "";
   return lang === "en" ? `${campaign.daysLeft} days remaining` : `${campaign.daysLeft} ימים נותרו`;
 }
