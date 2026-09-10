@@ -45,7 +45,7 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 
 ### Not Yet Built
 - Phone OTP authentication
-- Real payment processing (Israeli PSP — Tranzilla/Cardcom, TBD)
+- Real payment processing (Israeli PSP — Cardcom, Grow, or Gamma; hosted checkout and signed callbacks still required)
 - Real payment-service-provider integration
 - Non-profit verification flow
 - Personal campaigns (donor-created fundraisers)
@@ -64,7 +64,7 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 
 ## Open Questions (from PRD)
 
-- Which Israeli PSP? (Tranzilla, Cardcom, PayMe)
+- Which of the registered Israeli PSPs should be activated first (Cardcom, Grow, or Gamma)?
 - Platform commission on donations?
 - Non-profit verification: what documents, who moderates?
 - Section 46 tax receipt auto-compliance?

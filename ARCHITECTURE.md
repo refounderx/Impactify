@@ -62,7 +62,7 @@ page.tsx → useAuth() → user.id
 **Payment and donation trust boundary:**
 ```
 production payment page → no PAN/CVV collection inside Impactify
-  → hosted Cardcom/Grow checkout + signed webhook (not implemented yet)
+  → hosted Cardcom/Grow/Gamma checkout + signed webhook (not implemented yet)
   → only verified server callback may append a completed donation
 
 development payment page → explicit simulation flag → validated server-only insert

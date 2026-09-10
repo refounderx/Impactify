@@ -9,11 +9,7 @@ import {
   type PaymentConnection,
   type PaymentProvider,
 } from "@/lib/supabase/queries-payment-connections";
-
-const PROVIDERS: Record<PaymentProvider, { name: string; url: string }> = {
-  cardcom: { name: "Cardcom", url: "https://www.cardcom.solutions/developers/" },
-  grow: { name: "Grow", url: "https://developers.grow.business/docs/webhooks" },
-};
+import { PAYMENT_PROVIDERS } from "@/lib/payments/provider-catalog";
 
 export default function PaymentProviderConnections({ onConnectionSaved }: { onConnectionSaved?: () => void }) {
   const { lang } = useLang();
@@ -60,9 +56,7 @@ export default function PaymentProviderConnections({ onConnectionSaved }: { onCo
     } finally { setSaving(false); }
   }
 
-  const setupText = provider === "cardcom"
-    ? (lang === "en" ? "Prepare the terminal number, API name/password, a production callback URL, and confirm token charges are enabled." : "הכינו מספר מסוף, שם/סיסמת API, כתובת callback לייצור ואישור לחיובי token.")
-    : (lang === "en" ? "Prepare the Grow user ID/API key, payment-page configuration, and ask Grow support to enable transaction and recurring-payment webhooks." : "הכינו מזהה משתמש/מפתח API, הגדרת עמוד תשלום ובקשו מ־Grow להפעיל webhooks לעסקאות ולחיובים חוזרים.");
+  const providerConfig = PAYMENT_PROVIDERS[provider];
 
   return (
     <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100" dir={lang === "en" ? "ltr" : "rtl"}>
@@ -74,8 +68,8 @@ export default function PaymentProviderConnections({ onConnectionSaved }: { onCo
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-2" role="group" aria-label={lang === "en" ? "Choose payment provider" : "בחירת ספק סליקה"}>
-        {(Object.entries(PROVIDERS) as [PaymentProvider, (typeof PROVIDERS)[PaymentProvider]][]).map(([key, item]) => (
+      <div className="mt-6 grid gap-2 sm:grid-cols-3" role="group" aria-label={lang === "en" ? "Choose payment provider" : "בחירת ספק סליקה"}>
+        {(Object.entries(PAYMENT_PROVIDERS) as [PaymentProvider, (typeof PAYMENT_PROVIDERS)[PaymentProvider]][]).map(([key, item]) => (
           <button key={key} type="button" onClick={() => { setProvider(key); setMessage(""); }} aria-pressed={provider === key}
             className={`interactive-control flex min-h-14 items-center justify-between rounded-xl border px-4 text-start ${provider === key ? "border-raz-teal bg-raz-teal/10 text-raz-dark shadow-sm" : "border-slate-200 bg-white text-slate-500"}`}>
             <span className="font-bold">{item.name}</span>
@@ -92,12 +86,12 @@ export default function PaymentProviderConnections({ onConnectionSaved }: { onCo
       </div>
 
       <div key={provider} className="flow-reveal mt-4 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-        <div className="flex gap-2"><ShieldCheck size={18} className="mt-0.5 shrink-0 text-raz-teal" /><p>{setupText}</p></div>
-        <a className="mt-3 inline-flex items-center gap-1 font-bold text-raz-teal hover:underline" href={PROVIDERS[provider].url} target="_blank" rel="noreferrer"><ExternalLink size={14} />{lang === "en" ? `${PROVIDERS[provider].name} developer documentation` : `תיעוד מפתחים של ${PROVIDERS[provider].name}`}</a>
+        <div className="flex gap-2"><ShieldCheck size={18} className="mt-0.5 shrink-0 text-raz-teal" /><p>{providerConfig.requirements[lang]}</p></div>
+        <a className="mt-3 inline-flex items-center gap-1 font-bold text-raz-teal hover:underline" href={providerConfig.setupUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} />{providerConfig.setupLabel[lang]}</a>
       </div>
 
       {loading ? <p className="mt-5 text-sm text-slate-400">{lang === "en" ? "Loading payment connections…" : "טוען חיבורי סליקה…"}</p> : connections.length > 0 && <div className="mt-5 space-y-2">
-        {connections.map((connection) => <div key={connection.id} className="flow-reveal flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm"><span className="font-bold text-raz-dark">{PROVIDERS[connection.provider].name} · <bdi>{connection.terminalId}</bdi></span><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${connection.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{connection.status === "active" ? (lang === "en" ? "Active" : "פעיל") : (lang === "en" ? "Setup required" : "נדרשת השלמת הגדרה")}</span></div>)}
+        {connections.map((connection) => <div key={connection.id} className="flow-reveal flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm"><span className="font-bold text-raz-dark">{PAYMENT_PROVIDERS[connection.provider].name} · <bdi>{connection.terminalId}</bdi></span><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${connection.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{connection.status === "active" ? (lang === "en" ? "Active" : "פעיל") : (lang === "en" ? "Setup required" : "נדרשת השלמת הגדרה")}</span></div>)}
       </div>}
       {message && <p className="mt-4 text-sm text-slate-600" role="status">{message}</p>}
       <p className="mt-5 flex gap-2 text-xs text-slate-500"><CheckCircle2 size={16} className="shrink-0 text-raz-teal" />{lang === "en" ? "Impactify does not collect card numbers, CVV, or your provider credentials in this step." : "בשלב זה Impactify אינה אוספת מספרי כרטיס, CVV או פרטי גישה למסוף."}</p>

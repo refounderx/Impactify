@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
+import type { PaymentProvider } from "@/lib/payments/provider-catalog";
 
-export type PaymentProvider = "cardcom" | "grow";
+export type { PaymentProvider } from "@/lib/payments/provider-catalog";
 export type PaymentConnectionStatus = "setup_required" | "pending_verification" | "active" | "disabled" | "failed";
 
 export type PaymentConnection = {

@@ -68,8 +68,8 @@ export default function PaymentPage({
               </h2>
               <p className="mx-auto mt-2 max-w-md text-center text-sm leading-6 text-gray-600">
                 {lang === "en"
-                  ? "Impactify does not collect card numbers or CVV. Payment will become available after the nonprofit connects and verifies Cardcom or Grow."
-                  : "Impactify אינה אוספת מספרי כרטיס או CVV. התשלום יהיה זמין לאחר שהעמותה תחבר ותאמת מסוף Cardcom או Grow."}
+                  ? "Impactify does not collect card numbers or CVV. Payment will become available after the nonprofit connects and verifies a payment terminal."
+                  : "Impactify אינה אוספת מספרי כרטיס או CVV. התשלום יהיה זמין לאחר שהעמותה תחבר ותאמת מסוף סליקה."}
               </p>
               {isSimulation && (
                 <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-center text-sm font-bold text-amber-800">
