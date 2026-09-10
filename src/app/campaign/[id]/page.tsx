@@ -92,7 +92,7 @@ export default function CampaignDetail() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <main className="mx-auto w-full max-w-6xl px-5 pb-12 pt-8 md:px-8 md:pt-12">
+      <main className="mx-auto w-full max-w-6xl px-5 pb-12 pt-8 md:w-[90%] md:max-w-[64.8rem] md:px-8 md:pt-12">
       <div className="relative" dir={lang === "en" ? "ltr" : "rtl"}>
       <PublicBackButton />
       {/* The campaign's visual story leads the page; campaign data stays immediately below it. */}

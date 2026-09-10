@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
   const detailProduct: DiscoverableProduct = { productId: product.id, campaignId: campaign?.id ?? "", category: campaign?.category ?? "product", name: product.name, nameEn: product.nameEn, description: product.description, descriptionEn: product.descriptionEn, price: product.price, emoji: product.emoji, imageUrl: product.imageUrl, videoUrl: product.videoUrl, donationCount: campaign?.donors ?? 0 };
 
   return <main className="min-h-screen bg-raz-surface pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
-    <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
+    <div className="mx-auto w-full max-w-6xl px-5 py-8 md:w-[90%] md:max-w-[64.8rem] md:px-8">
       <div className="relative">
       <PublicBackButton />
       <div className="grid gap-8 rounded-[2rem] bg-white p-6 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] md:p-10">

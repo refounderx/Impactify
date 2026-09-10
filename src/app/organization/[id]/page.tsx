@@ -34,7 +34,7 @@ export default function OrganizationPage() {
   if (!campaign) return <main className="min-h-screen bg-raz-surface px-6 py-16" dir={lang === "en" ? "ltr" : "rtl"}><div className="mx-auto max-w-3xl rounded-[2rem] bg-white p-10 text-center shadow-sm"><h1 className="text-3xl font-extrabold text-raz-dark">{orgName}</h1><p className="mt-4 text-slate-500">{lang === "en" ? "There are no active campaigns right now." : "אין כרגע קמפיינים פעילים בעמותה."}</p></div><BottomNav variant="donor" /></main>;
 
   return <main className="min-h-screen bg-white pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
-    <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
+    <div className="mx-auto w-full max-w-6xl px-5 py-8 md:w-[90%] md:max-w-[64.8rem] md:px-8">
       <div className="relative">
       <PublicBackButton />
       <div className="grid gap-10 lg:grid-cols-[1.05fr_.95fr]" dir="ltr">

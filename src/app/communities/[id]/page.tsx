@@ -27,7 +27,7 @@ export default function PublicCommunityPage() {
   const name = lang === "en" ? (community.name_en ?? community.name) : community.name;
 
   return <main className="min-h-screen bg-white pb-24" dir={lang === "en" ? "ltr" : "rtl"}>
-    <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
+    <div className="mx-auto w-full max-w-6xl px-5 py-8 md:w-[90%] md:max-w-[64.8rem] md:px-8">
       <div className="relative">
       <PublicBackButton />
       <div className="grid gap-10 lg:grid-cols-[1.05fr_.95fr]" dir="ltr"><section dir={lang === "en" ? "ltr" : "rtl"} className="min-w-0"><p className="text-sm font-bold" style={{ color: community.color }}>{lang === "en" ? "Community profile" : "פרופיל קהילה"}</p><h1 className="mt-2 text-4xl font-extrabold leading-tight text-raz-dark sm:text-5xl">{name}</h1><p className="mt-5 max-w-2xl text-base leading-8 text-slate-600">{lang === "en" ? "A community built around shared giving and measurable impact." : "קהילה שנבנתה סביב נתינה משותפת והשפעה שאפשר לראות."}</p><PublicCommunityProfileTabs community={community} campaigns={campaigns} lang={lang} /></section><aside className="min-w-0" dir={lang === "en" ? "ltr" : "rtl"}><PublicCommunityHero community={community} campaign={campaigns[0]} lang={lang} /></aside></div>
