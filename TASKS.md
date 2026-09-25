@@ -260,8 +260,8 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 
 ## Phase 4 — Payments
 
-- [x] Initial provider onboarding for Cardcom, Grow, and Gamma: NGO owners can register their own terminal identifier through tenant-derived RPCs; no provider credentials or card data are stored in the browser database. Migration `20260830143000` establishes the registry and `20260910110000_add_gamma_payment_provider.sql` adds Gamma.
-- [ ] Add secure server-only provider credential onboarding and terminal verification for Cardcom, Grow, and Gamma; registered terminals remain `setup_required` until this exists. Gamma's public material does not document its full card-checkout/webhook contract, so its adapter remains blocked on provider documentation and sandbox credentials.
+- [x] Initial provider onboarding for Cardcom, Grow, Gamma, and Tranzila: NGO owners can register their own terminal identifier through tenant-derived RPCs; no provider credentials or card data are stored in the browser database. Migration `20260830143000` establishes the registry, `20260910110000_add_gamma_payment_provider.sql` adds Gamma, and `20260925110000_add_tranzila_payment_provider.sql` adds Tranzila.
+- [ ] Add secure server-only provider credential onboarding and terminal verification for Cardcom, Grow, Gamma, and Tranzila; registered terminals remain `setup_required` until this exists. Tranzila's DirectNG checkout needs production success/failure/notify URLs and response-hash verification before its callback may complete a donation.
 - [ ] Integrate PSP SDK for credit card tokenization
 - [ ] Implement actual charge flow (PCI-compliant, card data never touches our server)
 - [ ] Implement Impactify-scheduled recurring token charges, provider webhook verification/retries, and donor cancellation. Do not reserve an annual amount in advance; each monthly charge is submitted separately, subject to issuer approval.

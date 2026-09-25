@@ -25,7 +25,7 @@ All three go in `.env.local` (gitignored). Prefix `NEXT_PUBLIC_` vars are bundle
 ## API Routes
 
 ### `POST /api/donations`
-Development-only payment simulation. Production returns `503` until a Cardcom, Grow, or Gamma server integration can verify a signed payment result; a browser request alone can never create a completed production ledger entry.
+Development-only payment simulation. Production returns `503` until a Cardcom, Grow, Gamma, or Tranzila server integration can verify a signed payment result; a browser request alone can never create a completed production ledger entry.
 
 **Request body:**
 ```json
@@ -84,8 +84,8 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | `get_public_organization_donations(org_id)` | Anonymous or authenticated | Returns at most 12 recent completed donation amounts and timestamps for the organization's active campaigns; never exposes donor identity, message, payment, or receipt data |
 | `get_public_organization_communities(org_id)` | Anonymous or authenticated | Returns public details for communities with an active relationship to an active campaign of the organization |
 | `get_public_impact_stats()` | Anonymous or authenticated | Read-only, platform-wide aggregate counts and completed donation total for the landing page; never returns donation, payment, or donor rows |
-| `get_ngo_payment_connections()` | NGO owner only | Returns only the caller's Cardcom/Grow/Gamma terminal metadata; never returns provider credentials, card data, or payment tokens |
-| `start_ngo_payment_connection(provider, terminal_id)` | NGO owner only | Registers or updates the caller's Cardcom/Grow/Gamma terminal identifier and keeps it in setup-required state until server-side verification is implemented |
+| `get_ngo_payment_connections()` | NGO owner only | Returns only the caller's Cardcom/Grow/Gamma/Tranzila terminal metadata; never returns provider credentials, card data, or payment tokens |
+| `start_ngo_payment_connection(provider, terminal_id)` | NGO owner only | Registers or updates the caller's Cardcom/Grow/Gamma/Tranzila terminal identifier and keeps it in setup-required state until server-side verification is implemented |
 | `set_my_recurring_donation_status(recurring_id, status)` | Donor only | Changes only the caller's non-cancelled instruction to active, paused, or permanently cancelled |
 | `add_my_payment_method(brand, last_four)` | Donor only | Stores validated display metadata only; never accepts PAN, CVV, or a PSP token from the browser |
 | `remove_my_payment_method(payment_method_id)` | Donor only | Deletes only a display-metadata row owned by the caller |

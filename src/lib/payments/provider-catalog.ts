@@ -26,6 +26,15 @@ export const PAYMENT_PROVIDERS = {
       he: "הכינו מזהה מסוף אינטרנט של גמא ובקשו מגמא תיעוד API לייצור ולבדיקות, אימות callback/webhook ואישור ל־token או חיובים חוזרים לפי הצורך.",
     },
   },
+  tranzila: {
+    name: "Tranzila",
+    setupUrl: "https://docs.tranzila.com/docs/payments-and-billing/iframe-integration-directng",
+    setupLabel: { en: "Tranzila DirectNG documentation", he: "תיעוד Tranzila DirectNG" },
+    requirements: {
+      en: "Prepare the Tranzila terminal name, configure the production success, failure, and notify URLs, and obtain the response-hash secret before activating charges or recurring payments.",
+      he: "הכינו את שם מסוף Tranzila, הגדירו כתובות הצלחה, כישלון ו־notify לייצור, וקבלו את סוד אימות ה־response hash לפני הפעלת חיובים או הוראות קבע.",
+    },
+  },
 } as const;
 
 export type PaymentProvider = keyof typeof PAYMENT_PROVIDERS;
