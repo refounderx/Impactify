@@ -13,7 +13,7 @@ import { useCookieConsent } from "@/contexts/CookieConsentContext";
 import { getCampaignVideoSource } from "@/lib/campaign-media";
 import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-target";
 import { formatNIS, percent } from "@/lib/mock-data";
-import { getCampaignById, getCampaignProductProgress, getProductProgress, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
+import { getCampaignById, getCampaignProductProgress, getDiscoverableProducts, getProductProgress, getProductsByIds, type DiscoverableProduct } from "@/lib/supabase/queries";
 import { getOrgById } from "@/lib/supabase/queries-orgs";
 import DonationSocialProof from "@/components/donations/DonationSocialProof";
 import PublicBackButton from "@/components/layout/PublicBackButton";
@@ -28,19 +28,32 @@ export default function ProductDetailPage() {
   const [campaign, setCampaign] = useState<Awaited<ReturnType<typeof getCampaignById>>>(null);
   const [directOrg, setDirectOrg] = useState<Awaited<ReturnType<typeof getOrgById>>>(null);
   const [related, setRelated] = useState<Awaited<ReturnType<typeof getProductsByIds>>>([]);
+  const [popularDonations, setPopularDonations] = useState<DiscoverableProduct[]>([]);
   const [showDonation, setShowDonation] = useState(false);
   const [globalProgress, setGlobalProgress] = useState<Awaited<ReturnType<typeof getProductProgress>>>(null);
   const [campaignProductProgress, setCampaignProductProgress] = useState<Awaited<ReturnType<typeof getCampaignProductProgress>>>(null);
 
   useEffect(() => {
     if (!id) return;
-    void Promise.all([getProductsByIds([id]), getProductProgress(id), campaignId ? getCampaignById(campaignId) : Promise.resolve(null)]).then(async ([products, currentGlobalProgress, currentCampaign]) => {
+    void Promise.all([getProductsByIds([id]), getProductProgress(id), campaignId ? getCampaignById(campaignId) : Promise.resolve(null), getDiscoverableProducts()]).then(async ([products, currentGlobalProgress, currentCampaign, discoverableProducts]) => {
+      const currentProduct = products[0];
       setProduct(products[0] ?? null);
       setGlobalProgress(currentGlobalProgress);
       setCampaign(currentCampaign);
       setCampaignProductProgress(currentCampaign ? await getCampaignProductProgress(currentCampaign.id, id) : null);
       if (!currentCampaign && products[0]?.orgId) setDirectOrg(await getOrgById(products[0].orgId));
       if (currentCampaign?.productIds?.length) setRelated(await getProductsByIds(currentCampaign.productIds.filter((productId) => productId !== id)));
+      setPopularDonations(currentProduct?.donorPersona
+        ? discoverableProducts
+          .filter((candidate) => candidate.productId !== currentProduct.id && candidate.donorPersona === currentProduct.donorPersona)
+          .sort((first, second) => {
+            const firstSameSubcategory = Boolean(currentProduct.donorSubcategory) && first.donorSubcategory === currentProduct.donorSubcategory;
+            const secondSameSubcategory = Boolean(currentProduct.donorSubcategory) && second.donorSubcategory === currentProduct.donorSubcategory;
+            if (firstSameSubcategory !== secondSameSubcategory) return firstSameSubcategory ? -1 : 1;
+            return second.donationCount - first.donationCount;
+          })
+          .slice(0, 3)
+        : []);
     });
   }, [id, campaignId]);
 
@@ -95,6 +108,7 @@ export default function ProductDetailPage() {
       {!campaign && org && <section className="border-t border-slate-200 py-10"><p className="text-sm font-bold" style={{ color: brandColor }}>{lang === "en" ? "The nonprofit" : "העמותה"}</p><h2 className="mt-2 text-3xl font-extrabold text-raz-dark">{orgName}</h2><p className="mt-4 max-w-3xl leading-8 text-slate-600">{lang === "en" ? ((org as { bioEn?: string; description_en?: string } | null)?.bioEn ?? (org as { description_en?: string } | null)?.description_en) : ((org as { bio?: string; description?: string } | null)?.bio ?? (org as { description?: string } | null)?.description)}</p><Link href={`/organization/${org.id}`} className="mt-5 inline-flex text-sm font-bold hover:underline" style={{ color: brandColor }}>{lang === "en" ? "Visit the nonprofit" : "לביקור בעמוד העמותה"}</Link></section>}
       {campaign && <section className="border-t border-slate-200 py-10"><div className="flex items-center justify-between gap-4"><div><p className="text-sm font-bold text-raz-teal">{lang === "en" ? "The nonprofit" : "העמותה"}</p><h2 className="mt-1 text-2xl font-extrabold text-raz-dark">{orgName}</h2></div>{org && <Link href={`/organization/${org.id}`} className="text-sm font-bold text-raz-teal hover:underline">{lang === "en" ? "View page" : "לפרופיל העמותה"}</Link>}</div><p className="mt-5 max-w-3xl leading-8 text-slate-600">{lang === "en" ? ((org as { description_en?: string; bioEn?: string } | null)?.description_en ?? (org as { bioEn?: string } | null)?.bioEn) : ((org as { description?: string; bio?: string } | null)?.description ?? (org as { bio?: string } | null)?.bio)}</p><p className="mt-6 max-w-3xl border-t border-slate-100 pt-6 leading-8 text-slate-600">{lang === "en" ? (campaign.storyEn ?? campaign.story) : campaign.story}</p></section>}
       {campaign && related.length > 0 && <section className="border-t border-slate-200 py-10"><p className="text-sm font-bold text-raz-teal">{lang === "en" ? "More ways to help" : "מוצרים נוספים מאותו קמפיין"}</p><h2 className="mt-2 text-3xl font-extrabold text-raz-dark">{lang === "en" ? "Other relevant products" : "אפשרויות תרומה נוספות"}</h2><div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{related.map((item) => <ProductCard key={item.id} title={lang === "en" ? (item.nameEn ?? item.name) : item.name} price={item.price} emoji={item.emoji} imageUrl={item.imageUrl} videoUrl={item.videoUrl} donationCount={campaign.donors} donorPersona={item.donorPersona} donorSubcategory={lang === "en" ? item.donorSubcategoryEn : item.donorSubcategory} onOpenDetails={() => router.push(`/product/${item.id}?campaign_id=${campaign.id}`)} onChoose={() => router.push(`/product/${item.id}?campaign_id=${campaign.id}`)} />)}</div></section>}
+      {popularDonations.length > 0 && <section className="border-t border-slate-200 py-10"><p className="text-sm font-bold text-raz-teal">{lang === "en" ? "Popular donations" : "תרומות פופולריות"}</p><h2 className="mt-2 text-3xl font-extrabold text-raz-dark">{lang === "en" ? "More ways to make an impact" : "אפשרויות נוספות עם השפעה"}</h2><p className="mt-2 text-slate-500">{lang === "en" ? "For the same recipient, ordered first by the same donation type." : "עבור אותו מקבל/ת — קודם מאותה תת־קטגוריה, ולאחר מכן מאותו קהל יעד."}</p><div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{popularDonations.map((item) => <ProductCard key={`${item.productId}-${item.campaignId}`} title={lang === "en" ? (item.nameEn ?? item.name) : item.name} price={item.price} emoji={item.emoji} imageUrl={item.imageUrl} videoUrl={item.videoUrl} donationCount={item.donationCount} donorPersona={item.donorPersona} donorSubcategory={lang === "en" ? item.donorSubcategoryEn : item.donorSubcategory} onOpenDetails={() => router.push(`/product/${item.productId}?campaign_id=${item.campaignId}`)} onChoose={() => router.push(`/product/${item.productId}?campaign_id=${item.campaignId}`)} />)}</div></section>}
     </div>
     {showDonation && <LiveProductDonationModal product={detailProduct} otherProducts={[]} onChooseProduct={() => {}} onContinue={() => router.push(campaign ? `/donate/${campaign.id}/payment?amount=${product.price}&product_id=${product.id}` : `/donate/${product.id}/payment?direct_product=1&amount=${product.price}&product_id=${product.id}`)} onClose={() => setShowDonation(false)} />}
     <BottomNav variant="donor" />
