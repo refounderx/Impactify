@@ -18,6 +18,7 @@ import { useCookieConsent } from "@/contexts/CookieConsentContext";
 import { campaignTargetLabel, campaignTimeRemaining } from "@/lib/campaign-target";
 import LandingFooter from "@/components/landing/LandingFooter";
 import PublicBackButton from "@/components/layout/PublicBackButton";
+import VolunteerInterestButton from "@/components/volunteers/VolunteerInterestButton";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -170,7 +171,7 @@ export default function CampaignDetail() {
         </div>
 
         {/* Opens the donation-amount popup */}
-        <div className="mb-10 flex justify-center">
+        <div className="mb-10 flex flex-wrap justify-center gap-3">
           <button
             onClick={() => { setSelectedProduct(null); setShowModal(true); }}
             className="rounded-full px-9 py-3 text-sm font-bold text-white shadow-sm transition-transform hover:-translate-y-0.5"
@@ -178,6 +179,7 @@ export default function CampaignDetail() {
           >
             <EditableText tKey="campaign.chooseAmount" />
           </button>
+          <VolunteerInterestButton campaignId={campaign.id} />
         </div>
 
         {/* 3 products chosen by the org admin when creating the campaign */}

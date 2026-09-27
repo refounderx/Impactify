@@ -28,6 +28,7 @@ export default function SetupPage() {
   const { user, profile, loading, refreshProfile } = useAuth();
   const { lang } = useLang();
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<SignupRole>("donor");
   const [tenantName, setTenantName] = useState("");
   const [tenantNameEn, setTenantNameEn] = useState("");
@@ -44,22 +45,21 @@ export default function SetupPage() {
   }, [loading, profile, redirectingToRoleOnboarding, router, user]);
 
   async function completeSignup() {
-    if (!user || !name.trim() || (role !== "donor" && !tenantName.trim())) return;
+    if (!user || !name.trim() || !phone.trim() || (role !== "donor" && !tenantName.trim())) return;
     setSaving(true);
     setError("");
     const sb = createClient();
     const result = role === "donor"
-      ? await sb.rpc("complete_donor_signup", { p_full_name: name.trim() })
+      ? await sb.rpc("complete_donor_signup", { p_full_name: name.trim(), p_phone: phone.trim() })
       : role === "ngo_owner"
         ? await sb.rpc("complete_ngo_signup", {
             p_full_name: name.trim(), p_org_name: tenantName.trim(), p_org_name_en: tenantNameEn.trim() || null,
             p_goals: goals.map((goal) => ({ he: goal.he.trim(), en: goal.en?.trim() || null })),
-            p_color: brandColor,
+            p_color: brandColor, p_phone: phone.trim(),
           })
         : await sb.rpc("complete_community_signup", {
             p_full_name: name.trim(), p_community_name: tenantName.trim(),
-            p_community_name_en: tenantNameEn.trim() || null,
-            p_color: brandColor,
+            p_community_name_en: tenantNameEn.trim() || null, p_color: brandColor, p_phone: phone.trim(),
           });
     if (result.error) {
       setError(result.error.message);
@@ -107,6 +107,11 @@ export default function SetupPage() {
             <input value={name} onChange={(event) => setName(event.target.value)} maxLength={120}
               className="interactive-field mt-1.5 w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800" />
           </label>
+          <label className="block text-sm text-gray-500">
+            {lang === "en" ? "Mobile phone" : "טלפון נייד"}
+            <input value={phone} onChange={(event) => setPhone(event.target.value)} type="tel" inputMode="tel" maxLength={24} placeholder="050-0000000"
+              className="interactive-field mt-1.5 w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800" dir="ltr" />
+          </label>
           <div className="space-y-2">
             {roles.map((option) => (
               <button key={option.key} type="button" onClick={() => { setRole(option.key); setTenantName(""); setTenantNameEn(""); }}
@@ -153,7 +158,7 @@ export default function SetupPage() {
             </div>
           )}
           {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
-          <button onClick={completeSignup} disabled={saving || !name.trim() || (role !== "donor" && (!tenantName.trim() || !brandColorValid)) || (role === "ngo_owner" && goals.some((goal) => !goal.he.trim()))}
+          <button onClick={completeSignup} disabled={saving || !name.trim() || !phone.trim() || (role !== "donor" && (!tenantName.trim() || !brandColorValid)) || (role === "ngo_owner" && goals.some((goal) => !goal.he.trim()))}
             className="interactive-control w-full bg-raz-teal text-white py-3.5 rounded-xl font-bold shadow-lg shadow-teal-950/10 disabled:opacity-50">
             {saving ? (lang === "en" ? "Creating account…" : "יוצר חשבון…") : (lang === "en" ? "Continue" : "המשך")}
           </button>

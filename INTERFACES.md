@@ -196,6 +196,14 @@ Public reads support the home-page audience selectors. An NGO owner may create, 
 
 **Immutability:** A `BEFORE UPDATE` trigger rejects ledger edits but permits foreign-key anonymization that changes only `donor_id` and/or `product_id` from a UUID to `null`. A DB rule blocks DELETE. This lets account/product deletion retain financial history without allowing ordinary donation updates.
 
+### Volunteer and supporter contracts
+
+`volunteer_opportunities` records an organization-owned opportunity and may carry a community and active linked campaign. `volunteer_signups` records a unique authenticated volunteer registration with the resulting organization and optional community attribution. Opportunity states are `active`, `full`, or `closed`; signup states are `registered`, `scheduled`, `attended`, or `cancelled`.
+
+`supporter_organizations` and `supporter_communities` are durable, de-duplicated `(supporter_id, tenant_id)` links. `first_source` is `donation` or `volunteer`; `first_seen_at` is preserved on later activity. Browser roles have no direct access to either table.
+
+All volunteer writes are authenticated RPCs: `create_volunteer_opportunity`, `update_volunteer_opportunity`, `set_volunteer_opportunity_status`, `register_for_volunteer_opportunity`, and `set_volunteer_signup_status`. The read RPCs are `get_ngo_volunteer_opportunities`, `get_community_volunteer_opportunities`, `get_ngo_volunteer_signups`, and `get_community_volunteer_signups`. Owner RPCs derive the tenant from the caller profile. Community creation validates an active community-campaign link; community signup reads expose only that community's contacts. `register_for_volunteer_opportunity` requires a profile phone number and returns a calendar URL only after the signup succeeds.
+
 ### `profiles`
 | Column | Type | Notes |
 |---|---|---|

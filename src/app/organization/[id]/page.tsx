@@ -8,6 +8,7 @@ import OrganizationProfileTabs from "@/components/organization/OrganizationProfi
 import { useLang } from "@/contexts/LanguageContext";
 import { getProductsByIds, getPublicCampaignsByOrg, getOrgById } from "@/lib/supabase/queries";
 import PublicBackButton from "@/components/layout/PublicBackButton";
+import VolunteerInterestButton from "@/components/volunteers/VolunteerInterestButton";
 
 export default function OrganizationPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +42,7 @@ export default function OrganizationPage() {
         <section dir={lang === "en" ? "ltr" : "rtl"} className="min-w-0">
           <p className="text-sm font-bold" style={{ color: org.color }}>{lang === "en" ? "About the nonprofit" : "על העמותה"}</p>
           <h1 className="mt-2 text-4xl font-extrabold leading-tight text-raz-dark sm:text-5xl">{orgName}</h1>
+          <div className="mt-5"><VolunteerInterestButton orgId={org.id} /></div>
           {orgBio && <p className="mt-5 max-w-2xl whitespace-pre-line text-base leading-8 text-slate-600">{orgBio}</p>}
           <OrganizationProfileTabs products={products} campaignId={campaign.id} campaignDonors={campaign.donors} organization={org} lang={lang} />
         </section>

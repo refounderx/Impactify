@@ -4,6 +4,17 @@ export type CampaignGoalType = "deadline" | "monthly" | "annual";
 export type DonationStatus = "pending" | "completed" | "failed" | "refunded";
 export type RecurringStatus = "active" | "paused" | "cancelled";
 export type OrganizationGoal = { he: string; en: string | null };
+export type VolunteerOpportunitySummary = {
+  id: string; org_id: string; community_id: string | null; campaign_id: string | null;
+  title: string; description: string; starts_at: string | null; location: string | null;
+  calendar_url: string | null; capacity: number | null; status: "active" | "full" | "closed";
+  created_at: string; signup_count: number; campaign_title: string | null; community_name: string | null;
+};
+export type VolunteerSignupSummary = {
+  id: string; opportunity_id: string; status: "registered" | "scheduled" | "attended" | "cancelled";
+  created_at: string; volunteer_name: string | null; volunteer_email: string | null;
+  volunteer_phone: string | null; community_name: string | null;
+};
 
 export interface Database {
   public: {
@@ -326,21 +337,54 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      volunteer_opportunities: {
+        Row: { id: string; org_id: string; community_id: string | null; campaign_id: string | null; title: string; description: string; starts_at: string | null; location: string | null; calendar_url: string | null; capacity: number | null; status: "active" | "full" | "closed"; created_at: string; updated_at: string };
+        Insert: Omit<Database["public"]["Tables"]["volunteer_opportunities"]["Row"], "id" | "created_at" | "updated_at" | "status"> & { id?: string; status?: "active" | "full" | "closed" };
+        Update: Partial<Database["public"]["Tables"]["volunteer_opportunities"]["Insert"]>;
+        Relationships: [];
+      };
+      volunteer_signups: {
+        Row: { id: string; opportunity_id: string; volunteer_id: string; org_id: string; community_id: string | null; status: "registered" | "scheduled" | "attended" | "cancelled"; created_at: string };
+        Insert: Omit<Database["public"]["Tables"]["volunteer_signups"]["Row"], "id" | "created_at" | "status"> & { id?: string; status?: "registered" | "scheduled" | "attended" | "cancelled" };
+        Update: Partial<Pick<Database["public"]["Tables"]["volunteer_signups"]["Row"], "status">>;
+        Relationships: [];
+      };
+      supporter_organizations: {
+        Row: { supporter_id: string; org_id: string; first_source: "donation" | "volunteer"; first_seen_at: string };
+        Insert: Database["public"]["Tables"]["supporter_organizations"]["Row"];
+        Update: never;
+        Relationships: [];
+      };
+      supporter_communities: {
+        Row: { supporter_id: string; community_id: string; first_source: "donation" | "volunteer"; first_seen_at: string };
+        Insert: Database["public"]["Tables"]["supporter_communities"]["Row"];
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
       complete_donor_signup: {
-        Args: { p_full_name: string };
+        Args: { p_full_name: string; p_phone: string };
         Returns: string;
       };
       complete_ngo_signup: {
-        Args: { p_full_name: string; p_org_name: string; p_org_name_en: string | null; p_goals: OrganizationGoal[]; p_color: string };
+        Args: { p_full_name: string; p_org_name: string; p_org_name_en: string | null; p_goals: OrganizationGoal[]; p_color: string; p_phone: string };
         Returns: string;
       };
       complete_community_signup: {
-        Args: { p_full_name: string; p_community_name: string; p_community_name_en?: string | null; p_color: string };
+        Args: { p_full_name: string; p_community_name: string; p_community_name_en?: string | null; p_color: string; p_phone: string };
         Returns: string;
       };
+      create_volunteer_opportunity: { Args: { p_title: string; p_description: string; p_starts_at: string | null; p_location: string | null; p_calendar_url: string | null; p_capacity: number | null; p_campaign_id?: string | null }; Returns: string };
+      update_volunteer_opportunity: { Args: { p_opportunity_id: string; p_title: string; p_description: string; p_starts_at: string | null; p_location: string | null; p_calendar_url: string | null; p_capacity: number | null; p_campaign_id?: string | null }; Returns: string };
+      set_volunteer_opportunity_status: { Args: { p_opportunity_id: string; p_status: string }; Returns: string };
+      register_for_volunteer_opportunity: { Args: { p_opportunity_id: string }; Returns: { signup_id: string; calendar_url: string | null }[] };
+      set_volunteer_signup_status: { Args: { p_signup_id: string; p_status: string }; Returns: string };
+      get_ngo_volunteer_opportunities: { Args: Record<string, never>; Returns: VolunteerOpportunitySummary[] };
+      get_community_volunteer_opportunities: { Args: Record<string, never>; Returns: VolunteerOpportunitySummary[] };
+      get_ngo_volunteer_signups: { Args: Record<string, never>; Returns: VolunteerSignupSummary[] };
+      get_community_volunteer_signups: { Args: Record<string, never>; Returns: VolunteerSignupSummary[] };
       admin_update_profile_role: {
         Args: { p_profile_id: string; p_role: AppRole; p_org_id?: string | null; p_community_id?: string | null };
         Returns: undefined;

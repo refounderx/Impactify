@@ -70,6 +70,10 @@ development payment page → explicit simulation flag → validated server-only 
 
 Mutation APIs require same-origin JSON and bounded bodies. Production responses receive CSP, anti-framing, referrer, MIME-sniffing, permissions, opener, and HSTS headers from `next.config.ts`. Migration `20260830170000` removes direct browser insert/update privileges from financial tables and routes recurring/payment-display mutations through caller-derived RPCs.
 
+**Volunteer trust boundary:** Public opportunity reads are limited to active listings. The volunteer registration page requires an authenticated profile with a phone number and calls `register_for_volunteer_opportunity`; it never inserts a signup from the browser. NGO and community administration calls tenant-derived volunteer RPCs, which resolve organization/community identity from `auth.uid()`. They do not accept client-supplied tenant IDs. Opportunity signups expose contact details only through the relevant owner-scoped RPC; a community query is restricted to that community's attributed signups.
+
+**Supporter attribution:** A completed donation with an authenticated donor creates durable organization and (when present) community supporter links in a database trigger. A successful volunteer registration creates the same links atomically. Anonymous donations remain ledger entries but do not create a supporter link because there is no authenticated profile to associate.
+
 ## Module Structure
 
 ```

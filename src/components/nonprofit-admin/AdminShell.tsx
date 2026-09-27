@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, Flag, Package, LineChart, Bell, Users, ChevronUp, ChevronDown, LogOut, User, Megaphone } from "lucide-react";
+import { Heart, Flag, Package, LineChart, Bell, Users, HandHeart, ChevronUp, ChevronDown, LogOut, User, Megaphone } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
 import { useLang } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -127,6 +127,12 @@ export default function AdminShell({ children, variant = "nonprofit" }: { childr
             }`}
           >
             <Users size={17} className="flex-shrink-0" /><EditableText tKey={routes.lastNavKey} />
+          </Link>
+          <Link
+            href={variant === "nonprofit" ? "/nonprofit/volunteers" : "/community/volunteers"}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium transition-colors ${pathname.endsWith("/volunteers") ? "bg-white/20 text-white" : "text-teal-100 hover:bg-white/10"}`}
+          >
+            <HandHeart size={17} className="flex-shrink-0" />{lang === "en" ? "Volunteers" : "מתנדבים"}
           </Link>
           <Link
             href={profileHref}
