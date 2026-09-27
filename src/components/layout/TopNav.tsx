@@ -83,6 +83,9 @@ export default function TopNav() {
     { href: "/accessibility", label: lang === "en" ? "Accessibility" : "נגישות" },
   ];
 
+  // These public manager landing pages carry their own focused marketing header.
+  if (pathname === "/community-managers" || pathname === "/ngo-managers") return null;
+
   return (
     <>
     <nav className="hidden md:flex bg-white border-b border-gray-100 px-6 py-3 items-center justify-between">

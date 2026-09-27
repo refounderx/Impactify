@@ -58,6 +58,15 @@ Authenticated NGO owners can create an idempotent refund request for a completed
 | `/auth/setup` | One-time donor/NGO-owner/community-owner onboarding; admin is never self-selectable |
 | `/admin/users` | Admin-only user role, tenant-assignment, and permanent account deletion management |
 
+## Public manager landing routes
+
+| Route | Audience | Entry behavior |
+|---|---|---|
+| `/community-managers` | Community managers | Renders the community-focused marketing page. Its entry CTAs go straight to `/community` only for an authenticated `community_owner`; all other visitors use `/auth`. |
+| `/ngo-managers` | NGO managers | Renders the NGO-focused marketing page. Its entry CTAs go straight to `/nonprofit` only for an authenticated `ngo_owner`; all other visitors use `/auth`. |
+
+Both routes preserve `/` as the public donor landing page. The post-magic-link callback remains the authority for deciding a returning user's role-specific destination.
+
 **Auth mechanism:** Supabase email magic link. `/auth` sends `emailRedirectTo` as the current origin plus `/auth/callback`, so local and production sign-ins return to the site that initiated them. Supabase's redirect allowlist must contain `http://localhost:3000/auth/callback` and `https://impactify-sable.vercel.app/auth/callback`; its production Site URL is `https://impactify-sable.vercel.app`. The callback routes incomplete profiles to setup and returning users to the dashboard for their persisted role. `proxy.ts` refreshes sessions and performs coarse route protection; server layouts enforce the exact role. In the browser, `AuthContext` restores the persisted session before network validation, keeps it during transient validation errors, reacts to Supabase auth events, and reconciles on network recovery or tab focus. The UI shows a global notice for offline state, temporary verification failure, or a confirmed ended session; only the last state offers re-authentication.
 
 ### Auth and campaign RPCs
