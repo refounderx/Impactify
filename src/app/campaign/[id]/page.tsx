@@ -82,6 +82,9 @@ export default function CampaignDetail() {
     imageUrl: product.imageUrl,
     videoUrl: product.videoUrl,
     donationCount: campaign.donors,
+    donorPersona: product.donorPersona,
+    donorSubcategory: product.donorSubcategory,
+    donorSubcategoryEn: product.donorSubcategoryEn,
   }));
 
   function continueWithProduct(product: DiscoverableProduct) {
@@ -189,6 +192,8 @@ export default function CampaignDetail() {
                 imageUrl={p.imageUrl}
                 videoUrl={p.videoUrl}
                 donationCount={p.donationCount}
+                donorPersona={p.donorPersona}
+                donorSubcategory={lang === "en" ? p.donorSubcategoryEn : p.donorSubcategory}
                 onOpenDetails={() => router.push(`/product/${p.productId}?campaign_id=${p.campaignId}`)}
                 title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                 price={p.price}

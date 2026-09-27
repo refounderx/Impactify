@@ -105,6 +105,9 @@ create table public.products (
   emoji          text,
   image_url      text,
   video_url      text,
+  donor_persona  text check (donor_persona is null or donor_persona in ('baby', 'child', 'teen', 'soldier', 'elderly')),
+  donor_subcategory text,
+  donor_subcategory_en text,
   active         boolean not null default true,
   created_at     timestamptz default now() not null
 );

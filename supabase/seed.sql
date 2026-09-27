@@ -14,27 +14,27 @@ insert into public.organizations (id, name, name_en, initials, color, verified) 
 
 -- ── Products ─────────────────────────────────────────────────
 -- Note: UUIDs use only valid hex chars (0-9, a-f)
-insert into public.products (id, org_id, name, name_en, description, description_en, price, emoji) values
+insert into public.products (id, org_id, name, name_en, description, description_en, price, emoji, donor_persona, donor_subcategory, donor_subcategory_en) values
   ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
    'ארוחה חמה', 'Hot Meal',
    'ארוחה מזינה ומחממת לאדם אחד ליום', 'A warm, nutritious meal for one person per day',
-   50, '🍲'),
+   50, '🍲', 'elderly', 'ארוחות חמות ותזונה מזינה', 'Hot meals and nutritious food'),
   ('b2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
    'סל מזון שבועי', 'Weekly Food Basket',
    'סל מזון מלא לשבוע לאדם קשיש', 'A full week''s food basket for one elderly person',
-   150, '🛒'),
+   150, '🛒', 'elderly', 'סל מזון שבועי קבוע', 'Recurring weekly food basket'),
   ('b3333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222',
    'ציוד לימוד', 'School Supplies',
    'מחברות, עטים וציוד לימוד לסטודנט', 'Notebooks, pens and school supplies for one student',
-   80, '✏️'),
+   80, '✏️', 'teen', 'סדנאות הכשרה מקצועית וציוד לימודי', 'Skills training and study supplies'),
   ('b4444444-4444-4444-4444-444444444444', '22222222-2222-2222-2222-222222222222',
    'סל ספרים', 'Book Basket',
    'ספרי לימוד לשנת לימודים שלמה', 'Textbooks for a full academic year',
-   120, '📚'),
+   120, '📚', 'child', 'ילקוט מלא וציוד חזרה לבית הספר', 'Schoolbag and back-to-school supplies'),
   ('b5555555-5555-5555-5555-555555555555', '44444444-4444-4444-4444-444444444444',
    'חבילת בגדים', 'Clothing Package',
    'חבילת בגדים לחורף לאדם אחד', 'A winter clothing package for one person',
-   200, '🧥');
+   200, '🧥', 'elderly', 'ערכת חורף חם', 'Warm winter kit');
 
 -- ── Campaigns ────────────────────────────────────────────────
 insert into public.campaigns

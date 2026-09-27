@@ -81,6 +81,9 @@ export function toUIProduct(row: Product) {
     globalTargetQuantity: Number(row.global_target_quantity ?? 1),
     globalTargetGoalType: row.global_target_goal_type ?? "annual",
     globalTargetEndDate: row.global_target_end_date ?? undefined,
+    donorPersona: row.donor_persona ?? undefined,
+    donorSubcategory: row.donor_subcategory ?? undefined,
+    donorSubcategoryEn: row.donor_subcategory_en ?? undefined,
   };
 }
 

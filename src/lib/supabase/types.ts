@@ -103,6 +103,9 @@ export interface Database {
           global_target_quantity: number;
           global_target_goal_type: CampaignGoalType;
           global_target_end_date: string | null;
+          donor_persona: "baby" | "child" | "teen" | "soldier" | "elderly" | null;
+          donor_subcategory: string | null;
+          donor_subcategory_en: string | null;
           active: boolean;
           created_at: string;
         };
@@ -248,7 +251,7 @@ export interface Database {
         ];
       };
       org_payment_connections: {
-        Row: { id: string; org_id: string; provider: "cardcom" | "grow" | "gamma" | "tranzila"; terminal_id: string; status: "setup_required" | "pending_verification" | "active" | "disabled" | "failed"; created_by: string | null; last_verified_at: string | null; created_at: string; updated_at: string };
+        Row: { id: string; org_id: string; provider: "cardcom" | "grow" | "tranzila"; terminal_id: string; status: "setup_required" | "pending_verification" | "active" | "disabled" | "failed"; created_by: string | null; last_verified_at: string | null; created_at: string; updated_at: string };
         Insert: Omit<Database["public"]["Tables"]["org_payment_connections"]["Row"], "id" | "created_at" | "updated_at" | "last_verified_at"> & { id?: string; created_at?: string; updated_at?: string; last_verified_at?: string | null };
         Update: Partial<Database["public"]["Tables"]["org_payment_connections"]["Insert"]>;
         Relationships: [{ foreignKeyName: "org_payment_connections_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }];
@@ -362,8 +365,8 @@ export interface Database {
       get_ngo_campaign_requests: { Args: Record<string, never>; Returns: { community_campaign_id: string; campaign_id: string; community_id: string; community_name: string; campaign_title: string; requested_at: string }[] };
       get_ngo_community_links: { Args: Record<string, never>; Returns: { community_id: string; community_name: string; community_name_en: string | null; community_total_raised: number; community_created_at: string; campaign_id: string; status: string }[] };
       invite_communities_to_campaign: { Args: { p_campaign_id: string; p_community_ids: string[] }; Returns: number };
-      get_discoverable_products: { Args: { p_categories?: string[] | null }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; image_url: string | null; video_url: string | null; donation_count: number }[] };
-      get_discoverable_products_for_audience: { Args: { p_audience: string }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; image_url: string | null; video_url: string | null; donation_count: number }[] };
+      get_discoverable_products: { Args: { p_categories?: string[] | null }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; image_url: string | null; video_url: string | null; donation_count: number; donor_persona: "baby" | "child" | "teen" | "soldier" | "elderly" | null; donor_subcategory: string | null; donor_subcategory_en: string | null }[] };
+      get_discoverable_products_for_audience: { Args: { p_audience: string }; Returns: { product_id: string; campaign_id: string; category: string; name: string; name_en: string | null; description: string | null; description_en: string | null; price: number; emoji: string | null; image_url: string | null; video_url: string | null; donation_count: number; donor_persona: "baby" | "child" | "teen" | "soldier" | "elderly" | null; donor_subcategory: string | null; donor_subcategory_en: string | null }[] };
       get_public_organization_donations: { Args: { p_org_id: string }; Returns: { amount: number; created_at: string }[] };
       get_public_organization_communities: { Args: { p_org_id: string }; Returns: { community_id: string; community_name: string; community_name_en: string | null; community_color: string; community_total_raised: number }[] };
       manage_ngo_campaign_request: { Args: { p_community_id: string; p_campaign_id: string; p_action: string }; Returns: string };
@@ -465,8 +468,8 @@ export interface Database {
           active_recurring_donations: number;
         }[];
       };
-      get_ngo_payment_connections: { Args: Record<string, never>; Returns: { id: string; provider: "cardcom" | "grow" | "gamma" | "tranzila"; terminal_id: string; status: "setup_required" | "pending_verification" | "active" | "disabled" | "failed"; last_verified_at: string | null; created_at: string }[] };
-      start_ngo_payment_connection: { Args: { p_provider: "cardcom" | "grow" | "gamma" | "tranzila"; p_terminal_id: string }; Returns: string };
+      get_ngo_payment_connections: { Args: Record<string, never>; Returns: { id: string; provider: "cardcom" | "grow" | "tranzila"; terminal_id: string; status: "setup_required" | "pending_verification" | "active" | "disabled" | "failed"; last_verified_at: string | null; created_at: string }[] };
+      start_ngo_payment_connection: { Args: { p_provider: "cardcom" | "grow" | "tranzila"; p_terminal_id: string }; Returns: string };
     };
     Enums: {
       app_role: AppRole;

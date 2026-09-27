@@ -17,15 +17,6 @@ export const PAYMENT_PROVIDERS = {
       he: "הכינו מזהה משתמש/מפתח API, הגדרת עמוד תשלום ובקשו מ־Grow להפעיל webhooks לעסקאות ולחיובים חוזרים.",
     },
   },
-  gamma: {
-    name: "Gamma",
-    setupUrl: "https://www.gamaf.co.il/products/Payment-facilitator.html",
-    setupLabel: { en: "Gamma payment setup", he: "פרטי הצטרפות לסליקה של גמא" },
-    requirements: {
-      en: "Prepare the Gamma internet-terminal ID and ask Gamma for production and sandbox API documentation, callback/webhook authentication, and token or recurring-payment approval if needed.",
-      he: "הכינו מזהה מסוף אינטרנט של גמא ובקשו מגמא תיעוד API לייצור ולבדיקות, אימות callback/webhook ואישור ל־token או חיובים חוזרים לפי הצורך.",
-    },
-  },
   tranzila: {
     name: "Tranzila",
     setupUrl: "https://docs.tranzila.com/docs/payments-and-billing/iframe-integration-directng",

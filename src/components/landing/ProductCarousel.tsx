@@ -72,6 +72,8 @@ export default function ProductCarousel() {
                     imageUrl={p.imageUrl}
                     videoUrl={p.videoUrl}
                     donationCount={p.donationCount}
+                    donorPersona={p.donorPersona}
+                    donorSubcategory={lang === "en" ? p.donorSubcategoryEn : p.donorSubcategory}
                     onOpenDetails={() => router.push(`/product/${p.productId}`)}
                     onChoose={() => setSelectedProduct(p)}
                   />
@@ -100,6 +102,8 @@ export default function ProductCarousel() {
                 imageUrl={p.imageUrl}
                 videoUrl={p.videoUrl}
                 donationCount={p.donationCount}
+                donorPersona={p.donorPersona}
+                donorSubcategory={lang === "en" ? p.donorSubcategoryEn : p.donorSubcategory}
                 onOpenDetails={() => router.push(`/product/${p.productId}`)}
                 onChoose={() => setSelectedProduct(p)}
               />

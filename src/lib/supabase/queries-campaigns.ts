@@ -15,6 +15,9 @@ export type DiscoverableProduct = {
   imageUrl?: string;
   videoUrl?: string;
   donationCount: number;
+  donorPersona?: "baby" | "child" | "teen" | "soldier" | "elderly";
+  donorSubcategory?: string;
+  donorSubcategoryEn?: string;
 };
 
 const CAMPAIGN_WITH_ORG = "*, organizations(id,name,name_en,initials,color,description,description_en,goals,logo_url,registration_number,verified,founded,founded_en,ceo,ceo_en,volunteers,address,address_en,activity_area,phone,video_gradient,created_at)";
@@ -237,6 +240,9 @@ export async function getDiscoverableProducts(categories?: string[]) {
       imageUrl: product.image_url ?? undefined,
       videoUrl: product.video_url ?? undefined,
       donationCount: Number(product.donation_count),
+      donorPersona: product.donor_persona ?? undefined,
+      donorSubcategory: product.donor_subcategory ?? undefined,
+      donorSubcategoryEn: product.donor_subcategory_en ?? undefined,
     } satisfies DiscoverableProduct));
   } catch (error) {
     console.error("Unable to load discoverable products", error);
@@ -262,6 +268,9 @@ export async function getDiscoverableProductsForAudience(audience: string) {
       imageUrl: product.image_url ?? undefined,
       videoUrl: product.video_url ?? undefined,
       donationCount: Number(product.donation_count),
+      donorPersona: product.donor_persona ?? undefined,
+      donorSubcategory: product.donor_subcategory ?? undefined,
+      donorSubcategoryEn: product.donor_subcategory_en ?? undefined,
     } satisfies DiscoverableProduct));
   } catch (error) {
     console.error("Unable to load audience products", error);
