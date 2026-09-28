@@ -9,8 +9,10 @@ export default function PublicBackButton() {
   const router = useRouter();
   const { lang } = useLang();
   const isEnglish = lang === "en";
-  // Match the full-width header's horizontal padding, independently of page content width.
-  const edgePosition = isEnglish ? "md:left-6 md:right-auto" : "md:left-auto md:right-6";
+  // Match the shared site-frame width used by the header: 90% on tablet, 80% on desktop.
+  const edgePosition = isEnglish
+    ? "md:left-[5vw] md:right-auto lg:left-[max(10vw,calc((100vw-1920px)/2))]"
+    : "md:left-auto md:right-[5vw] lg:right-[max(10vw,calc((100vw-1920px)/2))]";
 
   return <button
     type="button"
