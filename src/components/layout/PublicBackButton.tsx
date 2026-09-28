@@ -9,12 +9,13 @@ export default function PublicBackButton() {
   const router = useRouter();
   const { lang } = useLang();
   const isEnglish = lang === "en";
-  const edgePosition = isEnglish ? "md:left-0 md:right-auto" : "md:left-auto md:right-0";
+  // Match the full-width header's horizontal padding, independently of page content width.
+  const edgePosition = isEnglish ? "md:left-6 md:right-auto" : "md:left-auto md:right-6";
 
   return <button
     type="button"
     onClick={() => router.back()}
-    className={`interactive-control group hidden min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md md:absolute md:top-0 md:z-40 md:inline-flex ${edgePosition}`}
+    className={`interactive-control group hidden min-h-11 items-center gap-2 rounded-full border border-raz-teal/20 bg-white px-4 text-sm font-bold text-raz-teal shadow-sm transition-all hover:-translate-y-0.5 hover:border-raz-teal hover:bg-raz-teal/5 hover:shadow-md md:fixed md:top-16 md:z-40 md:inline-flex ${edgePosition}`}
     aria-label={isEnglish ? "Back" : "חזרה"}
   >
     {isEnglish ? <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-0.5" /> : <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />}
