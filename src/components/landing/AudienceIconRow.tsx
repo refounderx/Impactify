@@ -14,7 +14,7 @@ export default function AudienceIconRow({
 }) {
   const { data } = useSiteDataset("landing");
   const carouselRef = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ pointerId: number; startX: number; scrollLeft: number; moved: boolean } | null>(null);
+  const drag = useRef<{ pointerId: number; lastX: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
   const audienceIcons = (data?.audienceIcons?.length ? data.audienceIcons : defaultAudienceIcons).filter(
     (icon, index, icons) => icons.findIndex((candidate) => candidate.kind === icon.kind) === index
@@ -98,7 +98,7 @@ export default function AudienceIconRow({
     if (window.matchMedia("(min-width: 768px)").matches) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
     const container = event.currentTarget;
-    drag.current = { pointerId: event.pointerId, startX: event.clientX, scrollLeft: container.scrollLeft, moved: false };
+    drag.current = { pointerId: event.pointerId, lastX: event.clientX, moved: false };
     container.setPointerCapture(event.pointerId);
   }
 
@@ -106,9 +106,10 @@ export default function AudienceIconRow({
     if (window.matchMedia("(min-width: 768px)").matches) return;
     const currentDrag = drag.current;
     if (!currentDrag || currentDrag.pointerId !== event.pointerId) return;
-    const distance = event.clientX - currentDrag.startX;
+    const distance = event.clientX - currentDrag.lastX;
     if (Math.abs(distance) > 3) currentDrag.moved = true;
-    event.currentTarget.scrollLeft = currentDrag.scrollLeft - distance;
+    event.currentTarget.scrollBy({ left: -distance, behavior: "instant" });
+    currentDrag.lastX = event.clientX;
   }
 
   function endDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -126,7 +127,7 @@ export default function AudienceIconRow({
   return (
     <div className="relative min-w-0 md:mx-0">
       <button type="button" onClick={() => scrollToCard(-1)} className="interactive-control absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/95 p-2 text-raz-dark shadow-lg md:hidden" aria-label="הקטגוריה הקודמת"><ChevronLeft size={20} /></button>
-      <div ref={carouselRef} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} className="no-scrollbar flex w-full min-w-0 snap-x snap-mandatory gap-3 overflow-x-auto px-8 pb-2 touch-pan-y md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 lg:grid-cols-5 lg:gap-5 2xl:gap-7">
+      <div ref={carouselRef} dir="ltr" onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} className="no-scrollbar flex w-full min-w-0 snap-x snap-mandatory touch-pan-y select-none gap-3 overflow-x-auto px-8 pb-2 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 lg:grid-cols-5 lg:gap-5 2xl:gap-7">
       {carouselItems.map(({ icon: a, isClone }, i) => {
         const isSelected = !isClone && a.kind === selected;
         return (

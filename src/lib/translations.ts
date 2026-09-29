@@ -251,7 +251,7 @@ const he = {
   "landing.nav.talk": "דברו איתנו", "landing.nav.about": "אודות",
   "landing.nav.campaign": "קמפיין אישי", "landing.nav.who": "למי תעניקו היום",
   "landing.nav.personalArea": "אזור אישי",
-  "landing.hero.title": "למי בא לך להעניק היום?",
+  "landing.hero.title": "למי בא לך להעניק היום\u2060?",
   "landing.hero.body": "לכל אחד יש את המטרה שמרגשת אותו. למי תרצה להעניק משהו שיחמם לו את הלב ויגרום לו לחייך? לחיצה על העיגול המתאים ומיד תוכל לבחור מה לשלוח להם!",
   "landing.hero.cta": "הרשמה לאתר",
   "landing.aud.elderly": "קשיש/ה", "landing.aud.soldier": "חייל/ת",
