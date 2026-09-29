@@ -1,5 +1,5 @@
 "use client";
-import { type TransitionEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "@/contexts/LanguageContext";
@@ -14,17 +14,36 @@ export default function ProductCarousel() {
   const [landingProducts, setLandingProducts] = useState<DiscoverableProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<DiscoverableProduct | null>(null);
   const [desktopStart, setDesktopStart] = useState(0);
-  const [mobileIndex, setMobileIndex] = useState(1);
-  const [skipMobileTransition, setSkipMobileTransition] = useState(false);
-  const mobileDragStart = useRef<number | null>(null);
+  const mobileCarouselRef = useRef<HTMLDivElement>(null);
+  const mobileDrag = useRef<{ pointerId: number; lastX: number; moved: boolean } | null>(null);
+  const suppressMobileClick = useRef(false);
   useEffect(() => { void getDiscoverableProducts().then(setLandingProducts); }, []);
   const maxDesktopStart = Math.max(0, landingProducts.length - 4);
   const desktopVisible = landingProducts.slice(desktopStart, desktopStart + 4);
   const hasMobileCarousel = landingProducts.length > 1;
-  const mobileSlides = hasMobileCarousel
-    ? [landingProducts[landingProducts.length - 1], ...landingProducts, landingProducts[0]]
-    : landingProducts;
-  const mobileOffset = hasMobileCarousel ? mobileIndex : 0;
+  const mobileCarouselItems = hasMobileCarousel
+    ? Array.from({ length: 3 }, (_, copyIndex) => landingProducts.map((product) => ({ product, copyIndex }))).flat()
+    : landingProducts.map((product) => ({ product, copyIndex: 1 }));
+
+  useEffect(() => {
+    if (!hasMobileCarousel) return;
+    const carousel = mobileCarouselRef.current;
+    const first = carousel?.querySelector<HTMLDivElement>('[data-loop-copy="0"]');
+    const middle = carousel?.querySelector<HTMLDivElement>('[data-loop-copy="1"]');
+    if (carousel && first && middle) carousel.scrollLeft = middle.offsetLeft - first.offsetLeft;
+  }, [hasMobileCarousel, landingProducts.length]);
+
+  function normalizeMobileLoop() {
+    if (!hasMobileCarousel) return;
+    const carousel = mobileCarouselRef.current;
+    const middle = carousel?.querySelector<HTMLDivElement>('[data-loop-copy="1"]');
+    const third = carousel?.querySelector<HTMLDivElement>('[data-loop-copy="2"]');
+    if (!carousel || !middle || !third) return;
+    const groupWidth = third.offsetLeft - middle.offsetLeft;
+    if (groupWidth <= 0) return;
+    if (carousel.scrollLeft < groupWidth * 0.25) carousel.scrollLeft += groupWidth;
+    else if (carousel.scrollLeft > groupWidth * 1.75) carousel.scrollLeft -= groupWidth;
+  }
 
   function previousDesktop() {
     setDesktopStart((current) => maxDesktopStart === 0 ? 0 : current === 0 ? maxDesktopStart : current - 1);
@@ -32,23 +51,32 @@ export default function ProductCarousel() {
   function nextDesktop() {
     setDesktopStart((current) => maxDesktopStart === 0 ? 0 : current === maxDesktopStart ? 0 : current + 1);
   }
-  function resetMobileLoop(index: number) {
-    setSkipMobileTransition(true);
-    setMobileIndex(index);
-    window.requestAnimationFrame(() => window.requestAnimationFrame(() => setSkipMobileTransition(false)));
+  function scrollMobile(direction: -1 | 1) {
+    const carousel = mobileCarouselRef.current;
+    if (carousel) carousel.scrollBy({ left: direction * carousel.clientWidth * 0.8, behavior: "smooth" });
   }
-  function previousMobile() {
-    if (!hasMobileCarousel) return;
-    setMobileIndex((current) => current - 1);
+  function startMobileDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    mobileDrag.current = { pointerId: event.pointerId, lastX: event.clientX, moved: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
   }
-  function nextMobile() {
-    if (!hasMobileCarousel) return;
-    setMobileIndex((current) => current + 1);
+  function moveMobileDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const drag = mobileDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const distance = event.clientX - drag.lastX;
+    if (Math.abs(distance) > 3) drag.moved = true;
+    event.currentTarget.scrollBy({ left: -distance, behavior: "instant" });
+    drag.lastX = event.clientX;
   }
-  function handleMobileTransitionEnd(event: TransitionEvent<HTMLDivElement>) {
-    if (event.target !== event.currentTarget || event.propertyName !== "transform" || !hasMobileCarousel) return;
-    if (mobileIndex === 0) resetMobileLoop(landingProducts.length);
-    if (mobileIndex === landingProducts.length + 1) resetMobileLoop(1);
+  function endMobileDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const drag = mobileDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    mobileDrag.current = null;
+    if (drag.moved) {
+      suppressMobileClick.current = true;
+      window.setTimeout(() => { suppressMobileClick.current = false; }, 0);
+    }
   }
 
   return (
@@ -57,14 +85,13 @@ export default function ProductCarousel() {
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-8"><EditableText tKey="landing.products.heading" /></h2>
 
         <div className="flex items-center gap-3 md:hidden" dir="rtl" aria-roledescription="carousel">
-          <button type="button" onClick={nextMobile} disabled={!hasMobileCarousel} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.next")}>
+          <button type="button" onClick={() => scrollMobile(1)} disabled={!hasMobileCarousel} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.next")}>
             <ChevronRight size={28} />
           </button>
 
-          <div className="min-w-0 flex-1 overflow-hidden touch-pan-y" onPointerDown={(event) => { mobileDragStart.current = event.clientX; }} onPointerUp={(event) => { if (mobileDragStart.current === null) return; const delta = event.clientX - mobileDragStart.current; mobileDragStart.current = null; if (Math.abs(delta) > 42) { if (delta < 0) nextMobile(); else previousMobile(); } }}>
-            <div className={`flex ${skipMobileTransition ? "" : "transition-transform duration-300 ease-out"}`} style={{ transform: `translateX(${mobileOffset * 100}%)` }} onTransitionEnd={handleMobileTransitionEnd}>
-              {mobileSlides.map((p, index) => (
-                <div className="w-full flex-none" key={`${p.productId}-${p.campaignId}-${index}`}>
+          <div ref={mobileCarouselRef} dir="ltr" onScroll={normalizeMobileLoop} onPointerDown={startMobileDrag} onPointerMove={moveMobileDrag} onPointerUp={endMobileDrag} onPointerCancel={endMobileDrag} onClickCapture={(event) => { if (suppressMobileClick.current) { event.preventDefault(); event.stopPropagation(); } }} className="no-scrollbar flex min-w-0 flex-1 touch-pan-y select-none gap-3 overflow-x-auto pb-2">
+              {mobileCarouselItems.map(({ product: p, copyIndex }, index) => (
+                <div data-loop-copy={copyIndex} className="w-[78vw] max-w-sm shrink-0" key={`${p.productId}-${p.campaignId}-${copyIndex}-${index}`}>
                   <ProductCard
                     title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                     price={p.price}
@@ -79,10 +106,9 @@ export default function ProductCarousel() {
                   />
                 </div>
               ))}
-            </div>
           </div>
 
-          <button type="button" onClick={previousMobile} disabled={!hasMobileCarousel} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.previous")}>
+          <button type="button" onClick={() => scrollMobile(-1)} disabled={!hasMobileCarousel} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.previous")}>
             <ChevronLeft size={28} />
           </button>
         </div>

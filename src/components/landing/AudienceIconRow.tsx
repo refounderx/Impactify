@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { audienceIcons as defaultAudienceIcons, type AudienceKind } from "@/lib/landing-data";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
@@ -19,6 +19,29 @@ export default function AudienceIconRow({
   const audienceIcons = (data?.audienceIcons?.length ? data.audienceIcons : defaultAudienceIcons).filter(
     (icon, index, icons) => icons.findIndex((candidate) => candidate.kind === icon.kind) === index
   );
+  const carouselItems = audienceIcons.length > 1
+    ? Array.from({ length: 3 }, (_, copyIndex) => audienceIcons.map((icon) => ({ icon, copyIndex }))).flat()
+    : audienceIcons.map((icon) => ({ icon, copyIndex: 1 }));
+
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 768px)").matches || audienceIcons.length < 2) return;
+    const container = carouselRef.current;
+    const first = container?.querySelector<HTMLButtonElement>('[data-loop-copy="0"]');
+    const middle = container?.querySelector<HTMLButtonElement>('[data-loop-copy="1"]');
+    if (container && first && middle) container.scrollLeft = middle.offsetLeft - first.offsetLeft;
+  }, [audienceIcons.length]);
+
+  function normalizeLoop() {
+    if (window.matchMedia("(min-width: 768px)").matches || audienceIcons.length < 2) return;
+    const container = carouselRef.current;
+    const middle = container?.querySelector<HTMLButtonElement>('[data-loop-copy="1"]');
+    const third = container?.querySelector<HTMLButtonElement>('[data-loop-copy="2"]');
+    if (!container || !middle || !third) return;
+    const groupWidth = third.offsetLeft - middle.offsetLeft;
+    if (groupWidth <= 0) return;
+    if (container.scrollLeft < groupWidth * 0.25) container.scrollLeft += groupWidth;
+    else if (container.scrollLeft > groupWidth * 1.75) container.scrollLeft -= groupWidth;
+  }
   function scrollToCard(direction: -1 | 1) {
     const container = carouselRef.current;
     if (container) container.scrollBy({ left: direction * container.clientWidth * 0.75, behavior: "smooth" });
@@ -57,17 +80,18 @@ export default function AudienceIconRow({
   return (
     <div className="relative min-w-0 md:mx-0">
       <button type="button" onClick={() => scrollToCard(-1)} className="interactive-control absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/95 p-2 text-raz-dark shadow-lg md:hidden" aria-label="הקטגוריה הקודמת"><ChevronLeft size={20} /></button>
-      <div ref={carouselRef} dir="ltr" onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} className="no-scrollbar flex w-full min-w-0 touch-pan-y select-none gap-3 overflow-x-auto px-8 pb-2 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 lg:grid-cols-5 lg:gap-5 2xl:gap-7">
-      {audienceIcons.map((a) => {
+      <div ref={carouselRef} dir="ltr" onScroll={normalizeLoop} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} className="no-scrollbar flex w-full min-w-0 touch-pan-y select-none gap-3 overflow-x-auto px-8 pb-2 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 lg:grid-cols-5 lg:gap-5 2xl:gap-7">
+      {carouselItems.map(({ icon: a, copyIndex }, index) => {
         const isSelected = a.kind === selected;
         return (
           <button
-            key={a.id}
+            data-loop-copy={copyIndex}
+            key={`${a.id}-${copyIndex}-${index}`}
             onClick={() => {
               if (suppressClick.current) return;
               onSelect(a.kind);
             }}
-            className={`flex h-40 w-[calc((100%-0.75rem)/2)] shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border py-5 transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none md:h-auto md:w-auto md:min-h-36 md:py-6 lg:min-h-44 lg:gap-3 lg:py-8 xl:min-h-48 xl:py-10 2xl:min-h-56 2xl:gap-4 2xl:py-12 ${
+            className={`${copyIndex !== 1 ? "md:hidden" : ""} flex h-40 w-[calc((100%-0.75rem)/2)] shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border py-5 transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none md:h-auto md:w-auto md:min-h-36 md:py-6 lg:min-h-44 lg:gap-3 lg:py-8 xl:min-h-48 xl:py-10 2xl:min-h-56 2xl:gap-4 2xl:py-12 ${
               isSelected ? "bg-raz-teal border-raz-teal text-white" : "bg-white border-gray-100 text-gray-800"
             }`}
           >
