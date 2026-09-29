@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { audienceIcons as defaultAudienceIcons, type AudienceKind } from "@/lib/landing-data";
 import { useSiteDataset } from "@/contexts/SiteDataContext";
@@ -19,85 +19,9 @@ export default function AudienceIconRow({
   const audienceIcons = (data?.audienceIcons?.length ? data.audienceIcons : defaultAudienceIcons).filter(
     (icon, index, icons) => icons.findIndex((candidate) => candidate.kind === icon.kind) === index
   );
-  const carouselItems = audienceIcons.length > 1
-    ? Array.from({ length: 3 }, (_, copyIndex) => audienceIcons.map((icon) => ({ icon, isClone: copyIndex !== 1 }))).flat()
-    : audienceIcons.map((icon) => ({ icon, isClone: false }));
-  const initialAudienceKind = audienceIcons[0]?.kind;
-
-  function getOriginalCard(kind: AudienceKind) {
-    return carouselRef.current?.querySelector<HTMLButtonElement>(`[data-audience-card][data-audience-kind="${kind}"]:not([data-carousel-clone])`);
-  }
-
-  function getCenteredCard() {
-    const container = carouselRef.current;
-    const cards = Array.from(container?.querySelectorAll<HTMLButtonElement>("[data-audience-card]") ?? []);
-    if (!container || !cards.length) return null;
-    const containerBounds = container.getBoundingClientRect();
-    const center = containerBounds.left + containerBounds.width / 2;
-    return cards.reduce((best, card) => {
-      const cardCenter = card.getBoundingClientRect().left + card.clientWidth / 2;
-      const bestCenter = best.getBoundingClientRect().left + best.clientWidth / 2;
-      return Math.abs(cardCenter - center) < Math.abs(bestCenter - center) ? card : best;
-    });
-  }
-  function centerCard(card: HTMLButtonElement, behavior: ScrollBehavior = "smooth") {
-    const container = carouselRef.current;
-    if (!container) return;
-    const containerBounds = container.getBoundingClientRect();
-    const cardBounds = card.getBoundingClientRect();
-    const distance = window.matchMedia("(max-width: 767px)").matches
-      ? cardBounds.left - containerBounds.left
-      : cardBounds.left + cardBounds.width / 2 - (containerBounds.left + containerBounds.width / 2);
-    if (Math.abs(distance) >= 1) container.scrollBy({ left: distance, behavior });
-  }
-  function normalizeLoopPosition() {
-    const centered = getCenteredCard();
-    if (centered?.dataset.carouselClone && centered.dataset.audienceKind) {
-      const original = getOriginalCard(centered.dataset.audienceKind as AudienceKind);
-      if (original) centerCard(original, "auto");
-    }
-  }
-
-  useEffect(() => {
-    if (!initialAudienceKind) return;
-    const initialFrame = window.requestAnimationFrame(() => {
-      const firstCard = getOriginalCard(initialAudienceKind);
-      if (firstCard) centerCard(firstCard, "auto");
-    });
-    return () => window.cancelAnimationFrame(initialFrame);
-  }, [initialAudienceKind]);
-
-  useEffect(() => {
-    if (!selected) return;
-    const firstFrame = window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        const card = getOriginalCard(selected);
-        if (card) centerCard(card);
-      });
-    });
-    return () => window.cancelAnimationFrame(firstFrame);
-  }, [selected]);
-
   function scrollToCard(direction: -1 | 1) {
-    const current = getCenteredCard();
-    if (!current || !audienceIcons.length) return;
-    const currentIndex = audienceIcons.findIndex((icon) => icon.kind === current.dataset.audienceKind);
-    if (currentIndex < 0) return;
-    const targetIndex = (currentIndex + direction + audienceIcons.length) % audienceIcons.length;
-    const targetKind = audienceIcons[targetIndex].kind;
-    const wrapsForward = direction === 1 && currentIndex === audienceIcons.length - 1;
-    const wrapsBackward = direction === -1 && currentIndex === 0;
-    const target = (wrapsForward || wrapsBackward)
-      ? (direction === 1 ? current.nextElementSibling : current.previousElementSibling) as HTMLButtonElement | null
-      : getOriginalCard(targetKind);
-    if (!target) return;
-    centerCard(target);
-    if (wrapsForward || wrapsBackward) {
-      const container = carouselRef.current;
-      const normalize = () => normalizeLoopPosition();
-      container?.addEventListener("scrollend", normalize, { once: true });
-      window.setTimeout(normalize, 700);
-    }
+    const container = carouselRef.current;
+    if (container) container.scrollBy({ left: direction * container.clientWidth * 0.75, behavior: "smooth" });
   }
 
   function startDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -126,9 +50,6 @@ export default function AudienceIconRow({
     drag.current = null;
     if (currentDrag.moved) {
       suppressClick.current = true;
-      const normalize = () => normalizeLoopPosition();
-      event.currentTarget.addEventListener("scrollend", normalize, { once: true });
-      window.setTimeout(normalize, 250);
       window.setTimeout(() => { suppressClick.current = false; }, 0);
     }
   }
@@ -136,20 +57,17 @@ export default function AudienceIconRow({
   return (
     <div className="relative min-w-0 md:mx-0">
       <button type="button" onClick={() => scrollToCard(-1)} className="interactive-control absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/95 p-2 text-raz-dark shadow-lg md:hidden" aria-label="הקטגוריה הקודמת"><ChevronLeft size={20} /></button>
-      <div ref={carouselRef} dir="ltr" onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} className="no-scrollbar flex w-full min-w-0 snap-x snap-mandatory touch-pan-y select-none gap-3 overflow-x-auto px-8 pb-2 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 lg:grid-cols-5 lg:gap-5 2xl:gap-7">
-      {carouselItems.map(({ icon: a, isClone }, i) => {
-        const isSelected = !isClone && a.kind === selected;
+      <div ref={carouselRef} dir="ltr" onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} className="no-scrollbar flex w-full min-w-0 touch-pan-y select-none gap-3 overflow-x-auto px-8 pb-2 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 lg:grid-cols-5 lg:gap-5 2xl:gap-7">
+      {audienceIcons.map((a) => {
+        const isSelected = a.kind === selected;
         return (
-          <button data-audience-card
-            data-audience-kind={a.kind}
-            {...(isClone ? { "data-carousel-clone": "true" } : {})}
-            key={`${a.id}-${i}`}
-            onClick={(event) => {
+          <button
+            key={a.id}
+            onClick={() => {
               if (suppressClick.current) return;
-              if (selected === a.kind) centerCard(isClone ? getOriginalCard(a.kind) ?? event.currentTarget : event.currentTarget);
-              else onSelect(a.kind);
+              onSelect(a.kind);
             }}
-            className={`${isClone ? "md:hidden" : ""} flex h-40 w-[calc((100%-0.75rem)/2)] shrink-0 snap-start cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border py-5 transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none md:h-auto md:w-auto md:min-h-36 md:py-6 lg:min-h-44 lg:gap-3 lg:py-8 xl:min-h-48 xl:py-10 2xl:min-h-56 2xl:gap-4 2xl:py-12 ${
+            className={`flex h-40 w-[calc((100%-0.75rem)/2)] shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border py-5 transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none md:h-auto md:w-auto md:min-h-36 md:py-6 lg:min-h-44 lg:gap-3 lg:py-8 xl:min-h-48 xl:py-10 2xl:min-h-56 2xl:gap-4 2xl:py-12 ${
               isSelected ? "bg-raz-teal border-raz-teal text-white" : "bg-white border-gray-100 text-gray-800"
             }`}
           >
