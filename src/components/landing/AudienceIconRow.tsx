@@ -20,7 +20,7 @@ export default function AudienceIconRow({
     (icon, index, icons) => icons.findIndex((candidate) => candidate.kind === icon.kind) === index
   );
   const carouselItems = audienceIcons.length > 1
-    ? [{ icon: audienceIcons[audienceIcons.length - 1], isClone: true }, ...audienceIcons.map((icon) => ({ icon, isClone: false })), { icon: audienceIcons[0], isClone: true }]
+    ? Array.from({ length: 3 }, (_, copyIndex) => audienceIcons.map((icon) => ({ icon, isClone: copyIndex !== 1 }))).flat()
     : audienceIcons.map((icon) => ({ icon, isClone: false }));
   const initialAudienceKind = audienceIcons[0]?.kind;
 
@@ -47,6 +47,13 @@ export default function AudienceIconRow({
     const cardBounds = card.getBoundingClientRect();
     const distanceFromCenter = cardBounds.left + cardBounds.width / 2 - (containerBounds.left + containerBounds.width / 2);
     if (Math.abs(distanceFromCenter) >= 1) container.scrollBy({ left: distanceFromCenter, behavior });
+  }
+  function normalizeLoopPosition() {
+    const centered = getCenteredCard();
+    if (centered?.dataset.carouselClone && centered.dataset.audienceKind) {
+      const original = getOriginalCard(centered.dataset.audienceKind as AudienceKind);
+      if (original) centerCard(original, "auto");
+    }
   }
 
   useEffect(() => {
@@ -79,16 +86,13 @@ export default function AudienceIconRow({
     const wrapsForward = direction === 1 && currentIndex === audienceIcons.length - 1;
     const wrapsBackward = direction === -1 && currentIndex === 0;
     const target = (wrapsForward || wrapsBackward)
-      ? carouselRef.current?.querySelector<HTMLButtonElement>(`[data-audience-card][data-audience-kind="${targetKind}"][data-carousel-clone]`)
+      ? (direction === 1 ? current.nextElementSibling : current.previousElementSibling) as HTMLButtonElement | null
       : getOriginalCard(targetKind);
     if (!target) return;
     centerCard(target);
     if (wrapsForward || wrapsBackward) {
       const container = carouselRef.current;
-      const normalize = () => {
-        const original = getOriginalCard(targetKind);
-        if (original) centerCard(original, "auto");
-      };
+      const normalize = () => normalizeLoopPosition();
       container?.addEventListener("scrollend", normalize, { once: true });
       window.setTimeout(normalize, 700);
     }
@@ -120,6 +124,9 @@ export default function AudienceIconRow({
     drag.current = null;
     if (currentDrag.moved) {
       suppressClick.current = true;
+      const normalize = () => normalizeLoopPosition();
+      event.currentTarget.addEventListener("scrollend", normalize, { once: true });
+      window.setTimeout(normalize, 250);
       window.setTimeout(() => { suppressClick.current = false; }, 0);
     }
   }
