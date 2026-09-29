@@ -21,15 +21,15 @@ const nonprofitTabs = [
 
 const communityTabs = [
   { label: "ראשי", href: "/community", Icon: LayoutDashboard },
-  { label: "קהילה", href: "/community", Icon: Users },
-  { label: "פעילות", href: "/community", Icon: Activity },
+  { label: "קמפיינים", href: "/community/campaigns", Icon: Users },
+  { label: "תרומות", href: "/community/donations", Icon: Activity },
   { label: "פרופיל", href: "/community/profile", Icon: User },
 ];
 
 export default function BottomNav({ variant = "donor", onSignOut }: { variant?: NavVariant; onSignOut?: () => void }) {
   const pathname = usePathname();
   const coveredByMobileChrome = !pathname.endsWith("/onboarding") && !pathname.startsWith("/nonprofit/create-campaign");
-  if (coveredByMobileChrome) return null;
+  if (!coveredByMobileChrome) return null;
   const tabs =
     variant === "nonprofit" ? nonprofitTabs : variant === "community" ? communityTabs : donorTabs;
 

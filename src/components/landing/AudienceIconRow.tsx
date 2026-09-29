@@ -45,8 +45,10 @@ export default function AudienceIconRow({
     if (!container) return;
     const containerBounds = container.getBoundingClientRect();
     const cardBounds = card.getBoundingClientRect();
-    const distanceFromCenter = cardBounds.left + cardBounds.width / 2 - (containerBounds.left + containerBounds.width / 2);
-    if (Math.abs(distanceFromCenter) >= 1) container.scrollBy({ left: distanceFromCenter, behavior });
+    const distance = window.matchMedia("(max-width: 767px)").matches
+      ? cardBounds.left - containerBounds.left
+      : cardBounds.left + cardBounds.width / 2 - (containerBounds.left + containerBounds.width / 2);
+    if (Math.abs(distance) >= 1) container.scrollBy({ left: distance, behavior });
   }
   function normalizeLoopPosition() {
     const centered = getCenteredCard();
@@ -147,7 +149,7 @@ export default function AudienceIconRow({
               if (selected === a.kind) centerCard(isClone ? getOriginalCard(a.kind) ?? event.currentTarget : event.currentTarget);
               else onSelect(a.kind);
             }}
-            className={`${isClone ? "md:hidden" : ""} flex h-40 w-28 shrink-0 snap-center cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border py-5 transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none md:h-auto md:w-auto md:min-h-36 md:py-6 lg:min-h-44 lg:gap-3 lg:py-8 xl:min-h-48 xl:py-10 2xl:min-h-56 2xl:gap-4 2xl:py-12 ${
+            className={`${isClone ? "md:hidden" : ""} flex h-40 w-[calc((100%-0.75rem)/2)] shrink-0 snap-start cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border py-5 transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none md:h-auto md:w-auto md:min-h-36 md:py-6 lg:min-h-44 lg:gap-3 lg:py-8 xl:min-h-48 xl:py-10 2xl:min-h-56 2xl:gap-4 2xl:py-12 ${
               isSelected ? "bg-raz-teal border-raz-teal text-white" : "bg-white border-gray-100 text-gray-800"
             }`}
           >
