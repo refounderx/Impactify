@@ -29,7 +29,7 @@ const communityTabs = [
 export default function BottomNav({ variant = "donor", onSignOut }: { variant?: NavVariant; onSignOut?: () => void }) {
   const pathname = usePathname();
   const coveredByMobileChrome = !pathname.endsWith("/onboarding") && !pathname.startsWith("/nonprofit/create-campaign");
-  if (!coveredByMobileChrome) return null;
+  if (coveredByMobileChrome) return null;
   const tabs =
     variant === "nonprofit" ? nonprofitTabs : variant === "community" ? communityTabs : donorTabs;
 
