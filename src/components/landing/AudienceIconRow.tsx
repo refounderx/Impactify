@@ -91,7 +91,7 @@ export default function AudienceIconRow({
               if (suppressClick.current) return;
               onSelect(a.kind);
             }}
-            className={`${copyIndex !== 1 ? "md:hidden" : ""} flex h-40 w-[calc((100%-0.75rem)/2)] shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border py-5 transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none md:h-auto md:w-auto md:min-h-36 md:py-6 lg:min-h-44 lg:gap-3 lg:py-8 xl:min-h-48 xl:py-10 2xl:min-h-56 2xl:gap-4 2xl:py-12 ${
+            className={`${copyIndex !== 1 ? "md:hidden" : ""} flex h-40 w-[calc(50%_-_0.375rem)] shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border py-5 transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-raz-teal motion-reduce:transition-none md:h-auto md:w-auto md:min-h-36 md:py-6 lg:min-h-44 lg:gap-3 lg:py-8 xl:min-h-48 xl:py-10 2xl:min-h-56 2xl:gap-4 2xl:py-12 ${
               isSelected ? "bg-raz-teal border-raz-teal text-white" : "bg-white border-gray-100 text-gray-800"
             }`}
           >

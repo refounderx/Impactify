@@ -84,14 +84,14 @@ export default function ProductCarousel() {
       <div className="max-w-6xl mx-auto px-6">
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-8"><EditableText tKey="landing.products.heading" /></h2>
 
-        <div className="flex items-center gap-3 md:hidden" dir="rtl" aria-roledescription="carousel">
-          <button type="button" onClick={() => scrollMobile(1)} disabled={!hasMobileCarousel} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.next")}>
+        <div className="relative md:hidden" dir="rtl" aria-roledescription="carousel">
+          <button type="button" onClick={() => scrollMobile(1)} disabled={!hasMobileCarousel} className="micro-hint interactive-control absolute end-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/95 p-2 text-gray-500 shadow-lg hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.next")}>
             <ChevronRight size={28} />
           </button>
 
-          <div ref={mobileCarouselRef} dir="ltr" onScroll={normalizeMobileLoop} onPointerDown={startMobileDrag} onPointerMove={moveMobileDrag} onPointerUp={endMobileDrag} onPointerCancel={endMobileDrag} onClickCapture={(event) => { if (suppressMobileClick.current) { event.preventDefault(); event.stopPropagation(); } }} className="no-scrollbar flex min-w-0 flex-1 touch-pan-y select-none gap-3 overflow-x-auto pb-2">
+          <div ref={mobileCarouselRef} dir="ltr" onScroll={normalizeMobileLoop} onPointerDown={startMobileDrag} onPointerMove={moveMobileDrag} onPointerUp={endMobileDrag} onPointerCancel={endMobileDrag} onClickCapture={(event) => { if (suppressMobileClick.current) { event.preventDefault(); event.stopPropagation(); } }} className="no-scrollbar flex w-full min-w-0 touch-pan-y select-none gap-3 overflow-x-auto px-8 pb-2">
               {mobileCarouselItems.map(({ product: p, copyIndex }, index) => (
-                <div data-loop-copy={copyIndex} className="w-[78vw] max-w-sm shrink-0" key={`${p.productId}-${p.campaignId}-${copyIndex}-${index}`}>
+                <div data-loop-copy={copyIndex} className="w-[calc(50%_-_0.375rem)] shrink-0" key={`${p.productId}-${p.campaignId}-${copyIndex}-${index}`}>
                   <ProductCard
                     title={lang === "en" ? (p.nameEn ?? p.name) : p.name}
                     price={p.price}
@@ -108,7 +108,7 @@ export default function ProductCarousel() {
               ))}
           </div>
 
-          <button type="button" onClick={() => scrollMobile(-1)} disabled={!hasMobileCarousel} className="micro-hint interactive-control flex-shrink-0 text-gray-400 hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.previous")}>
+          <button type="button" onClick={() => scrollMobile(-1)} disabled={!hasMobileCarousel} className="micro-hint interactive-control absolute start-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/95 p-2 text-gray-500 shadow-lg hover:text-gray-700 disabled:opacity-35" aria-label={t("hint.previous")}>
             <ChevronLeft size={28} />
           </button>
         </div>
