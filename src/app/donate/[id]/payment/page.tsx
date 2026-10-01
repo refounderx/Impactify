@@ -56,7 +56,14 @@ export default function PaymentPage({
   const amount = parseInt(amountParam ?? "100") || 100;
   const isRecurring = recurringParam === "1";
   const isSimulation = process.env.NODE_ENV === "development";
-  const customerDetailsValid = Object.values(customer).every((value) => value.trim()) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
+  const missingCustomerDetails = [
+    !customer.contact.trim() && (lang === "en" ? "full name" : "שם מלא"),
+    !customer.email.trim() ? (lang === "en" ? "email" : "אימייל") : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim()) && (lang === "en" ? "valid email" : "אימייל תקין"),
+    !customer.address.trim() && (lang === "en" ? "address" : "כתובת"),
+    !customer.city.trim() && (lang === "en" ? "city" : "עיר"),
+    !customer.zip.trim() && (lang === "en" ? "postal code" : "מיקוד"),
+    !customer.country.trim() && (lang === "en" ? "country" : "מדינה"),
+  ].filter((detail): detail is string => Boolean(detail));
   const startHostedCheckout = async (orgId: string) => {
     const response = await fetch("/api/payments/checkout", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -141,8 +148,8 @@ export default function PaymentPage({
               <button
                 onClick={async () => {
                   setPaymentError("");
-                  if (!isSimulation && !customerDetailsValid) {
-                    setPaymentError(lang === "en" ? "Please enter your full name, a valid email, address, city, postal code, and country." : "חסרים פרטים: יש למלא שם מלא, אימייל תקין, כתובת, עיר, מיקוד ומדינה.");
+                  if (!isSimulation && missingCustomerDetails.length) {
+                    setPaymentError(lang === "en" ? `Missing or invalid: ${missingCustomerDetails.join(", ")}.` : `חסרים או שגויים הפרטים הבאים: ${missingCustomerDetails.join(", ")}.`);
                     return;
                   }
                   setSubmitting(true);
