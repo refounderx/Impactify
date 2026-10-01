@@ -6,7 +6,7 @@ import { isPaymentProvider, type PaymentProvider } from "@/lib/payments/provider
 import { randomUUID } from "node:crypto";
 
 type Customer = { contact: string; email: string; country: string; zip: string; address: string; city: string };
-type Body = { org_id?: unknown; amount?: unknown; return_url?: unknown; cancel_url?: unknown; customer?: unknown };
+type Body = { org_id?: unknown; campaign_id?: unknown; product_id?: unknown; amount?: unknown; return_url?: unknown; cancel_url?: unknown; customer?: unknown };
 type ReadResult = { data: Body; error: null; status: 200 } | { data: null; error: string; status: 400 | 413 | 415 };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,7 +25,7 @@ async function readCheckoutBody(request: NextRequest, isForm: boolean): Promise<
   const value = (name: string) => form.get(name) ?? undefined;
   return {
     data: {
-      org_id: value("org_id"), amount: value("amount"), return_url: value("return_url"), cancel_url: value("cancel_url"),
+      org_id: value("org_id"), campaign_id: value("campaign_id"), product_id: value("product_id"), amount: value("amount"), return_url: value("return_url"), cancel_url: value("cancel_url"),
       customer: { contact: value("contact"), email: value("email"), country: value("country"), zip: value("zip"), address: value("address"), city: value("city") },
     },
     error: null,
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
   const parsed = await readCheckoutBody(request, formSubmission);
   if (!parsed.data) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const orgId = typeof parsed.data.org_id === "string" ? parsed.data.org_id : "";
-  const amount = Number(parsed.data.amount);
+  let amount = Number(parsed.data.amount);
   if (!UUID.test(orgId) || !Number.isFinite(amount) || amount <= 0 || amount > 1_000_000) return NextResponse.json({ error: "Invalid payment request" }, { status: 400 });
   const customer = readCustomer(parsed.data.customer);
   const admin = createAdminClient();
@@ -87,11 +87,42 @@ export async function POST(request: NextRequest) {
     if (connection.provider === "tranzila" && !customer) return NextResponse.json({ error: "Invalid payment details" }, { status: 400 });
     provider = connection.provider;
     const origin = request.nextUrl.origin;
-    const returnUrl = typeof parsed.data.return_url === "string" && parsed.data.return_url.startsWith(origin) ? parsed.data.return_url : `${origin}/donate/complete`;
-    const cancelUrl = typeof parsed.data.cancel_url === "string" && parsed.data.cancel_url.startsWith(origin) ? parsed.data.cancel_url : `${origin}/donate/cancelled`;
+    const reference = randomUUID();
+    const campaignId = typeof parsed.data.campaign_id === "string" && UUID.test(parsed.data.campaign_id) ? parsed.data.campaign_id : null;
+    const productId = typeof parsed.data.product_id === "string" && UUID.test(parsed.data.product_id) ? parsed.data.product_id : null;
+    if (!campaignId && !productId) return NextResponse.json({ error: "Campaign or product reference required" }, { status: 400 });
+    if (campaignId) {
+      const { data: campaign } = await admin.from("campaigns").select("org_id,status").eq("id", campaignId).maybeSingle();
+      if (!campaign || campaign.org_id !== orgId || campaign.status !== "active") return NextResponse.json({ error: "Campaign is not available" }, { status: 400 });
+    }
+    if (productId) {
+      const { data: product } = await admin.from("products").select("org_id,price,active").eq("id", productId).maybeSingle();
+      if (!product || product.org_id !== orgId || !product.active) return NextResponse.json({ error: "Product is not available" }, { status: 400 });
+      amount = Number(product.price);
+    }
+    const defaultReturn = typeof parsed.data.return_url === "string" && parsed.data.return_url.startsWith(origin) ? parsed.data.return_url : `${origin}/`;
+    const defaultCancel = typeof parsed.data.cancel_url === "string" && parsed.data.cancel_url.startsWith(origin) ? parsed.data.cancel_url : `${origin}/`;
+    let returnUrl = defaultReturn;
+    let cancelUrl = defaultCancel;
+    let notifyUrl: string | undefined;
+    if (connection.provider === "tranzila") {
+    await admin.from("payment_checkout_sessions").delete().lt("created_at", new Date(Date.now() - 30 * 86_400_000).toISOString());
+    const recent = await admin.from("payment_checkout_sessions").select("reference", { count: "exact", head: true }).eq("org_id", orgId).gte("created_at", new Date(Date.now() - 60_000).toISOString());
+    if ((recent.count ?? 0) >= 30) return NextResponse.json({ error: "Too many payment attempts" }, { status: 429 });
+    const callbackBase = `${origin}/api/payments/tranzila/callback?reference=${reference}`;
+    returnUrl = `${callbackBase}&outcome=success`;
+    cancelUrl = `${callbackBase}&outcome=failure`;
+    notifyUrl = `${callbackBase}&outcome=notify`;
+    const { error: sessionError } = await admin.from("payment_checkout_sessions").insert({
+      reference, provider: "tranzila", terminal_id: connection.terminal_id, org_id: orgId, campaign_id: campaignId,
+      product_id: productId, amount, currency: "ILS", customer_email: customer?.email ?? "", customer_name: customer?.contact ?? "",
+      customer_address: customer?.address ?? "", customer_city: customer?.city ?? "", customer_zip: customer?.zip ?? "", customer_country: customer?.country ?? "",
+    });
+    if (sessionError) throw new Error("Unable to create payment session");
+    }
     stage = "provider handshake";
     const checkout = await withTimeout(
-      createHostedCheckout({ provider: connection.provider as PaymentProvider, terminalId: connection.terminal_id, amount, reference: randomUUID(), returnUrl, cancelUrl, customer: customer ?? undefined }),
+      createHostedCheckout({ provider: connection.provider as PaymentProvider, terminalId: connection.terminal_id, amount, reference, returnUrl, cancelUrl, notifyUrl, customer: customer ?? undefined }),
       15_000,
       "Payment terminal initialization timed out",
     );

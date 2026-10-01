@@ -5,7 +5,7 @@ import type { PaymentProvider } from "@/lib/payments/provider-catalog";
 import { findTerminalCredential } from "@/lib/payments/server-config";
 
 type CheckoutCustomer = { contact: string; email: string; country: string; zip: string; address: string; city: string };
-type CheckoutInput = { provider: PaymentProvider; terminalId: string; amount: number; reference: string; returnUrl: string; cancelUrl: string; customer?: CheckoutCustomer };
+type CheckoutInput = { provider: PaymentProvider; terminalId: string; amount: number; reference: string; returnUrl: string; cancelUrl: string; notifyUrl?: string; customer?: CheckoutCustomer };
 export type HostedCheckout = { url: string; method: "GET" | "POST"; fields?: Record<string, string>; providerReference: string };
 
 function asFormResponse(text: string) {
@@ -60,6 +60,7 @@ export async function createHostedCheckout(input: CheckoutInput): Promise<Hosted
         company: "Impactify", ...input.customer,
         thtk,
         success_url_address: input.returnUrl, fail_url_address: input.cancelUrl,
+        ...(input.notifyUrl ? { notify_url_address: input.notifyUrl } : {}),
       },
     };
   }

@@ -27,6 +27,8 @@ export default function ThanksPage() {
   const { lang } = useLang();
   const [donation, setDonation] = useState<Confirmation | null>(null);
   const [error, setError] = useState("");
+  const [register, setRegister] = useState(false);
+  const [registrationState, setRegistrationState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const id = searchParams.get("id");
   const receipt = searchParams.get("receipt");
   const missingReference = !id || !receipt;
@@ -52,6 +54,14 @@ export default function ThanksPage() {
   const shareText = lang === "en" ? `I donated ${formatNIS(Number(donation.amount))} to ${campaignTitle} through Impactify` : `תרמתי ${formatNIS(Number(donation.amount))} ל${campaignTitle} דרך Impactify`;
   const shareUrl = donation.campaign_id ? `/campaign/${donation.campaign_id}` : `/product/${donation.product_id}`;
   const openShare = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
+  const requestRegistration = async () => {
+    setRegistrationState("sending");
+    const response = await fetch("/api/donations/register", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ donation_id: donation.id, receipt_id: donation.receipt_id }),
+    });
+    setRegistrationState(response.ok ? "sent" : "error");
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-raz-surface">
@@ -77,6 +87,19 @@ export default function ThanksPage() {
             <span className="text-gray-500 text-sm"><EditableText tKey="thanks.date" /></span>
             <span className="font-medium text-sm">{date}</span>
           </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 w-full mb-6 text-start">
+          <label className="flex items-start gap-3 text-sm text-gray-700">
+            <input type="checkbox" checked={register} onChange={(event) => setRegister(event.target.checked)} className="mt-1 h-4 w-4 accent-raz-teal" />
+            <span>{lang === "en" ? "Want updates about this donation? Create an Impactify account." : "רוצה לקבל עדכונים על התרומה? צור/י חשבון Impactify."}</span>
+          </label>
+          {register && registrationState !== "sent" && <button type="button" onClick={requestRegistration} disabled={registrationState === "sending"}
+            className="mt-4 w-full rounded-xl bg-raz-teal py-3 font-bold text-white disabled:opacity-50">
+            {registrationState === "sending" ? (lang === "en" ? "Sending…" : "שולח…") : (lang === "en" ? "Send me a secure sign-in link" : "שלחו לי קישור התחברות מאובטח")}
+          </button>}
+          {registrationState === "sent" && <p className="mt-3 text-sm text-raz-success">{lang === "en" ? "Check your email and click the link to connect your account to this donation." : "בדקו את המייל ולחצו על הקישור כדי לקשר את החשבון לתרומה."}</p>}
+          {registrationState === "error" && <p className="mt-3 text-sm text-red-600">{lang === "en" ? "The link could not be sent. Please try again." : "לא ניתן לשלוח את הקישור. נסו שוב."}</p>}
         </div>
 
         <div className="bg-white rounded-2xl p-5 w-full mb-6">

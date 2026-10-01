@@ -203,6 +203,18 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["communities"]["Insert"]>;
         Relationships: [];
       };
+      payment_checkout_sessions: {
+        Row: { reference: string; provider: "tranzila"; terminal_id: string; org_id: string; campaign_id: string | null; product_id: string | null; amount: number; currency: string; customer_email: string; customer_name: string; customer_address: string; customer_city: string; customer_zip: string; customer_country: string; status: "pending" | "completed" | "failed" | "expired"; provider_transaction_id: number | null; donation_id: string | null; receipt_id: string | null; registration_opt_in_at: string | null; created_at: string; expires_at: string; completed_at: string | null };
+        Insert: Omit<Database["public"]["Tables"]["payment_checkout_sessions"]["Row"], "status" | "provider_transaction_id" | "donation_id" | "receipt_id" | "registration_opt_in_at" | "created_at" | "expires_at" | "completed_at"> & { status?: "pending" | "completed" | "failed" | "expired"; provider_transaction_id?: number | null; donation_id?: string | null; receipt_id?: string | null; registration_opt_in_at?: string | null; created_at?: string; expires_at?: string; completed_at?: string | null };
+        Update: Partial<Database["public"]["Tables"]["payment_checkout_sessions"]["Insert"]>;
+        Relationships: [];
+      };
+      donor_contact_details: {
+        Row: { donor_id: string; address: string; city: string; zip: string; country: string; updated_at: string };
+        Insert: Omit<Database["public"]["Tables"]["donor_contact_details"]["Row"], "updated_at"> & { updated_at?: string };
+        Update: Partial<Omit<Database["public"]["Tables"]["donor_contact_details"]["Row"], "donor_id">>;
+        Relationships: [];
+      };
       community_campaigns: {
         Row: { community_id: string; campaign_id: string; status: "active" | "paused"; source: "created" | "linked"; requested_at: string; updated_at: string };
         Insert: { community_id: string; campaign_id: string; status?: "active" | "paused"; source?: "created" | "linked"; requested_at?: string; updated_at?: string };
@@ -513,6 +525,8 @@ export interface Database {
         }[];
       };
       get_ngo_payment_connections: { Args: Record<string, never>; Returns: { id: string; provider: "cardcom" | "grow" | "tranzila"; connection_kind: "regular" | "token"; terminal_id: string; status: "setup_required" | "pending_verification" | "active" | "disabled" | "failed"; last_verified_at: string | null; created_at: string }[] };
+      complete_verified_checkout: { Args: { p_reference: string; p_transaction_id: number; p_receipt_id: string; p_last_four?: string | null; p_card_brand?: string | null }; Returns: { donation_id: string; receipt_id: string }[] };
+      claim_verified_donation: { Args: { p_donation_id: string }; Returns: boolean };
       start_ngo_payment_connection: { Args: { p_provider: "cardcom" | "grow" | "tranzila"; p_terminal_id: string; p_connection_kind: "regular" | "token" }; Returns: string };
     };
     Enums: {

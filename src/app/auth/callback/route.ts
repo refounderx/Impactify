@@ -19,6 +19,8 @@ export async function GET(request: Request) {
     const { error } = await sb.auth.exchangeCodeForSession(code);
     if (!error) {
       const { data: { user } } = await sb.auth.getUser();
+      const donationId = searchParams.get("donation");
+      if (user && donationId) await sb.rpc("claim_verified_donation", { p_donation_id: donationId });
       const { data: profile } = user
         ? await sb.from("profiles").select("app_role, onboarding_completed_at").eq("id", user.id).single()
         : { data: null };

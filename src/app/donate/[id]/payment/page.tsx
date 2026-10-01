@@ -50,7 +50,8 @@ export default function PaymentPage({
     form.method = "POST";
     form.action = "/api/payments/checkout";
     const values: Record<string, string> = {
-      org_id: orgId, amount: amount.toString(), return_url: window.location.href, cancel_url: window.location.href, ...customer,
+      org_id: orgId, campaign_id: campaign?.id ?? "", product_id: productData?.id ?? productId ?? "",
+      amount: amount.toString(), return_url: window.location.href, cancel_url: window.location.href, ...customer,
     };
     Object.entries(values).forEach(([name, value]) => {
       const input = document.createElement("input");
