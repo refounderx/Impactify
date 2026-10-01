@@ -49,12 +49,15 @@ export default function PaymentPage({
     const controller = new AbortController();
     let timer: number | undefined;
     try {
-      const response = await Promise.race([
+      const { response, checkout } = await Promise.race([
         fetch("/api/payments/checkout", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ org_id: orgId, amount, return_url: window.location.href, cancel_url: window.location.href, customer }),
           signal: controller.signal,
-        }),
+        }).then(async (response) => ({
+          response,
+          checkout: await response.json() as { error?: string; url?: string; method?: "GET" | "POST"; fields?: Record<string, string> },
+        })),
         new Promise<never>((_, reject) => {
           timer = window.setTimeout(() => {
             controller.abort();
@@ -62,7 +65,6 @@ export default function PaymentPage({
           }, 20_000);
         }),
       ]);
-      const checkout = await response.json() as { error?: string; url?: string; method?: "GET" | "POST"; fields?: Record<string, string> };
       if (!response.ok || !checkout.url || !checkout.method) throw new Error(checkout.error ?? "Payment terminal is not ready");
       if (checkout.method === "GET") { window.location.assign(checkout.url); return; }
       const form = document.createElement("form");
