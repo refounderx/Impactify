@@ -15,18 +15,26 @@ async function createTranzilaHandshake(terminalName: string, amount: number, ref
   const requestTime = Math.floor(Date.now() / 1000).toString();
   const nonce = randomBytes(40).toString("hex");
   const accessToken = createHmac("sha256", `${secret}${requestTime}${nonce}`).update(appKey).digest("hex");
-  const response = await fetch("https://api.tranzila.com/v2/handshake/create", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-tranzila-api-app-key": appKey,
-      "X-tranzila-api-request-time": requestTime,
-      "X-tranzila-api-nonce": nonce,
-      "X-tranzila-api-access-token": accessToken,
-    },
-    body: JSON.stringify({ terminal_name: terminalName, sum: amount, request_params: { reference } }),
-    cache: "no-store",
-    signal: AbortSignal.timeout(12_000),
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const response = await Promise.race<Response>([
+    fetch("https://api.tranzila.com/v2/handshake/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-tranzila-api-app-key": appKey,
+        "X-tranzila-api-request-time": requestTime,
+        "X-tranzila-api-nonce": nonce,
+        "X-tranzila-api-access-token": accessToken,
+      },
+      body: JSON.stringify({ terminal_name: terminalName, sum: amount, request_params: { reference } }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+    }),
+    new Promise<never>((_, reject) => {
+      timeout = setTimeout(() => reject(new Error("Tranzila handshake timed out")), 12_000);
+    }),
+  ]).finally(() => {
+    if (timeout) clearTimeout(timeout);
   });
   const body = await response.json().catch(() => null) as { error_code?: unknown; thtk?: unknown } | null;
   if (!response.ok || body?.error_code !== 0 || typeof body.thtk !== "string" || !body.thtk) {

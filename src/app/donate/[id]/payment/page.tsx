@@ -40,6 +40,7 @@ export default function PaymentPage({
     const response = await fetch("/api/payments/checkout", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ org_id: orgId, amount, return_url: window.location.href, cancel_url: window.location.href }),
+      signal: AbortSignal.timeout(15_000),
     });
     const checkout = await response.json() as { error?: string; url?: string; method?: "GET" | "POST"; fields?: Record<string, string> };
     if (!response.ok || !checkout.url || !checkout.method) throw new Error(checkout.error ?? "Payment terminal is not ready");
