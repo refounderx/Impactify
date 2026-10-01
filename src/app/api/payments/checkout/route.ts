@@ -54,7 +54,11 @@ export async function POST(request: NextRequest) {
     const returnUrl = typeof parsed.data.return_url === "string" && parsed.data.return_url.startsWith(origin) ? parsed.data.return_url : `${origin}/donate/complete`;
     const cancelUrl = typeof parsed.data.cancel_url === "string" && parsed.data.cancel_url.startsWith(origin) ? parsed.data.cancel_url : `${origin}/donate/cancelled`;
     stage = "provider handshake";
-    const checkout = await createHostedCheckout({ provider: connection.provider as PaymentProvider, terminalId: connection.terminal_id, amount, reference: randomUUID(), returnUrl, cancelUrl, customer: customer ?? undefined });
+    const checkout = await withTimeout(
+      createHostedCheckout({ provider: connection.provider as PaymentProvider, terminalId: connection.terminal_id, amount, reference: randomUUID(), returnUrl, cancelUrl, customer: customer ?? undefined }),
+      15_000,
+      "Payment terminal initialization timed out",
+    );
     return NextResponse.json(checkout, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Payment checkout initialization failed", {

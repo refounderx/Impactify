@@ -46,26 +46,40 @@ export default function PaymentPage({
     !customer.country.trim() && (lang === "en" ? "country" : "מדינה"),
   ].filter((detail): detail is string => Boolean(detail));
   const startHostedCheckout = async (orgId: string) => {
-    const response = await fetch("/api/payments/checkout", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ org_id: orgId, amount, return_url: window.location.href, cancel_url: window.location.href, customer }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    const checkout = await response.json() as { error?: string; url?: string; method?: "GET" | "POST"; fields?: Record<string, string> };
-    if (!response.ok || !checkout.url || !checkout.method) throw new Error(checkout.error ?? "Payment terminal is not ready");
-    if (checkout.method === "GET") { window.location.assign(checkout.url); return; }
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = checkout.url;
-    Object.entries(checkout.fields ?? {}).forEach(([name, value]) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    });
-    document.body.appendChild(form);
-    form.submit();
+    const controller = new AbortController();
+    let timer: number | undefined;
+    try {
+      const response = await Promise.race([
+        fetch("/api/payments/checkout", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ org_id: orgId, amount, return_url: window.location.href, cancel_url: window.location.href, customer }),
+          signal: controller.signal,
+        }),
+        new Promise<never>((_, reject) => {
+          timer = window.setTimeout(() => {
+            controller.abort();
+            reject(new Error(lang === "en" ? "Payment setup timed out. Please try again." : "הכנת התשלום ארכה זמן רב מדי. נסו שוב."));
+          }, 20_000);
+        }),
+      ]);
+      const checkout = await response.json() as { error?: string; url?: string; method?: "GET" | "POST"; fields?: Record<string, string> };
+      if (!response.ok || !checkout.url || !checkout.method) throw new Error(checkout.error ?? "Payment terminal is not ready");
+      if (checkout.method === "GET") { window.location.assign(checkout.url); return; }
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = checkout.url;
+      Object.entries(checkout.fields ?? {}).forEach(([name, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+    } finally {
+      if (timer) window.clearTimeout(timer);
+    }
   };
   const orgName = lang === "en"
     ? ((org as { name_en?: string; nameEn?: string; name?: string } | null)?.name_en ?? (org as { nameEn?: string } | null)?.nameEn ?? org?.name)
