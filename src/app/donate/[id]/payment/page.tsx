@@ -25,11 +25,30 @@ export default function PaymentPage({
   const [submitting, setSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState("");
   const [customer, setCustomer] = useState({ contact: "", email: "", country: "Israel", zip: "", address: "", city: "" });
+  const [tranzilaForm, setTranzilaForm] = useState<{ url: string; fields: Record<string, string> } | null>(null);
 
   useEffect(() => {
     if (directProduct === "1") { getProductsByIds([productId ?? id]).then(async ([product]) => { setProductData(product ?? null); if (product?.orgId) setDirectOrg(await getOrgById(product.orgId)); }); }
     else getCampaignById(id).then((c) => { if (c) setCampaignData(c); });
   }, [id, productId, directProduct]);
+
+  useEffect(() => {
+    if (!tranzilaForm) return;
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = tranzilaForm.url;
+    form.target = "tranzila-payment";
+    Object.entries(tranzilaForm.fields).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+  }, [tranzilaForm]);
 
   if ((directProduct === "1" && !productData) || (directProduct !== "1" && !campaignData)) return <div className="min-h-screen bg-raz-surface animate-pulse" />;
   const campaign = campaignData;
@@ -46,9 +65,7 @@ export default function PaymentPage({
     const checkout = await response.json() as { error?: string; url?: string; method?: "GET" | "POST"; fields?: Record<string, string> };
     if (!response.ok || !checkout.url || !checkout.method) throw new Error(checkout.error ?? "Payment terminal is not ready");
     if (checkout.method === "GET") { window.location.assign(checkout.url); return; }
-    const form = document.createElement("form"); form.method = "POST"; form.action = checkout.url;
-    Object.entries(checkout.fields ?? {}).forEach(([name, value]) => { const input = document.createElement("input"); input.type = "hidden"; input.name = name; input.value = value; form.appendChild(input); });
-    document.body.appendChild(form); form.submit();
+    setTranzilaForm({ url: checkout.url, fields: checkout.fields ?? {} });
   };
   const orgName = lang === "en"
     ? ((org as { name_en?: string; nameEn?: string; name?: string } | null)?.name_en ?? (org as { nameEn?: string } | null)?.nameEn ?? org?.name)
@@ -100,6 +117,7 @@ export default function PaymentPage({
                   <input value={customer.country} onChange={(event) => setCustomer({ ...customer, country: event.target.value })} placeholder={lang === "en" ? "Country" : "מדינה"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
                 </div>
               )}
+              {tranzilaForm && <iframe title="Tranzila payment" name="tranzila-payment" className="mt-5 h-[650px] w-full rounded-xl border border-gray-200" />}
             </div>
 
             <div className="flex items-center justify-center gap-6 mt-4 py-3">
