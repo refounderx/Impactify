@@ -8,6 +8,13 @@ import { randomUUID } from "node:crypto";
 type Body = { org_id?: unknown; amount?: unknown; return_url?: unknown; cancel_url?: unknown };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+function withTimeout<T>(operation: PromiseLike<T>, milliseconds: number, message: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), milliseconds);
+    Promise.resolve(operation).then(resolve, reject).finally(() => clearTimeout(timer));
+  });
+}
+
 export async function POST(request: NextRequest) {
   if (!validateSameOriginMutation(request)) return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
   const parsed = await readJsonBody<Body>(request, 2_048);
@@ -16,18 +23,27 @@ export async function POST(request: NextRequest) {
   const amount = Number(parsed.data.amount);
   if (!UUID.test(orgId) || !Number.isFinite(amount) || amount <= 0 || amount > 1_000_000) return NextResponse.json({ error: "Invalid payment request" }, { status: 400 });
   const admin = createAdminClient();
-  const { data: connection } = await admin.from("org_payment_connections").select("provider,terminal_id,status")
-    .eq("org_id", orgId).eq("connection_kind", "regular").in("status", ["setup_required", "pending_verification", "active"]).order("created_at", { ascending: true }).limit(1).maybeSingle();
-  if (!connection || !isPaymentProvider(connection.provider)) return NextResponse.json({ error: "No configured payment terminal" }, { status: 503 });
-  const origin = request.nextUrl.origin;
-  const returnUrl = typeof parsed.data.return_url === "string" && parsed.data.return_url.startsWith(origin) ? parsed.data.return_url : `${origin}/donate/complete`;
-  const cancelUrl = typeof parsed.data.cancel_url === "string" && parsed.data.cancel_url.startsWith(origin) ? parsed.data.cancel_url : `${origin}/donate/cancelled`;
+  let provider: string | null = null;
+  let stage = "terminal lookup";
   try {
+    const { data: connection } = await withTimeout(
+      admin.from("org_payment_connections").select("provider,terminal_id,status")
+        .eq("org_id", orgId).eq("connection_kind", "regular").in("status", ["setup_required", "pending_verification", "active"]).order("created_at", { ascending: true }).limit(1).maybeSingle(),
+      10_000,
+      "Payment terminal lookup timed out",
+    );
+    if (!connection || !isPaymentProvider(connection.provider)) return NextResponse.json({ error: "No configured payment terminal" }, { status: 503 });
+    provider = connection.provider;
+    const origin = request.nextUrl.origin;
+    const returnUrl = typeof parsed.data.return_url === "string" && parsed.data.return_url.startsWith(origin) ? parsed.data.return_url : `${origin}/donate/complete`;
+    const cancelUrl = typeof parsed.data.cancel_url === "string" && parsed.data.cancel_url.startsWith(origin) ? parsed.data.cancel_url : `${origin}/donate/cancelled`;
+    stage = "provider handshake";
     const checkout = await createHostedCheckout({ provider: connection.provider as PaymentProvider, terminalId: connection.terminal_id, amount, reference: randomUUID(), returnUrl, cancelUrl });
     return NextResponse.json(checkout, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Payment checkout initialization failed", {
-      provider: connection.provider,
+      stage,
+      provider,
       error: error instanceof Error ? error.message : "Unknown error",
     });
     return NextResponse.json({ error: "Payment terminal is not ready" }, { status: 503 });
