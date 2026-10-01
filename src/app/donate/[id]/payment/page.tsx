@@ -24,6 +24,7 @@ export default function PaymentPage({
   const [directOrg, setDirectOrg] = useState<Awaited<ReturnType<typeof getOrgById>>>(null);
   const [submitting, setSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  const [customer, setCustomer] = useState({ contact: "", email: "", country: "Israel", zip: "", address: "", city: "" });
 
   useEffect(() => {
     if (directProduct === "1") { getProductsByIds([productId ?? id]).then(async ([product]) => { setProductData(product ?? null); if (product?.orgId) setDirectOrg(await getOrgById(product.orgId)); }); }
@@ -39,7 +40,7 @@ export default function PaymentPage({
   const startHostedCheckout = async (orgId: string) => {
     const response = await fetch("/api/payments/checkout", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ org_id: orgId, amount, return_url: window.location.href, cancel_url: window.location.href }),
+      body: JSON.stringify({ org_id: orgId, amount, return_url: window.location.href, cancel_url: window.location.href, customer }),
       signal: AbortSignal.timeout(15_000),
     });
     const checkout = await response.json() as { error?: string; url?: string; method?: "GET" | "POST"; fields?: Record<string, string> };
@@ -88,6 +89,16 @@ export default function PaymentPage({
                 <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-center text-sm font-bold text-amber-800">
                   {lang === "en" ? "Development mode: the button simulates a completed payment." : "מצב פיתוח: הכפתור מדמה תשלום שהושלם."}
                 </p>
+              )}
+              {!isSimulation && (
+                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <input value={customer.contact} onChange={(event) => setCustomer({ ...customer, contact: event.target.value })} placeholder={lang === "en" ? "Full name" : "שם מלא"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
+                  <input value={customer.email} onChange={(event) => setCustomer({ ...customer, email: event.target.value })} type="email" placeholder={lang === "en" ? "Email" : "אימייל"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
+                  <input value={customer.address} onChange={(event) => setCustomer({ ...customer, address: event.target.value })} placeholder={lang === "en" ? "Address" : "כתובת"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
+                  <input value={customer.city} onChange={(event) => setCustomer({ ...customer, city: event.target.value })} placeholder={lang === "en" ? "City" : "עיר"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
+                  <input value={customer.zip} onChange={(event) => setCustomer({ ...customer, zip: event.target.value })} placeholder={lang === "en" ? "Postal code" : "מיקוד"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
+                  <input value={customer.country} onChange={(event) => setCustomer({ ...customer, country: event.target.value })} placeholder={lang === "en" ? "Country" : "מדינה"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
+                </div>
               )}
             </div>
 

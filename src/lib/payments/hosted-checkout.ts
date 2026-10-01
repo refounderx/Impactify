@@ -4,7 +4,8 @@ import { createHmac, randomBytes } from "node:crypto";
 import type { PaymentProvider } from "@/lib/payments/provider-catalog";
 import { findTerminalCredential } from "@/lib/payments/server-config";
 
-type CheckoutInput = { provider: PaymentProvider; terminalId: string; amount: number; reference: string; returnUrl: string; cancelUrl: string };
+type CheckoutCustomer = { contact: string; email: string; country: string; zip: string; address: string; city: string };
+type CheckoutInput = { provider: PaymentProvider; terminalId: string; amount: number; reference: string; returnUrl: string; cancelUrl: string; customer?: CheckoutCustomer };
 export type HostedCheckout = { url: string; method: "GET" | "POST"; fields?: Record<string, string>; providerReference: string };
 
 function asFormResponse(text: string) {
@@ -47,7 +48,7 @@ export async function createHostedCheckout(input: CheckoutInput): Promise<Hosted
   const credential = findTerminalCredential(input.provider, input.terminalId);
   if (!credential) throw new Error("Payment terminal credentials are not configured");
   if (input.provider === "tranzila") {
-    if (!credential.appKey || !credential.secret) throw new Error("Tranzila API credentials are not configured");
+    if (!credential.appKey || !credential.secret || !input.customer) throw new Error("Tranzila payment details are not configured");
     const thtk = await createTranzilaHandshake(input.terminalId, input.amount, input.reference, credential.appKey, credential.secret);
     return {
       url: `https://directng.tranzila.com/${encodeURIComponent(input.terminalId)}/iframenew.php`,
@@ -56,6 +57,7 @@ export async function createHostedCheckout(input: CheckoutInput): Promise<Hosted
       fields: {
         sum: input.amount.toFixed(2), currency: "1", tranmode: "A", cred_type: "1", lang: "il",
         pdesc: `Donation ${input.reference}`, DCdisable: input.reference,
+        company: "Impactify", ...input.customer,
         thtk,
         success_url_address: input.returnUrl, fail_url_address: input.cancelUrl,
       },
