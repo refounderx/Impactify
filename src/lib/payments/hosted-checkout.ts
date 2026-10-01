@@ -3,6 +3,7 @@ import "server-only";
 import { createHmac, randomBytes } from "node:crypto";
 import type { PaymentProvider } from "@/lib/payments/provider-catalog";
 import { findTerminalCredential } from "@/lib/payments/server-config";
+import { createTranzilaCallbackProof } from "@/lib/payments/tranzila-verification";
 
 type CheckoutCustomer = { contact: string; email: string; country: string; zip: string; address: string; city: string };
 type CheckoutInput = { provider: PaymentProvider; terminalId: string; amount: number; reference: string; returnUrl: string; cancelUrl: string; notifyUrl?: string; customer?: CheckoutCustomer };
@@ -27,7 +28,11 @@ async function createTranzilaHandshake(terminalName: string, amount: number, ref
         "X-tranzila-api-nonce": nonce,
         "X-tranzila-api-access-token": accessToken,
       },
-      body: JSON.stringify({ terminal_name: terminalName, sum: amount, request_params: { reference } }),
+      body: JSON.stringify({
+        terminal_name: terminalName,
+        sum: amount,
+        request_params: { reference, checkout_proof: createTranzilaCallbackProof(terminalName, reference) },
+      }),
       cache: "no-store",
       signal: AbortSignal.timeout(12_000),
     }),

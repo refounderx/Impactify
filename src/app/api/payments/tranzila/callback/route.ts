@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { verifyTranzilaTransaction } from "@/lib/payments/tranzila-verification";
+import { verifyTranzilaCallbackProof, verifyTranzilaTransaction } from "@/lib/payments/tranzila-verification";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -32,6 +32,10 @@ async function handle(request: NextRequest) {
   }
   if (outcome === "failure" || !["000", "0"].includes(responseCode)) {
     return notify ? new NextResponse(null, { status: 204 }) : NextResponse.redirect(new URL("/donate/cancelled", request.url), 303);
+  }
+  const checkoutProof = values.get("checkout_proof") ?? "";
+  if (!verifyTranzilaCallbackProof(session.terminal_id, reference, checkoutProof)) {
+    return new NextResponse(null, { status: 400 });
   }
   if (!Number.isInteger(transactionIndex) || transactionIndex <= 0) return new NextResponse(null, { status: 400 });
   try {

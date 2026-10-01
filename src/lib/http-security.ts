@@ -11,7 +11,15 @@ export function validateSameOriginMutation(request: NextRequest) {
   if (fetchSite === "cross-site") return false;
 
   const origin = request.headers.get("origin");
-  return !origin || origin === request.nextUrl.origin;
+  if (origin) return origin === request.nextUrl.origin;
+
+  const referer = request.headers.get("referer");
+  if (!referer) return false;
+  try {
+    return new URL(referer).origin === request.nextUrl.origin;
+  } catch {
+    return false;
+  }
 }
 
 export async function readJsonBody<T>(request: NextRequest, maxBytes = 16_384): Promise<JsonReadResult<T>> {
