@@ -25,7 +25,11 @@ export async function POST(request: NextRequest) {
   try {
     const checkout = await createHostedCheckout({ provider: connection.provider as PaymentProvider, terminalId: connection.terminal_id, amount, reference: randomUUID(), returnUrl, cancelUrl });
     return NextResponse.json(checkout, { headers: { "Cache-Control": "no-store" } });
-  } catch {
+  } catch (error) {
+    console.error("Payment checkout initialization failed", {
+      provider: connection.provider,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
     return NextResponse.json({ error: "Payment terminal is not ready" }, { status: 503 });
   }
 }

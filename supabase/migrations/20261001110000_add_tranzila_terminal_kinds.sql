@@ -4,6 +4,13 @@ alter table public.org_payment_connections
   add column if not exists connection_kind text not null default 'regular';
 
 alter table public.org_payment_connections
+  drop constraint if exists org_payment_connections_provider_check;
+
+alter table public.org_payment_connections
+  add constraint org_payment_connections_provider_check
+  check (provider in ('cardcom', 'grow', 'tranzila'));
+
+alter table public.org_payment_connections
   drop constraint if exists org_payment_connections_org_id_provider_key;
 
 alter table public.org_payment_connections

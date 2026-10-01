@@ -6,7 +6,6 @@ type TerminalCredential = {
   provider: PaymentProvider;
   terminalId: string;
   username?: string;
-  terminalPassword?: string;
   appKey?: string;
   secret?: string;
 };
@@ -27,7 +26,8 @@ export function findTerminalCredential(provider: PaymentProvider, terminalId: st
       (value as TerminalCredential).terminalId === terminalId &&
       (provider !== "cardcom" || typeof (value as TerminalCredential).username === "string") &&
       (provider !== "tranzila" || (
-        typeof (value as TerminalCredential).terminalPassword === "string"
+        typeof (value as TerminalCredential).appKey === "string" &&
+        typeof (value as TerminalCredential).secret === "string"
       ))
     ));
     return match ?? null;

@@ -22,8 +22,8 @@ export const PAYMENT_PROVIDERS = {
     setupUrl: "https://docs.tranzila.com/docs/payments-and-billing/iframe-integration-directng",
     setupLabel: { en: "Tranzila DirectNG documentation", he: "תיעוד Tranzila DirectNG" },
     requirements: {
-      en: "Prepare the Tranzila terminal name and terminal password, configure production success, failure, and notify URLs, and enable Handshake and New Process before accepting payments.",
-      he: "הכינו את שם מסוף Tranzila וסיסמת המסוף, הגדירו כתובות הצלחה, כישלון ו־notify לייצור, והפעילו Handshake ו־New Process לפני קבלת תשלומים.",
+      en: "Prepare the Tranzila terminal name and V2 API public/private keys, configure production success, failure, and notify URLs, and enable Handshake before accepting payments.",
+      he: "הכינו את שם מסוף Tranzila ואת מפתחות ה־API הציבורי והפרטי של V2, הגדירו כתובות הצלחה, כישלון ו־notify לייצור, והפעילו Handshake לפני קבלת תשלומים.",
     },
   },
 } as const;
