@@ -56,6 +56,7 @@ export default function PaymentPage({
   const amount = parseInt(amountParam ?? "100") || 100;
   const isRecurring = recurringParam === "1";
   const isSimulation = process.env.NODE_ENV === "development";
+  const customerDetailsValid = Object.values(customer).every((value) => value.trim()) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
   const startHostedCheckout = async (orgId: string) => {
     const response = await fetch("/api/payments/checkout", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -109,6 +110,7 @@ export default function PaymentPage({
               )}
               {!isSimulation && (
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <p className="sm:col-span-2 text-center text-xs font-medium text-gray-500">{lang === "en" ? "All details below are required to continue to secure payment." : "יש למלא את כל הפרטים הבאים כדי להמשיך לתשלום מאובטח."}</p>
                   <input value={customer.contact} onChange={(event) => setCustomer({ ...customer, contact: event.target.value })} placeholder={lang === "en" ? "Full name" : "שם מלא"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
                   <input value={customer.email} onChange={(event) => setCustomer({ ...customer, email: event.target.value })} type="email" placeholder={lang === "en" ? "Email" : "אימייל"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
                   <input value={customer.address} onChange={(event) => setCustomer({ ...customer, address: event.target.value })} placeholder={lang === "en" ? "Address" : "כתובת"} className="interactive-field rounded-xl border border-gray-200 px-4 py-3 text-sm" />
@@ -138,8 +140,12 @@ export default function PaymentPage({
               </div>
               <button
                 onClick={async () => {
-                  setSubmitting(true);
                   setPaymentError("");
+                  if (!isSimulation && !customerDetailsValid) {
+                    setPaymentError(lang === "en" ? "Please enter your full name, a valid email, address, city, postal code, and country." : "חסרים פרטים: יש למלא שם מלא, אימייל תקין, כתובת, עיר, מיקוד ומדינה.");
+                    return;
+                  }
+                  setSubmitting(true);
                   try {
                     const orgId = (campaign as {org_id?:string})?.org_id
                       ?? (campaign as {orgId?:string})?.orgId
