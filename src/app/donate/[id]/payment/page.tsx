@@ -45,43 +45,22 @@ export default function PaymentPage({
     !customer.zip.trim() && (lang === "en" ? "postal code" : "מיקוד"),
     !customer.country.trim() && (lang === "en" ? "country" : "מדינה"),
   ].filter((detail): detail is string => Boolean(detail));
-  const startHostedCheckout = async (orgId: string) => {
-    const controller = new AbortController();
-    let timer: number | undefined;
-    try {
-      const { response, checkout } = await Promise.race([
-        fetch("/api/payments/checkout", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ org_id: orgId, amount, return_url: window.location.href, cancel_url: window.location.href, customer }),
-          signal: controller.signal,
-        }).then(async (response) => ({
-          response,
-          checkout: await response.json() as { error?: string; url?: string; method?: "GET" | "POST"; fields?: Record<string, string> },
-        })),
-        new Promise<never>((_, reject) => {
-          timer = window.setTimeout(() => {
-            controller.abort();
-            reject(new Error(lang === "en" ? "Payment setup timed out. Please try again." : "הכנת התשלום ארכה זמן רב מדי. נסו שוב."));
-          }, 20_000);
-        }),
-      ]);
-      if (!response.ok || !checkout.url || !checkout.method) throw new Error(checkout.error ?? "Payment terminal is not ready");
-      if (checkout.method === "GET") { window.location.assign(checkout.url); return; }
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = checkout.url;
-      Object.entries(checkout.fields ?? {}).forEach(([name, value]) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
-      });
-      document.body.appendChild(form);
-      form.submit();
-    } finally {
-      if (timer) window.clearTimeout(timer);
-    }
+  const startHostedCheckout = (orgId: string) => {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/api/payments/checkout";
+    const values: Record<string, string> = {
+      org_id: orgId, amount: amount.toString(), return_url: window.location.href, cancel_url: window.location.href, ...customer,
+    };
+    Object.entries(values).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
   };
   const orgName = lang === "en"
     ? ((org as { name_en?: string; nameEn?: string; name?: string } | null)?.name_en ?? (org as { nameEn?: string } | null)?.nameEn ?? org?.name)
@@ -164,7 +143,7 @@ export default function PaymentPage({
                     const orgId = (campaign as {org_id?:string})?.org_id
                       ?? (campaign as {orgId?:string})?.orgId
                       ?? org?.id ?? productData?.orgId ?? "";
-                    if (!isSimulation) { await startHostedCheckout(orgId); return; }
+                    if (!isSimulation) { startHostedCheckout(orgId); return; }
                     const response = await fetch("/api/donations", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },

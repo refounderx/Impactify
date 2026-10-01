@@ -7,8 +7,43 @@ import { randomUUID } from "node:crypto";
 
 type Customer = { contact: string; email: string; country: string; zip: string; address: string; city: string };
 type Body = { org_id?: unknown; amount?: unknown; return_url?: unknown; cancel_url?: unknown; customer?: unknown };
+type ReadResult = { data: Body; error: null; status: 200 } | { data: null; error: string; status: 400 | 413 | 415 };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isFormSubmission(request: NextRequest) {
+  return request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase() === "application/x-www-form-urlencoded";
+}
+
+async function readCheckoutBody(request: NextRequest, isForm: boolean): Promise<ReadResult> {
+  if (!isForm) return readJsonBody<Body>(request, 2_048);
+  const text = await request.text().catch(() => "");
+  if (!text || new TextEncoder().encode(text).byteLength > 2_048) {
+    return { data: null, error: text ? "Request body is too large" : "Invalid form", status: text ? 413 : 400 };
+  }
+  const form = new URLSearchParams(text);
+  const value = (name: string) => form.get(name) ?? undefined;
+  return {
+    data: {
+      org_id: value("org_id"), amount: value("amount"), return_url: value("return_url"), cancel_url: value("cancel_url"),
+      customer: { contact: value("contact"), email: value("email"), country: value("country"), zip: value("zip"), address: value("address"), city: value("city") },
+    },
+    error: null,
+    status: 200,
+  };
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
+}
+
+function hostedNavigationResponse(checkout: Awaited<ReturnType<typeof createHostedCheckout>>) {
+  if (checkout.method === "GET") return NextResponse.redirect(checkout.url, 303);
+  const fields = Object.entries(checkout.fields ?? {}).map(([name, value]) => `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`).join("");
+  return new NextResponse(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>מעבירים לתשלום מאובטח</title></head><body><p>מעבירים לתשלום מאובטח…</p><form id="checkout" method="POST" action="${escapeHtml(checkout.url)}">${fields}</form><script>document.getElementById("checkout").submit()</script></body></html>`, {
+    headers: { "Cache-Control": "no-store", "Content-Type": "text/html; charset=utf-8", "Referrer-Policy": "no-referrer" },
+  });
+}
 
 function readCustomer(value: unknown): Customer | null {
   if (typeof value !== "object" || value === null) return null;
@@ -31,7 +66,8 @@ function withTimeout<T>(operation: PromiseLike<T>, milliseconds: number, message
 
 export async function POST(request: NextRequest) {
   if (!validateSameOriginMutation(request)) return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
-  const parsed = await readJsonBody<Body>(request, 2_048);
+  const formSubmission = isFormSubmission(request);
+  const parsed = await readCheckoutBody(request, formSubmission);
   if (!parsed.data) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const orgId = typeof parsed.data.org_id === "string" ? parsed.data.org_id : "";
   const amount = Number(parsed.data.amount);
@@ -59,6 +95,7 @@ export async function POST(request: NextRequest) {
       15_000,
       "Payment terminal initialization timed out",
     );
+    if (formSubmission) return hostedNavigationResponse(checkout);
     return NextResponse.json(checkout, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Payment checkout initialization failed", {
