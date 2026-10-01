@@ -1,6 +1,5 @@
 import "server-only";
 
-import { createHmac, randomBytes } from "node:crypto";
 import type { PaymentProvider } from "@/lib/payments/provider-catalog";
 import { findTerminalCredential } from "@/lib/payments/server-config";
 
@@ -11,35 +10,31 @@ function asFormResponse(text: string) {
   return Object.fromEntries(new URLSearchParams(text));
 }
 
-async function createTranzilaHandshake(terminalName: string, amount: number, reference: string, appKey: string, secret: string) {
-  const requestTime = Math.floor(Date.now() / 1000).toString();
-  const nonce = randomBytes(40).toString("hex");
-  const accessToken = createHmac("sha256", `${secret}${requestTime}${nonce}`).update(appKey).digest("hex");
-  const response = await fetch("https://api.tranzila.com/v2/handshake/create", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-tranzila-api-app-key": appKey,
-      "X-tranzila-api-request-time": requestTime,
-      "X-tranzila-api-nonce": nonce,
-      "X-tranzila-api-access-token": accessToken,
-    },
-    body: JSON.stringify({ terminal_name: terminalName, sum: amount, request_params: { reference } }),
-    cache: "no-store",
+async function createTranzilaHandshake(terminalName: string, amount: number, terminalPassword: string) {
+  const query = new URLSearchParams({
+    supplier: terminalName,
+    sum: amount.toFixed(2),
+    TranzilaPW: terminalPassword,
   });
-  const body = await response.json().catch(() => null) as { error_code?: unknown; thtk?: unknown } | null;
-  if (!response.ok || body?.error_code !== 0 || typeof body.thtk !== "string" || !body.thtk) {
+  const response = await fetch(`https://api.tranzila.com/v1/handshake/create?${query}`, { cache: "no-store" });
+  const body = await response.text();
+  const formResponse = asFormResponse(body);
+  const jsonResponse = (() => {
+    try { return JSON.parse(body) as { thtk?: unknown }; } catch { return null; }
+  })();
+  const thtk = typeof formResponse.thtk === "string" ? formResponse.thtk : jsonResponse?.thtk;
+  if (!response.ok || typeof thtk !== "string" || !thtk) {
     throw new Error("Tranzila could not create a payment handshake");
   }
-  return body.thtk;
+  return thtk;
 }
 
 export async function createHostedCheckout(input: CheckoutInput): Promise<HostedCheckout> {
   const credential = findTerminalCredential(input.provider, input.terminalId);
   if (!credential) throw new Error("Payment terminal credentials are not configured");
   if (input.provider === "tranzila") {
-    if (!credential.appKey || !credential.secret) throw new Error("Tranzila API credentials are not configured");
-    const thtk = await createTranzilaHandshake(input.terminalId, input.amount, input.reference, credential.appKey, credential.secret);
+    if (!credential.terminalPassword) throw new Error("Tranzila terminal password is not configured");
+    const thtk = await createTranzilaHandshake(input.terminalId, input.amount, credential.terminalPassword);
     return {
       url: `https://directng.tranzila.com/${encodeURIComponent(input.terminalId)}/iframenew.php`,
       method: "POST",
@@ -47,7 +42,7 @@ export async function createHostedCheckout(input: CheckoutInput): Promise<Hosted
       fields: {
         sum: input.amount.toFixed(2), currency: "1", tranmode: "A", cred_type: "1", lang: "il",
         pdesc: `Donation ${input.reference}`, DCdisable: input.reference,
-        thtk,
+        new_process: "1", thtk,
         success_url_address: input.returnUrl, fail_url_address: input.cancelUrl,
       },
     };
