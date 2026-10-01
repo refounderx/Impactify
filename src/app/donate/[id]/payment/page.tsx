@@ -36,6 +36,18 @@ export default function PaymentPage({
   const amount = parseInt(amountParam ?? "100") || 100;
   const isRecurring = recurringParam === "1";
   const isSimulation = process.env.NODE_ENV === "development";
+  const startHostedCheckout = async (orgId: string) => {
+    const response = await fetch("/api/payments/checkout", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ org_id: orgId, amount, return_url: window.location.href, cancel_url: window.location.href }),
+    });
+    const checkout = await response.json() as { error?: string; url?: string; method?: "GET" | "POST"; fields?: Record<string, string> };
+    if (!response.ok || !checkout.url || !checkout.method) throw new Error(checkout.error ?? "Payment terminal is not ready");
+    if (checkout.method === "GET") { window.location.assign(checkout.url); return; }
+    const form = document.createElement("form"); form.method = "POST"; form.action = checkout.url;
+    Object.entries(checkout.fields ?? {}).forEach(([name, value]) => { const input = document.createElement("input"); input.type = "hidden"; input.name = name; input.value = value; form.appendChild(input); });
+    document.body.appendChild(form); form.submit();
+  };
   const orgName = lang === "en"
     ? ((org as { name_en?: string; nameEn?: string; name?: string } | null)?.name_en ?? (org as { nameEn?: string } | null)?.nameEn ?? org?.name)
     : org?.name;
@@ -98,10 +110,11 @@ export default function PaymentPage({
                 onClick={async () => {
                   setSubmitting(true);
                   setPaymentError("");
-                  const orgId = (campaign as {org_id?:string})?.org_id
-                    ?? (campaign as {orgId?:string})?.orgId
-                    ?? org?.id ?? productData?.orgId ?? "";
                   try {
+                    const orgId = (campaign as {org_id?:string})?.org_id
+                      ?? (campaign as {orgId?:string})?.orgId
+                      ?? org?.id ?? productData?.orgId ?? "";
+                    if (!isSimulation) { await startHostedCheckout(orgId); return; }
                     const response = await fetch("/api/donations", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
@@ -115,10 +128,10 @@ export default function PaymentPage({
                     setSubmitting(false);
                   }
                 }}
-                disabled={submitting || !isSimulation}
+                disabled={submitting}
                 className="w-full bg-raz-teal text-white rounded-xl py-4 font-bold text-lg hover:bg-raz-teal-dark transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? "..." : isSimulation ? <EditableText tKey="payment.confirm" /> : (lang === "en" ? "Payment provider not connected" : "ספק הסליקה טרם חובר")}
+                {submitting ? "..." : <EditableText tKey="payment.confirm" />}
               </button>
               {paymentError && <p className="text-center text-sm text-red-500 mt-2">{paymentError}</p>}
               <p className="text-center text-xs text-gray-400 mt-3"><EditableText tKey="payment.terms" /></p>

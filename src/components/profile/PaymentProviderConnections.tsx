@@ -7,6 +7,7 @@ import {
   getNgoPaymentConnections,
   startNgoPaymentConnection,
   type PaymentConnection,
+  type PaymentConnectionKind,
   type PaymentProvider,
 } from "@/lib/supabase/queries-payment-connections";
 import { PAYMENT_PROVIDERS } from "@/lib/payments/provider-catalog";
@@ -15,6 +16,7 @@ export default function PaymentProviderConnections({ onConnectionSaved }: { onCo
   const { lang } = useLang();
   const [connections, setConnections] = useState<PaymentConnection[]>([]);
   const [provider, setProvider] = useState<PaymentProvider>("cardcom");
+  const [connectionKind, setConnectionKind] = useState<PaymentConnectionKind>("regular");
   const [terminalId, setTerminalId] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,7 +48,7 @@ export default function PaymentProviderConnections({ onConnectionSaved }: { onCo
     }
     setSaving(true); setMessage("");
     try {
-      await startNgoPaymentConnection(provider, terminalId);
+      await startNgoPaymentConnection(provider, terminalId, connectionKind);
       await refresh();
       setTerminalId("");
       onConnectionSaved?.();
@@ -70,13 +72,22 @@ export default function PaymentProviderConnections({ onConnectionSaved }: { onCo
 
       <div className="mt-6 grid gap-2 sm:grid-cols-3" role="group" aria-label={lang === "en" ? "Choose payment provider" : "בחירת ספק סליקה"}>
         {(Object.entries(PAYMENT_PROVIDERS) as [PaymentProvider, (typeof PAYMENT_PROVIDERS)[PaymentProvider]][]).map(([key, item]) => (
-          <button key={key} type="button" onClick={() => { setProvider(key); setMessage(""); }} aria-pressed={provider === key}
+          <button key={key} type="button" onClick={() => { setProvider(key); if (key !== "tranzila") setConnectionKind("regular"); setMessage(""); }} aria-pressed={provider === key}
             className={`interactive-control flex min-h-14 items-center justify-between rounded-xl border px-4 text-start ${provider === key ? "border-raz-teal bg-raz-teal/10 text-raz-dark shadow-sm" : "border-slate-200 bg-white text-slate-500"}`}>
             <span className="font-bold">{item.name}</span>
             <span className={`flex h-5 w-5 items-center justify-center rounded-full border text-xs transition-all ${provider === key ? "border-raz-teal bg-raz-teal text-white" : "border-slate-300 text-transparent"}`} aria-hidden="true">✓</span>
           </button>
         ))}
       </div>
+      {provider === "tranzila" && <div className="mt-3" role="group" aria-label={lang === "en" ? "Choose Tranzila terminal type" : "בחירת סוג מסוף טרנזילה"}>
+        <p className="mb-2 text-sm font-bold text-raz-dark">{lang === "en" ? "Tranzila terminal type" : "סוג מסוף טרנזילה"}</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {(["regular", "token"] as PaymentConnectionKind[]).map((kind) => <button key={kind} type="button" onClick={() => setConnectionKind(kind)} aria-pressed={connectionKind === kind}
+            className={`interactive-control min-h-12 rounded-xl border px-4 text-start text-sm ${connectionKind === kind ? "border-raz-teal bg-raz-teal/10 font-bold text-raz-dark" : "border-slate-200 bg-white text-slate-500"}`}>
+            {kind === "regular" ? (lang === "en" ? "Regular payments terminal" : "מסוף לתשלומים רגילים") : (lang === "en" ? "Token terminal" : "מסוף טוקנים")}
+          </button>)}
+        </div>
+      </div>}
       <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
         <input value={terminalId} onChange={(event) => setTerminalId(event.target.value)} maxLength={120} placeholder={lang === "en" ? "Terminal identifier" : "מזהה מסוף"} className="interactive-field min-h-11 rounded-xl border border-slate-200 px-3 text-sm" dir="ltr" />
         <button type="button" onClick={() => void startConnection()} disabled={saving} className="interactive-control inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-raz-teal px-5 text-sm font-bold text-white disabled:opacity-50">
@@ -91,7 +102,7 @@ export default function PaymentProviderConnections({ onConnectionSaved }: { onCo
       </div>
 
       {loading ? <p className="mt-5 text-sm text-slate-400">{lang === "en" ? "Loading payment connections…" : "טוען חיבורי סליקה…"}</p> : connections.length > 0 && <div className="mt-5 space-y-2">
-        {connections.map((connection) => <div key={connection.id} className="flow-reveal flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm"><span className="font-bold text-raz-dark">{PAYMENT_PROVIDERS[connection.provider].name} · <bdi>{connection.terminalId}</bdi></span><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${connection.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{connection.status === "active" ? (lang === "en" ? "Active" : "פעיל") : (lang === "en" ? "Setup required" : "נדרשת השלמת הגדרה")}</span></div>)}
+        {connections.map((connection) => <div key={connection.id} className="flow-reveal flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm"><span className="font-bold text-raz-dark">{PAYMENT_PROVIDERS[connection.provider].name}{connection.provider === "tranzila" && ` · ${connection.connectionKind === "token" ? (lang === "en" ? "Token terminal" : "מסוף טוקנים") : (lang === "en" ? "Regular payments" : "תשלומים רגילים")}`} · <bdi>{connection.terminalId}</bdi></span><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${connection.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{connection.status === "active" ? (lang === "en" ? "Active" : "פעיל") : (lang === "en" ? "Setup required" : "נדרשת השלמת הגדרה")}</span></div>)}
       </div>}
       {message && <p className="mt-4 text-sm text-slate-600" role="status">{message}</p>}
       <p className="mt-5 flex gap-2 text-xs text-slate-500"><CheckCircle2 size={16} className="shrink-0 text-raz-teal" />{lang === "en" ? "Impactify does not collect card numbers, CVV, or your provider credentials in this step." : "בשלב זה Impactify אינה אוספת מספרי כרטיס, CVV או פרטי גישה למסוף."}</p>

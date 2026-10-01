@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["scripts/generate-ngo-donor-guide.js"],
+    rules: {
+      // This standalone Node script is CommonJS because its docx runtime is
+      // loaded from the bundled workspace dependency path.
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

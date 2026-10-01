@@ -2,7 +2,7 @@
 
 ## Current State
 
-Responsive bilingual application with Supabase-backed normalized entities, authentication, donation writes, and shared presentation datasets. Local fixture modules are migration inputs only; active pages do not use them as runtime fallbacks. Real PSP processing is still not implemented.
+Responsive bilingual application with Supabase-backed normalized entities, authentication, donation writes, and shared presentation datasets. Local fixture modules are migration inputs only; active pages do not use them as runtime fallbacks. Tranzila can now be configured with separate regular and token terminals per NGO; checkout intentionally uses only the regular terminal. Real PSP completion processing is still not implemented.
 
 **Product donor-persona taxonomy prepared (2026-09-27):** migration `20260927110000_product_persona_taxonomy.sql` adds a nullable persona and bilingual support subcategory to products. It classifies only products with an unambiguous fit; generic and QA products remain intentionally unclassified. Public product cards, persona overlays, campaign products, organization product tabs, and product detail pages display the classification after the migration is applied.
 
@@ -263,7 +263,7 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
 ## Phase 4 — Payments
 
 - [x] Initial provider onboarding for Cardcom, Grow, and Tranzila: NGO owners can register their own terminal identifier through tenant-derived RPCs; no provider credentials or card data are stored in the browser database. Migration `20260830143000` establishes the registry, `20260925110000_add_tranzila_payment_provider.sql` adds Tranzila, and `20260925120000_remove_gamma_payment_provider.sql` removes Gamma and any saved Gamma terminal metadata.
-- [ ] Add secure server-only provider credential onboarding and terminal verification for Cardcom, Grow, and Tranzila; registered terminals remain `setup_required` until this exists. Tranzila's DirectNG checkout needs production success/failure/notify URLs and response-hash verification before its callback may complete a donation.
+- [~] Cardcom/Tranzila hosted-checkout initialization: `/api/payments/checkout` resolves terminal credentials only from the server-only `PAYMENT_TERMINAL_CREDENTIALS_JSON` deployment secret and routes card entry to the provider. The Tranzila DirectNG path first creates a signed V2 Handshake to lock the amount. It does not record a donation or activate a terminal. Add provider-specific callback/webhook verification, idempotent event storage, replay protection, and terminal activation before enabling production donations. Grow remains unimplemented.
 - [ ] Integrate PSP SDK for credit card tokenization
 - [ ] Implement actual charge flow (PCI-compliant, card data never touches our server)
 - [ ] Implement Impactify-scheduled recurring token charges, provider webhook verification/retries, and donor cancellation. Do not reserve an annual amount in advance; each monthly charge is submitted separately, subject to issuer approval.

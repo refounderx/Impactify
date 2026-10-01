@@ -28,7 +28,17 @@ export default function CommunityUpdatesPage() {
     try { setRows((await getCommunityUpdates()).map(toViewRow)); setError(""); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load community updates"); }
   }
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    let active = true;
+    const timer = window.setTimeout(() => {
+      void getCommunityUpdates().then((data) => {
+        if (active) { setRows(data.map(toViewRow)); setError(""); }
+      }).catch((cause) => {
+        if (active) setError(cause instanceof Error ? cause.message : "Unable to load community updates");
+      });
+    }, 0);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, []);
 
   async function save(draft: NewUpdateDraft) {
     setBusy(true); setError("");
