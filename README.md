@@ -48,7 +48,7 @@ New schema/seed changes should be added as a new timestamped file under `supabas
 - Before deploying the NGO/community sign-up color picker, apply `supabase/migrations/20260904100000_add_tenant_brand_colors.sql`.
 - Before deploying public organization-profile activity tabs, apply `supabase/migrations/20260904110000_public_organization_activity.sql`.
 - Apply `supabase/migrations/20260904120000_fix_partnership_requests_org_id_ambiguity.sql` to restore the community and NGO partnership inboxes.
-- Before relying on global payment/registration limits or terminal activation auditing, apply `supabase/migrations/20261002150000_payment_security_operations.sql`, then run `supabase/scripts/payment_security_qa.sql` and `supabase/scripts/verify_payment_security_operations.sql`.
+- Before relying on global payment/registration limits or terminal activation auditing, apply `supabase/migrations/20261002150000_payment_security_operations.sql` and `supabase/migrations/20261002160000_fix_payment_connection_profile_ambiguity.sql`, then run `supabase/scripts/payment_security_qa.sql` and `supabase/scripts/verify_payment_security_operations.sql`.
 - Enable Supabase Cron in Dashboard → Integrations, apply `supabase/migrations/20261002151000_schedule_payment_pii_cleanup.sql`, and run the verification script again.
 
 See `AGENTS.md` for the required agent workflow and security constraints.

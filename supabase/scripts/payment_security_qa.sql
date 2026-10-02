@@ -10,6 +10,12 @@ declare
   v_status text;
   v_qa_terminal text := 'impactify-security-qa-' || gen_random_uuid()::text;
 begin
+  if not exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version = '20261002160000'
+  ) then
+    raise exception 'Apply migration 20261002160000 before running payment tenant QA';
+  end if;
   if has_table_privilege('authenticated', 'public.org_payment_connections', 'SELECT')
     or has_table_privilege('authenticated', 'public.org_payment_connections', 'INSERT')
     or has_table_privilege('authenticated', 'public.org_payment_connections', 'UPDATE')

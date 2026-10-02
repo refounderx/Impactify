@@ -59,11 +59,12 @@ Use the authenticated Supabase Dashboard SQL Editor; do not use `supabase db pus
 
 1. Run `supabase/migrations/20261002150000_payment_security_operations.sql` in a transaction.
 2. Run `supabase/scripts/verify_payment_security_operations.sql`. The first migration, functions, grants, duplicate-terminal check, and PII checks must pass.
-3. Run `supabase/scripts/payment_security_qa.sql`. It intentionally rolls back, but it requires terminal connections for at least two organizations and must prove an authenticated NGO owner cannot read another NGO's terminal, directly alter status, or retarget an active connection.
-4. Enable Supabase Cron (`pg_cron`) in Dashboard → Integrations.
-5. Run `supabase/migrations/20261002151000_schedule_payment_pii_cleanup.sql` in a transaction.
-6. Run `supabase/scripts/verify_payment_security_operations.sql` again and confirm the daily job exists.
-7. Watch for `rate_limit_backend_unavailable`. It should stop after the first migration is live.
+3. Apply `supabase/migrations/20261002160000_fix_payment_connection_profile_ambiguity.sql`, which qualifies the tenant profile lookup used by `get_ngo_payment_connections()`.
+4. Run `supabase/scripts/payment_security_qa.sql`. It intentionally rolls back, but it requires terminal connections for at least two organizations and must prove an authenticated NGO owner cannot read another NGO's terminal, directly alter status, or retarget an active connection.
+5. Enable Supabase Cron (`pg_cron`) in Dashboard → Integrations.
+6. Run `supabase/migrations/20261002151000_schedule_payment_pii_cleanup.sql` in a transaction.
+7. Run `supabase/scripts/verify_payment_security_operations.sql` again and confirm the daily job exists.
+8. Watch for `rate_limit_backend_unavailable`. It should stop after the first migration is live.
 
 If the unique active-terminal index fails, do not remove the constraint. Investigate the duplicate active provider/terminal rows and resolve ownership before retrying.
 
