@@ -209,6 +209,18 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["payment_checkout_sessions"]["Insert"]>;
         Relationships: [];
       };
+      payment_connection_audit: {
+        Row: { id: number; connection_id: string | null; org_id: string; provider: string; connection_kind: string; previous_status: string | null; new_status: string; terminal_changed: boolean; actor_id: string | null; source_role: string; reason: string | null; created_at: string };
+        Insert: Omit<Database["public"]["Tables"]["payment_connection_audit"]["Row"], "id" | "created_at"> & { id?: number; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
+      api_rate_limit_buckets: {
+        Row: { scope: string; bucket_key: string; window_start: string; request_count: number; updated_at: string };
+        Insert: Omit<Database["public"]["Tables"]["api_rate_limit_buckets"]["Row"], "updated_at"> & { updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["api_rate_limit_buckets"]["Insert"]>;
+        Relationships: [];
+      };
       donor_contact_details: {
         Row: { donor_id: string; address: string; city: string; zip: string; country: string; updated_at: string };
         Insert: Omit<Database["public"]["Tables"]["donor_contact_details"]["Row"], "updated_at"> & { updated_at?: string };
@@ -527,6 +539,9 @@ export interface Database {
       get_ngo_payment_connections: { Args: Record<string, never>; Returns: { id: string; provider: "cardcom" | "grow" | "tranzila"; connection_kind: "regular" | "token"; terminal_id: string; status: "setup_required" | "pending_verification" | "active" | "disabled" | "failed"; last_verified_at: string | null; created_at: string }[] };
       complete_verified_checkout: { Args: { p_reference: string; p_transaction_id: number; p_receipt_id: string; p_last_four?: string | null; p_card_brand?: string | null }; Returns: { donation_id: string; receipt_id: string }[] };
       claim_verified_donation: { Args: { p_donation_id: string }; Returns: boolean };
+      set_payment_connection_status: { Args: { p_connection_id: string; p_status: string; p_reason: string }; Returns: boolean };
+      cleanup_payment_checkout_pii: { Args: Record<string, never>; Returns: number };
+      consume_api_rate_limit: { Args: { p_scope: string; p_bucket_key: string; p_limit: number; p_window_seconds: number }; Returns: boolean };
       start_ngo_payment_connection: { Args: { p_provider: "cardcom" | "grow" | "tranzila"; p_terminal_id: string; p_connection_kind: "regular" | "token" }; Returns: string };
     };
     Enums: {

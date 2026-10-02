@@ -13,6 +13,8 @@ Bilingual (Hebrew/English) Israeli-market charitable donation platform. Connects
 | Icons | lucide-react |
 | Fonts | Heebo · Assistant · Roboto (Google Fonts) |
 
+Use Node.js `24.x`, matching `package.json` and the Vercel production runtime.
+
 ## Quick Start
 
 ### 1. Install dependencies
@@ -27,7 +29,10 @@ Copy `.env.local` and fill in your values (Settings → API in Supabase dashboar
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...   # server-only, never commit
+PAYMENT_TERMINAL_CREDENTIALS_JSON=[{"provider":"tranzila","terminalId":"YOUR_REGULAR_TERMINAL","appKey":"YOUR_APP_KEY","secret":"YOUR_PRIVATE_API_KEY"},{"provider":"tranzila","terminalId":"YOUR_TOKEN_TERMINAL","appKey":"YOUR_APP_KEY","secret":"YOUR_PRIVATE_API_KEY"}]
 ```
+
+`PAYMENT_TERMINAL_CREDENTIALS_JSON` is server-only. Use placeholders in documentation and never commit real values. The current one-time flow selects only the active regular terminal; the token-terminal entry is reserved for a future recurring-charge implementation. Tranzila terminal/refund passwords are not used by the current Handshake or Reports API implementation.
 
 ### 3. Run the database schema
 New schema/seed changes should be added as a new timestamped file under `supabase/migrations/` going forward (not appended to `schema.sql`/`seed.sql` — see `PROJECT_CONTEXT.md`/`DECISIONS.md` for the still-open question of whether the historical `schema.sql`/`seed.sql` files get retired in favor of `migrations/`).
@@ -43,6 +48,8 @@ New schema/seed changes should be added as a new timestamped file under `supabas
 - Before deploying the NGO/community sign-up color picker, apply `supabase/migrations/20260904100000_add_tenant_brand_colors.sql`.
 - Before deploying public organization-profile activity tabs, apply `supabase/migrations/20260904110000_public_organization_activity.sql`.
 - Apply `supabase/migrations/20260904120000_fix_partnership_requests_org_id_ambiguity.sql` to restore the community and NGO partnership inboxes.
+- Before relying on global payment/registration limits or terminal activation auditing, apply `supabase/migrations/20261002150000_payment_security_operations.sql`, then run `supabase/scripts/payment_security_qa.sql` and `supabase/scripts/verify_payment_security_operations.sql`.
+- Enable Supabase Cron in Dashboard → Integrations, apply `supabase/migrations/20261002151000_schedule_payment_pii_cleanup.sql`, and run the verification script again.
 
 See `AGENTS.md` for the required agent workflow and security constraints.
 
@@ -68,7 +75,7 @@ Runtime data queries Supabase directly; missing data or query failures surface e
 | `/campaign/[id]` | Campaign detail |
 | `/product/[id]?campaign_id=…` | Product detail, nonprofit/campaign context, and donation entry point |
 | `/donate/[id]/amount` | Donation amount selection |
-| `/donate/[id]/payment` | Payment form (mock) |
+| `/donate/[id]/payment` | Tranzila hosted-payment handoff for an active regular terminal; development simulation remains separate |
 | `/donate/[id]/thanks` | Thank you / confirmation |
 | `/nonprofit` | Org dashboard |
 | `/nonprofit/onboarding` | Guided NGO setup: account readiness, payment terminal, first product, then campaign/community setup |

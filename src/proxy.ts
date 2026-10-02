@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isPaymentSecurityRoute, paymentContentSecurityPolicy } from "@/lib/content-security-policy";
 
 const NGO_ADMIN_PREFIXES = [
   "/nonprofit/campaigns",
@@ -20,7 +21,20 @@ function isProtectedPath(pathname: string) {
 }
 
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const requestHeaders = new Headers(request.headers);
+  const paymentRoute = isPaymentSecurityRoute(request.nextUrl.pathname);
+  const nonce = paymentRoute ? btoa(crypto.randomUUID()) : null;
+  const csp = nonce ? paymentContentSecurityPolicy(nonce, process.env.NODE_ENV === "development") : null;
+  if (nonce && csp) {
+    requestHeaders.set("x-nonce", nonce);
+    requestHeaders.set("Content-Security-Policy", csp);
+  }
+  const nextResponse = () => {
+    const result = NextResponse.next({ request: { headers: requestHeaders } });
+    if (csp) result.headers.set("Content-Security-Policy", csp);
+    return result;
+  };
+  let response = nextResponse();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,7 +43,7 @@ export async function proxy(request: NextRequest) {
         getAll: () => request.cookies.getAll(),
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          response = nextResponse();
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },

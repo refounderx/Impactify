@@ -15,7 +15,7 @@
 
 ## Current Build Status
 
-**Supabase-backed demo application** — public, donor, NGO-owner, community-owner, admin, and landing-page data flow through Supabase. The two admin dashboards derive their tenant from the authenticated profile and query normalized tables; only shared/landing presentation fixtures remain in public-read-only `site_datasets` rows. Query errors and empty results are surfaced instead of silently falling back to bundled mock values. Authentication and development-only donation simulation exist; production payment submission is disabled until a PSP-hosted checkout and signed callback are implemented.
+**Supabase-backed application with a verified Tranzila one-time-payment path** — public, donor, NGO-owner, community-owner, admin, and landing-page data flow through Supabase. The two admin dashboards derive their tenant from the authenticated profile and query normalized tables; only shared/landing presentation fixtures remain in public-read-only `site_datasets` rows. Query errors and empty results are surfaced instead of silently falling back to bundled mock values. Production checkout uses an active regular Tranzila terminal, a V2 Handshake, a proof-bound callback, an authenticated Reports lookup, and atomic donation completion. Cardcom, Grow, and recurring token charges remain unimplemented.
 
 The `site_datasets` and organization-profile migrations were applied to the live project through the Dashboard SQL Editor on 2026-08-23. The later auth migration removed obsolete admin snapshots; REST verification confirms the two required shared/landing dataset rows and all five extended organization profiles.
 
@@ -34,7 +34,7 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 - Product detail (`/product/[id]?campaign_id=…`) — opened from a product-card body; shows product, nonprofit and campaign context/progress, then opens the donation popup only from its CTA
 - Public organization profile (`/organization/[id]`) — opened from a product's nonprofit name; presents a featured active campaign, donation products, and tabs for privacy-safe recent donation totals, active partner communities, campaign story, and organization details
 - Public non-profit profile (`/nonprofit/[id]`) — org video, verification/founding/CEO/volunteer/address info, product quantity picker with running total, one-click donate that skips straight to payment
-- Donation flow: amount selection → hosted-payment readiness screen; completed-payment simulation and thank-you confirmation are development-only until the PSP is connected
+- Donation flow: amount selection → donor details → Tranzila-hosted card entry → independently verified callback → thank-you/receipt → optional email magic-link account claim. Development still supports an explicit simulator.
 - Non-Profit admin panel (`/nonprofit/*`, teal sidebar shell) — campaigns dashboard (table) + campaigns grid (donut-chart cards), searchable/filterable products-management table with tenant-scoped creation/editing + products grid (donut-chart cards), donations table, updates/alerts table with trigger/schedule tabs; replaces the old single-page NP dashboard
 - NGO onboarding (`/nonprofit/onboarding`) — a five-step guided setup after NGO signup: organization readiness, payment-terminal setup, first product creation with a live preview, first-campaign handoff for community invitations, and dashboard completion
 - Community onboarding (`/community/onboarding`) — a matching five-step guided setup after community signup: tenant readiness, active-campaign discovery, a persisted join request, an explicit NGO-approval wait state, and dashboard handoff
@@ -45,8 +45,8 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 
 ### Not Yet Built
 - Phone OTP authentication
-- Real payment processing (Israeli PSP — Cardcom, Grow, or Gamma; hosted checkout and signed callbacks still required)
-- Real payment-service-provider integration
+- Cardcom and Grow payment processing
+- Recurring Tranzila token charging, retry/cancellation scheduling, and provider webhook processing
 - Non-profit verification flow
 - Personal campaigns (donor-created fundraisers)
 - SMS / push notifications
@@ -64,7 +64,8 @@ Structured NGO goals are live from migration `20260825130000`. New NGO owners mu
 
 ## Open Questions (from PRD)
 
-- Which of the registered Israeli PSPs should be activated first (Cardcom, Grow, or Gamma)?
+- Whether Cardcom or Grow should be implemented in addition to the active Tranzila one-time path
+- Tranzila token lifecycle, recurring-charge schedule, retries, cancellations, and webhook contract
 - Platform commission on donations?
 - Non-profit verification: what documents, who moderates?
 - Section 46 tax receipt auto-compliance?

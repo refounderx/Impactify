@@ -1,31 +1,39 @@
 import "server-only";
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import { findTerminalCredential } from "@/lib/payments/server-config";
+import {
+  createCallbackProof,
+  validateReportedTransaction,
+  verifyCallbackProof,
+  verifyLegacyCallbackProof,
+  type CheckoutProofInput,
+  type ReportedTransaction,
+} from "@/lib/payments/security-contract";
 
-type Transaction = {
-  index?: unknown; amount?: unknown; currency?: unknown; processor_response_code?: unknown;
-  child_terminal?: unknown; ccno?: unknown; card_description?: unknown;
-};
-
-function callbackProof(secret: string, terminalId: string, reference: string) {
-  return createHmac("sha256", secret).update(`impactify:tranzila:${terminalId}:${reference}`).digest("hex");
-}
-
-export function createTranzilaCallbackProof(terminalId: string, reference: string) {
-  const credential = findTerminalCredential("tranzila", terminalId);
+export function createTranzilaCallbackProof(input: CheckoutProofInput) {
+  const credential = findTerminalCredential("tranzila", input.terminalId);
   if (!credential?.secret) throw new Error("Tranzila callback credentials unavailable");
-  return callbackProof(credential.secret, terminalId, reference);
+  return createCallbackProof(credential.secret, input);
 }
 
-export function verifyTranzilaCallbackProof(terminalId: string, reference: string, supplied: string) {
-  if (!/^[a-f0-9]{64}$/i.test(supplied)) return false;
+export function verifyTranzilaCallbackProof(input: CheckoutProofInput, supplied: string) {
+  const credential = findTerminalCredential("tranzila", input.terminalId);
+  if (!credential?.secret) return false;
+  return verifyCallbackProof(credential.secret, input, supplied);
+}
+
+export function verifyLegacyTranzilaCallbackProof(terminalId: string, reference: string, supplied: string) {
   const credential = findTerminalCredential("tranzila", terminalId);
   if (!credential?.secret) return false;
-  const expected = Buffer.from(callbackProof(credential.secret, terminalId, reference), "hex");
-  return timingSafeEqual(expected, Buffer.from(supplied, "hex"));
+  return verifyLegacyCallbackProof(credential.secret, terminalId, reference, supplied);
 }
 
-export async function verifyTranzilaTransaction(terminalId: string, transactionIndex: number, expectedAmount: number) {
+export async function verifyTranzilaTransaction(
+  terminalId: string,
+  transactionIndex: number,
+  expectedAmount: number,
+  expectedCurrency: string,
+) {
   const credential = findTerminalCredential("tranzila", terminalId);
   if (!credential?.appKey || !credential.secret) throw new Error("Tranzila verification credentials unavailable");
   const requestTime = Math.floor(Date.now() / 1000).toString();
@@ -40,18 +48,14 @@ export async function verifyTranzilaTransaction(terminalId: string, transactionI
     },
     body: JSON.stringify({ terminal_name: terminalId, transaction_index: transactionIndex }),
   });
-  const body = await response.json().catch(() => null) as { transactions?: Transaction[] } | Transaction[] | null;
+  const body = await response.json().catch(() => null) as { transactions?: ReportedTransaction[] } | ReportedTransaction[] | null;
   const transactions = Array.isArray(body) ? body : body?.transactions;
   const transaction = transactions?.find((item) => Number(item.index) === transactionIndex);
   if (!response.ok || !transaction) throw new Error("Tranzila transaction was not found");
-  if (String(transaction.processor_response_code).padStart(3, "0") !== "000") throw new Error("Tranzila transaction was declined");
-  if (transaction.child_terminal !== terminalId) throw new Error("Tranzila terminal mismatch");
-  if (!["1", "ILS"].includes(String(transaction.currency))) throw new Error("Tranzila currency mismatch");
-  const reportedAmount = Number(transaction.amount);
-  if (!Number.isFinite(reportedAmount) || Math.abs(reportedAmount - expectedAmount) > 0.001) throw new Error("Tranzila amount mismatch");
-  return {
-    transactionId: transactionIndex,
-    lastFour: typeof transaction.ccno === "string" ? transaction.ccno.slice(-4) : null,
-    cardBrand: typeof transaction.card_description === "string" ? transaction.card_description.slice(0, 40) : null,
-  };
+  return validateReportedTransaction(transaction, {
+    transactionIndex,
+    terminalId,
+    amount: expectedAmount,
+    currency: expectedCurrency,
+  });
 }

@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-10-02 — Isolate the payment surface and make operational controls database-backed
+
+**Decision:** Apply a per-request nonce CSP and forced dynamic rendering only to the payment page and checkout handoff. Bind Tranzila callback proof to terminal, reference, amount, currency, and expiry. Keep global request counters, terminal activation history, and scheduled PII cleanup in service-only database objects; store only an HMAC of a client address, never the address itself.
+
+**Context:** A site-wide nonce rollout would make every route dynamic and has a wider performance/regression surface. In-memory rate limits are ineffective across serverless instances, checkout data can outlive its purpose when traffic is quiet, and terminal activation crosses a tenant/payment trust boundary.
+
+**Rationale:** The payment surface receives the strongest script policy without changing caching for unrelated public pages. Atomic database counters work across Vercel instances, scheduled cleanup does not depend on future traffic, and an audited service-only status transition preserves least privilege. During deployment the new limiter fails open only if its database function is unavailable, while the existing per-organization and resend protections remain active and an operational event is emitted.
+
+**Consequences:** Apply `20261002150000_payment_security_operations.sql`, run both supplied QA/verification scripts, enable Supabase Cron, then apply `20261002151000_schedule_payment_pii_cleanup.sql`. Vercel WAF remains an additional edge control, not a replacement. `includeSubDomains` was removed from HSTS until the complete subdomain inventory is known. See `SECURITY_REVIEW_2026-10-02.md` for evidence and remaining release gates.
+
+---
+
 ## 2026-10-02 — Require trusted terminal activation and retain payment replay evidence
 
 **Decision:** Hosted checkout may use only an `active` regular payment connection. Expired and completed checkout sessions erase temporary donor contact fields, but completed rows retain the provider transaction identifier and donation linkage instead of being deleted.

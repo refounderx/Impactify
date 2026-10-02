@@ -1,12 +1,13 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useLang } from "@/contexts/LanguageContext";
 import { Mail, CheckCircle2, RotateCcw } from "lucide-react";
 
-export default function AuthPage() {
+function AuthContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { lang } = useLang();
   const [step, setStep] = useState<"email" | "sent">("email");
   const [email, setEmail] = useState("");
@@ -24,14 +25,20 @@ export default function AuthPage() {
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) {
-      console.error("Supabase auth error:", error);
-      setError(error.message); // show real error
+      setError(lang === "en" ? "The sign-in link could not be sent. Please try again." : "לא ניתן לשלוח את קישור ההתחברות. נסו שוב.");
     } else {
       setStep("sent");
       startCooldown();
     }
     setLoading(false);
   }
+
+  const callbackError = searchParams.get("error") ?? "";
+  const callbackErrorMessage = callbackError === "donation_claim_failed"
+    ? (lang === "en" ? "The donation could not be linked to this account." : "לא ניתן לקשר את התרומה לחשבון הזה.")
+    : callbackError === "auth_failed"
+      ? (lang === "en" ? "The sign-in link is invalid or expired." : "קישור ההתחברות אינו תקין או שפג תוקפו.")
+      : "";
 
   function startCooldown() {
     setResendCooldown(60);
@@ -75,7 +82,7 @@ export default function AuthPage() {
               />
             </div>
 
-            {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+            {(error || callbackErrorMessage) && <p className="text-red-500 text-sm mb-3">{error || callbackErrorMessage}</p>}
 
             <button
               onClick={sendOtp}
@@ -124,5 +131,13 @@ export default function AuthPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-raz-dark" />}>
+      <AuthContent />
+    </Suspense>
   );
 }

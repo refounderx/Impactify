@@ -3,6 +3,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { readJsonBody, validateSameOriginMutation } from "@/lib/http-security";
 import { createHostedCheckout } from "@/lib/payments/hosted-checkout";
 import { isPaymentProvider, type PaymentProvider } from "@/lib/payments/provider-catalog";
+import { sameOriginUrl } from "@/lib/payments/security-contract";
+import { paymentContentSecurityPolicy } from "@/lib/content-security-policy";
+import { logSecurityEvent } from "@/lib/security-events";
+import { consumeRequestRateLimit } from "@/lib/request-rate-limit";
 import { randomUUID } from "node:crypto";
 
 type Customer = { contact: string; email: string; country: string; zip: string; address: string; city: string };
@@ -37,21 +41,16 @@ function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
 }
 
-function sameOriginUrl(value: unknown, origin: string) {
-  if (typeof value !== "string") return null;
-  try {
-    const url = new URL(value);
-    return url.origin === origin ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
-
-function hostedNavigationResponse(checkout: Awaited<ReturnType<typeof createHostedCheckout>>) {
+function hostedNavigationResponse(checkout: Awaited<ReturnType<typeof createHostedCheckout>>, nonce: string) {
   if (checkout.method === "GET") return NextResponse.redirect(checkout.url, 303);
   const fields = Object.entries(checkout.fields ?? {}).map(([name, value]) => `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`).join("");
-  return new NextResponse(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>מעבירים לתשלום מאובטח</title></head><body><p>מעבירים לתשלום מאובטח…</p><form id="checkout" method="POST" action="${escapeHtml(checkout.url)}">${fields}</form><script>document.getElementById("checkout").submit()</script></body></html>`, {
-    headers: { "Cache-Control": "no-store", "Content-Type": "text/html; charset=utf-8", "Referrer-Policy": "no-referrer" },
+  return new NextResponse(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>מעבירים לתשלום מאובטח</title></head><body><p>מעבירים לתשלום מאובטח…</p><form id="checkout" method="POST" action="${escapeHtml(checkout.url)}">${fields}</form><script nonce="${escapeHtml(nonce)}">document.getElementById("checkout").submit()</script></body></html>`, {
+    headers: {
+      "Cache-Control": "no-store",
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Security-Policy": paymentContentSecurityPolicy(nonce, process.env.NODE_ENV === "development"),
+      "Referrer-Policy": "no-referrer",
+    },
   });
 }
 
@@ -87,6 +86,15 @@ export async function POST(request: NextRequest) {
   let provider: string | null = null;
   let stage = "terminal lookup";
   try {
+    const globalLimit = await consumeRequestRateLimit(admin, request, "payment_checkout", 10, 60)
+      .catch(() => ({ allowed: true, unavailable: true }));
+    if (globalLimit.unavailable) {
+      logSecurityEvent("rate_limit_backend_unavailable", "payment_checkout");
+    }
+    if (!globalLimit.allowed) {
+      logSecurityEvent("payment_checkout_rate_limited", "global_ip_window_exceeded");
+      return NextResponse.json({ error: "Too many payment attempts" }, { status: 429 });
+    }
     const { data: connection } = await withTimeout(
       admin.from("org_payment_connections").select("provider,terminal_id")
         .eq("org_id", orgId).eq("connection_kind", "regular").eq("status", "active").order("created_at", { ascending: true }).limit(1).maybeSingle(),
@@ -115,6 +123,7 @@ export async function POST(request: NextRequest) {
     let returnUrl = defaultReturn;
     let cancelUrl = defaultCancel;
     let notifyUrl: string | undefined;
+    const sessionExpiresAt = new Date(Date.now() + 20 * 60_000).toISOString();
     if (connection.provider === "tranzila") {
       const erased = { customer_email: "", customer_name: "", customer_address: "", customer_city: "", customer_zip: "", customer_country: "" };
       const { error: expiredError } = await admin.from("payment_checkout_sessions").update({ ...erased, status: "expired" }).eq("status", "pending").lt("expires_at", new Date().toISOString());
@@ -122,25 +131,43 @@ export async function POST(request: NextRequest) {
       if (expiredError || retentionError) throw new Error("Unable to enforce payment session retention");
       const recent = await admin.from("payment_checkout_sessions").select("reference", { count: "exact", head: true }).eq("org_id", orgId).gte("created_at", new Date(Date.now() - 60_000).toISOString());
       if (recent.error) throw new Error("Unable to enforce payment rate limit");
-      if ((recent.count ?? 0) >= 30) return NextResponse.json({ error: "Too many payment attempts" }, { status: 429 });
+      if ((recent.count ?? 0) >= 30) {
+        logSecurityEvent("payment_checkout_rate_limited", "organization_window_exceeded");
+        return NextResponse.json({ error: "Too many payment attempts" }, { status: 429 });
+      }
       const callbackBase = `${origin}/api/payments/tranzila/callback?reference=${reference}`;
       returnUrl = `${callbackBase}&outcome=success`;
       cancelUrl = `${callbackBase}&outcome=failure`;
       notifyUrl = `${callbackBase}&outcome=notify`;
       const { error: sessionError } = await admin.from("payment_checkout_sessions").insert({
         reference, provider: "tranzila", terminal_id: connection.terminal_id, org_id: orgId, campaign_id: campaignId,
-        product_id: productId, amount, currency: "ILS", customer_email: customer?.email ?? "", customer_name: customer?.contact ?? "",
+        product_id: productId, amount, currency: "ILS", expires_at: sessionExpiresAt, customer_email: customer?.email ?? "", customer_name: customer?.contact ?? "",
         customer_address: customer?.address ?? "", customer_city: customer?.city ?? "", customer_zip: customer?.zip ?? "", customer_country: customer?.country ?? "",
       });
       if (sessionError) throw new Error("Unable to create payment session");
     }
     stage = "provider handshake";
     const checkout = await withTimeout(
-      createHostedCheckout({ provider: connection.provider as PaymentProvider, terminalId: connection.terminal_id, amount, reference, returnUrl, cancelUrl, notifyUrl, customer: customer ?? undefined }),
+      createHostedCheckout({
+        provider: connection.provider as PaymentProvider,
+        terminalId: connection.terminal_id,
+        amount,
+        currency: "ILS",
+        reference,
+        expiresAt: sessionExpiresAt,
+        returnUrl,
+        cancelUrl,
+        notifyUrl,
+        customer: customer ?? undefined,
+      }),
       15_000,
       "Payment terminal initialization timed out",
     );
-    if (formSubmission) return hostedNavigationResponse(checkout);
+    if (formSubmission) {
+      const nonce = request.headers.get("x-nonce");
+      if (!nonce) throw new Error("Payment security nonce unavailable");
+      return hostedNavigationResponse(checkout, nonce);
+    }
     return NextResponse.json(checkout, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Payment checkout initialization failed", {

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { verifyTranzilaCallbackProof, verifyTranzilaTransaction } from "@/lib/payments/tranzila-verification";
+import {
+  verifyLegacyTranzilaCallbackProof,
+  verifyTranzilaCallbackProof,
+  verifyTranzilaTransaction,
+} from "@/lib/payments/tranzila-verification";
+import { logSecurityEvent } from "@/lib/security-events";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,7 +28,7 @@ async function handle(request: NextRequest) {
   const transactionIndex = Number(values.get("transaction_id") ?? values.get("index"));
   const admin = createAdminClient();
   const { data: session } = await admin.from("payment_checkout_sessions")
-    .select("terminal_id,amount,status,donation_id,receipt_id,expires_at,campaign_id,product_id").eq("reference", reference).maybeSingle();
+    .select("terminal_id,amount,currency,status,donation_id,receipt_id,expires_at,campaign_id,product_id").eq("reference", reference).maybeSingle();
   if (!session) return notify ? new NextResponse(null, { status: 404 }) : NextResponse.redirect(new URL("/", request.url));
   if (session.status === "completed" && session.donation_id && session.receipt_id) {
     const targetId = session.campaign_id ?? session.product_id;
@@ -34,12 +39,26 @@ async function handle(request: NextRequest) {
     return notify ? new NextResponse(null, { status: 204 }) : NextResponse.redirect(new URL("/donate/cancelled", request.url), 303);
   }
   const checkoutProof = values.get("checkout_proof") ?? "";
-  if (!verifyTranzilaCallbackProof(session.terminal_id, reference, checkoutProof)) {
+  const proofVersion = values.get("proof_version");
+  const currentProofValid = proofVersion === "2" && verifyTranzilaCallbackProof({
+    terminalId: session.terminal_id,
+    reference,
+    amount: Number(session.amount),
+    currency: session.currency,
+    expiresAt: session.expires_at,
+  }, checkoutProof);
+  const inFlightLegacyProofValid = proofVersion === null
+    && verifyLegacyTranzilaCallbackProof(session.terminal_id, reference, checkoutProof);
+  if (values.get("reference") !== reference || (!currentProofValid && !inFlightLegacyProofValid)) {
+    logSecurityEvent("payment_callback_rejected", "reference_or_proof_mismatch");
     return new NextResponse(null, { status: 400 });
   }
-  if (!Number.isSafeInteger(transactionIndex) || transactionIndex <= 0) return new NextResponse(null, { status: 400 });
+  if (!Number.isSafeInteger(transactionIndex) || transactionIndex <= 0) {
+    logSecurityEvent("payment_callback_rejected", "invalid_transaction_index");
+    return new NextResponse(null, { status: 400 });
+  }
   try {
-    const verified = await verifyTranzilaTransaction(session.terminal_id, transactionIndex, Number(session.amount));
+    const verified = await verifyTranzilaTransaction(session.terminal_id, transactionIndex, Number(session.amount), session.currency);
     const receiptId = `R-${new Date().getFullYear()}-${randomBytes(8).toString("hex").toUpperCase()}`;
     const { data, error } = await admin.rpc("complete_verified_checkout", {
       p_reference: reference, p_transaction_id: verified.transactionId, p_receipt_id: receiptId,
@@ -50,8 +69,8 @@ async function handle(request: NextRequest) {
     const targetId = session.campaign_id ?? session.product_id;
     const url = new URL(`/donate/${targetId}/thanks?id=${data[0].donation_id}&receipt=${encodeURIComponent(data[0].receipt_id)}`, request.url);
     return NextResponse.redirect(url, 303);
-  } catch (error) {
-    console.error("Tranzila callback verification failed", { error: error instanceof Error ? error.message : "Unknown error" });
+  } catch {
+    logSecurityEvent("payment_callback_verification_failed", "provider_or_completion_verification_failed");
     return new NextResponse(null, { status: 503, headers: { "Retry-After": "15" } });
   }
 }

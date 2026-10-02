@@ -8,7 +8,8 @@ Browser
         ├── proxy.ts               → refreshes session + coarse protected-route redirects
         ├── Client components      → Supabase JS client (anon key, RLS-filtered)
         ├── AuthContext            → tracks authenticated user + persisted profile
-        ├── /api/donations         → development simulator; production awaits verified PSP callback
+        ├── /api/donations         → development-only simulator
+        ├── /api/payments/*        → Tranzila hosted checkout + verified callback
         └── Server components      → Supabase SSR client (cookie-based session)
               └── Admin client     → service role for validated server operations, never in browser
                     ├── PostgreSQL (Supabase) [Frankfurt eu-central-1]
@@ -69,7 +70,7 @@ production payment page → no PAN/CVV collection inside Impactify
 development payment page → explicit simulation flag → validated server-only insert
 ```
 
-Mutation APIs require same-origin requests and bounded bodies. Production responses receive CSP, anti-framing, referrer, MIME-sniffing, permissions, cross-origin resource/opener, cross-domain-policy, and HSTS headers from `next.config.ts`. Migration `20260830170000` removes direct browser insert/update privileges from financial tables and routes recurring/payment-display mutations through caller-derived RPCs. Completed checkout sessions retain only the transaction identity needed for replay prevention after temporary contact fields are erased.
+Mutation APIs require same-origin requests and bounded bodies. Production responses receive CSP, anti-framing, referrer, MIME-sniffing, permissions, cross-origin resource/opener, cross-domain-policy, and HSTS headers. Payment pages and the checkout handoff additionally receive a per-request nonce CSP and dynamic rendering. Migration `20260830170000` removes direct browser insert/update privileges from financial tables and routes recurring/payment-display mutations through caller-derived RPCs. Completed checkout sessions retain only the transaction identity needed for replay prevention after temporary contact fields are erased. Prepared migration `20261002150000` adds service-only atomic global rate limiting, a unique active provider/terminal boundary, and non-PII terminal audit records; `20261002151000` schedules daily PII cleanup after Supabase Cron is enabled.
 
 **Volunteer trust boundary:** Public opportunity reads are limited to active listings. The volunteer registration page requires an authenticated profile with a phone number and calls `register_for_volunteer_opportunity`; it never inserts a signup from the browser. NGO and community administration calls tenant-derived volunteer RPCs, which resolve organization/community identity from `auth.uid()`. They do not accept client-supplied tenant IDs. Opportunity signups expose contact details only through the relevant owner-scoped RPC; a community query is restricted to that community's attributed signups.
 
@@ -160,6 +161,8 @@ The donor home page remains `/`. Separate public acquisition pages at `/communit
 | `payment_methods` | Saved brand + last-4 (no raw card data) | Own safe columns only; add/remove through owner RPC |
 | `org_payment_connections` | Per-NGO provider terminal metadata and activation state | No browser table grants; owner RPCs return metadata only; checkout requires `active` |
 | `payment_checkout_sessions` | Expiring server checkout state and permanent provider-transaction replay key | No browser grants; service role only; temporary contact fields are erased |
+| `payment_connection_audit` | Non-PII active-terminal status/identifier change history | No browser grants; trigger and service-only status RPC write |
+| `api_rate_limit_buckets` | Atomic abuse-control counters keyed by HMAC of client address | No browser grants; service-role function only; stale rows deleted daily |
 | `donor_contact_details` | Contact address accepted after verified-payment account claim | Authenticated donor reads/updates own row only |
 | `profile_special_days` | User-defined dated occasions shown in the NGO-owner profile | Own only; anonymous has no privileges |
 | `system_updates` | Broadcast/per-donor update feed | Own or broadcast (`donor_id is null`) |

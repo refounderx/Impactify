@@ -6,14 +6,14 @@ import { findTerminalCredential } from "@/lib/payments/server-config";
 import { createTranzilaCallbackProof } from "@/lib/payments/tranzila-verification";
 
 type CheckoutCustomer = { contact: string; email: string; country: string; zip: string; address: string; city: string };
-type CheckoutInput = { provider: PaymentProvider; terminalId: string; amount: number; reference: string; returnUrl: string; cancelUrl: string; notifyUrl?: string; customer?: CheckoutCustomer };
+type CheckoutInput = { provider: PaymentProvider; terminalId: string; amount: number; currency: string; reference: string; expiresAt: string; returnUrl: string; cancelUrl: string; notifyUrl?: string; customer?: CheckoutCustomer };
 export type HostedCheckout = { url: string; method: "GET" | "POST"; fields?: Record<string, string>; providerReference: string };
 
 function asFormResponse(text: string) {
   return Object.fromEntries(new URLSearchParams(text));
 }
 
-async function createTranzilaHandshake(terminalName: string, amount: number, reference: string, appKey: string, secret: string) {
+async function createTranzilaHandshake(input: CheckoutInput, appKey: string, secret: string) {
   const requestTime = Math.floor(Date.now() / 1000).toString();
   const nonce = randomBytes(40).toString("hex");
   const accessToken = createHmac("sha256", `${secret}${requestTime}${nonce}`).update(appKey).digest("hex");
@@ -29,9 +29,19 @@ async function createTranzilaHandshake(terminalName: string, amount: number, ref
         "X-tranzila-api-access-token": accessToken,
       },
       body: JSON.stringify({
-        terminal_name: terminalName,
-        sum: amount,
-        request_params: { reference, checkout_proof: createTranzilaCallbackProof(terminalName, reference) },
+        terminal_name: input.terminalId,
+        sum: input.amount,
+        request_params: {
+          reference: input.reference,
+          proof_version: "2",
+          checkout_proof: createTranzilaCallbackProof({
+            terminalId: input.terminalId,
+            reference: input.reference,
+            amount: input.amount,
+            currency: input.currency,
+            expiresAt: input.expiresAt,
+          }),
+        },
       }),
       cache: "no-store",
       signal: AbortSignal.timeout(12_000),
@@ -54,7 +64,7 @@ export async function createHostedCheckout(input: CheckoutInput): Promise<Hosted
   if (!credential) throw new Error("Payment terminal credentials are not configured");
   if (input.provider === "tranzila") {
     if (!credential.appKey || !credential.secret || !input.customer) throw new Error("Tranzila payment details are not configured");
-    const thtk = await createTranzilaHandshake(input.terminalId, input.amount, input.reference, credential.appKey, credential.secret);
+    const thtk = await createTranzilaHandshake(input, credential.appKey, credential.secret);
     return {
       url: `https://directng.tranzila.com/${encodeURIComponent(input.terminalId)}/iframenew.php`,
       method: "POST",
