@@ -4,8 +4,8 @@ do $$
 declare
   v_user uuid;
   v_org uuid;
+  v_foreign_org uuid;
   v_connection public.org_payment_connections%rowtype;
-  v_foreign_connection_count integer;
   v_cross_tenant_count integer;
   v_status text;
   v_qa_terminal text := 'impactify-security-qa-' || gen_random_uuid()::text;
@@ -46,11 +46,23 @@ begin
   limit 1;
   if v_user is null then raise exception 'QA requires one onboarded NGO owner'; end if;
 
-  select count(*) into v_foreign_connection_count
-  from public.org_payment_connections
-  where org_id <> v_org;
-  if v_foreign_connection_count = 0 then
-    raise exception 'QA requires a payment connection belonging to a second organization';
+  select o.id into v_foreign_org
+  from public.organizations as o
+  where o.id <> v_org
+  order by o.id
+  limit 1;
+  if v_foreign_org is null then
+    raise exception 'QA requires a second organization';
+  end if;
+  if not exists (
+    select 1 from public.org_payment_connections as c
+    where c.org_id = v_foreign_org
+  ) then
+    insert into public.org_payment_connections(
+      org_id, provider, connection_kind, terminal_id, status
+    ) values (
+      v_foreign_org, 'tranzila', 'regular', v_qa_terminal || '-foreign', 'setup_required'
+    );
   end if;
 
   perform set_config(
