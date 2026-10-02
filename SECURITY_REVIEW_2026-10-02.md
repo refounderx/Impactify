@@ -2,11 +2,11 @@
 
 ## Executive summary
 
-The payment and post-payment registration code now has stronger transaction binding, a nonce-based Content Security Policy on the payment surface, privacy-safe security events, automated security regression checks, and prepared database controls for terminal isolation, global rate limiting, audit history, and scheduled PII cleanup.
+The payment and post-payment registration code now has stronger transaction binding, a nonce-based Content Security Policy on the payment surface, privacy-safe security events, automated security regression checks, and live database controls for terminal isolation, global rate limiting, audit history, and scheduled PII cleanup.
 
-The application changes passed local tests, TypeScript, ESLint with no errors, a production build, Git-history secret scanning, client-bundle secret scanning, and live local CSP probes. The two new Supabase migrations have **not** been applied to the live project because the available browser session stopped at Supabase sign-in. They must not be described as live until the SQL Editor deployment and the supplied verification scripts pass.
+The application changes passed local tests, TypeScript, ESLint with no errors, a production build, Git-history secret scanning, client-bundle secret scanning, and live local CSP probes. The three payment-security operations/fix migrations were applied through the Supabase SQL Editor on 2026-10-02: consolidated privilege/data checks returned all `true`, Cron is active, and the authenticated tenant-isolation QA passed. `verify_current_payment_sql_status.sql` preserves the read-only operational check for future runs.
 
-This is an engineering review, not a penetration-test certificate, PCI attestation, or legal opinion. A real low-value Tranzila payment, email claim, authenticated tenant-isolation QA, WAF rollout, and independent external testing remain release gates.
+This is an engineering review, not a penetration-test certificate, PCI attestation, or legal opinion. A real low-value Tranzila payment and email claim, WAF rollout, and independent external testing remain release gates.
 
 ## Scope and trust boundaries
 
@@ -22,13 +22,13 @@ This is an engineering review, not a penetration-test certificate, PCI attestati
 | ID | Risk | Implementation | Status |
 |---|---|---|---|
 | SR-01 | Patched Next.js versions were required by upstream security advisories. Exploitability in this application was not established. | Next.js and `eslint-config-next` are pinned to `16.3.8`; Node `24.x` is required and CI repeats build/audit checks. | Implemented and locally verified |
-| SR-02 | An NGO must not be able to activate another tenant's terminal or repoint an active connection. Until authenticated tenant probes pass, this remains a potentially critical boundary. | Checkout accepts only an `active` regular terminal. A prepared migration adds a unique active provider/terminal index, service-role-only status mutation with a reason, and non-PII audit records. Authenticated cross-tenant probes are supplied. | Code complete; live SQL and authenticated QA pending |
+| SR-02 | An NGO must not be able to activate another tenant's terminal or repoint an active connection. | Checkout accepts only an `active` regular terminal. A unique active provider/terminal index, service-role-only status mutation with a reason, and non-PII audit records are live. Authenticated cross-tenant probes passed. | Implemented and live-verified |
 | SR-03 | Deleting completed sessions could remove the permanent provider transaction replay key. | Completed sessions retain transaction identity while donor contact fields are anonymized; atomic completion remains protected by the unique provider transaction. | Implemented; existing completion migration was previously live |
 | SR-04 | Callback proof covered too little checkout state. | New Handshakes label and require v2 HMAC binding over terminal, internal reference, exact two-decimal amount, currency, and expiry. A missing-version legacy proof is accepted only for already-issued sessions, which expire under the existing 30-minute database limit. The callback also requires the provider-returned reference and independently verifies the transaction through Tranzila Reports. | Implemented and unit-tested |
 | SR-05 | Open redirects could be accepted through prefix comparison. | Return and cancel URLs require an exact parsed origin match; lookalike and protocol-relative URLs are rejected. | Implemented and unit-tested |
 | SR-06 | Payment pages allowed inline script execution under the general CSP. | Payment pages and checkout responses receive a per-request nonce CSP with `strict-dynamic`; `script-src` does not contain `unsafe-inline`. The payment route is dynamically rendered so Next.js can apply the nonce. | Implemented, built, and runtime-probed locally |
-| SR-07 | Checkout and registration needed a durable global abuse limit. | A service-only atomic database bucket stores only an HMAC of the client address. Checkout is limited to 10/minute per address and registration to 5/hour. Existing per-organization and resend limits remain. | Code complete; activates after live migration |
-| SR-08 | Contact data cleanup depended on a later checkout request. | A service-only cleanup function anonymizes expired/failed sessions and completed sessions older than seven days; a second migration schedules it daily with Supabase Cron. | Prepared; live Cron enablement/migrations pending |
+| SR-07 | Checkout and registration needed a durable global abuse limit. | A live service-only atomic database bucket stores only an HMAC of the client address. Checkout is limited to 10/minute per address and registration to 5/hour. Existing per-organization and resend limits remain. | Implemented and live-verified |
+| SR-08 | Contact data cleanup depended on a later checkout request. | A service-only cleanup function anonymizes expired/failed sessions and completed sessions older than seven days; Supabase Cron runs it daily. | Implemented and live-verified |
 | SR-09 | Authentication and callback errors could leak internal provider details or PII into logs/UI. | Security events contain only an allowlisted event name, reason code, and timestamp. Auth errors are generic; callback payloads, IPs, email addresses, tokens, and credentials are not logged. | Implemented |
 | SR-10 | Secret and regression checks were manual. | CI now runs lint, typecheck, unit tests, dependency audit, full Git-history scan, production build, and built-client secret scan; Dependabot is enabled for npm and Actions. | Implemented; CI result after push is still required |
 | SR-11 | `includeSubDomains` HSTS was enabled without a verified subdomain inventory. | HSTS remains two years on the application host but no longer asserts `includeSubDomains`. | Implemented |
@@ -50,7 +50,7 @@ The rate-limit caller deliberately fails open **only when the new database funct
 | Local browser console | No error or warning entries on the payment page |
 | Diff whitespace check | Passed |
 | Dependency audit | Last full npm audit before this code-only delta reported 0 vulnerabilities; the dependency graph did not change. CI must repeat it after push because npm is unavailable in this execution shell. |
-| Live Supabase migration/QA | **Not run**: authentication is required in the Dashboard SQL Editor |
+| Live Supabase migration/QA | Passed on 2026-10-02: migrations recorded, privilege/data checks all true, Cron active, and authenticated tenant-isolation QA passed |
 | Live Tranzila + account claim | **Not run**: requires a real low-value charge and access to the recipient mailbox |
 
 ## Supabase release procedure
@@ -80,7 +80,7 @@ If the unique active-terminal index fails, do not remove the constraint. Investi
 
 ## Current risk statement
 
-No confirmed critical or high code defect remains in the reviewed local payment path. However, SR-02 is not closed operationally until the database migration and authenticated tenant probes pass. Global rate limiting and scheduled PII cleanup are also not live until their migrations are applied. The platform must not be represented as fully secure, penetration-tested, PCI compliant, or production-approved solely on the basis of this report.
+No confirmed critical or high code defect remains in the reviewed payment path, and the database migration, tenant probes, global rate limiting, and scheduled PII cleanup passed the recorded live checks. The platform must not be represented as fully secure, penetration-tested, PCI compliant, or production-approved solely on the basis of this report.
 
 ## Authoritative references
 
