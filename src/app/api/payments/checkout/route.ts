@@ -37,6 +37,16 @@ function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
 }
 
+function sameOriginUrl(value: unknown, origin: string) {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    return url.origin === origin ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 function hostedNavigationResponse(checkout: Awaited<ReturnType<typeof createHostedCheckout>>) {
   if (checkout.method === "GET") return NextResponse.redirect(checkout.url, 303);
   const fields = Object.entries(checkout.fields ?? {}).map(([name, value]) => `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`).join("");
@@ -78,8 +88,8 @@ export async function POST(request: NextRequest) {
   let stage = "terminal lookup";
   try {
     const { data: connection } = await withTimeout(
-      admin.from("org_payment_connections").select("provider,terminal_id,status")
-        .eq("org_id", orgId).eq("connection_kind", "regular").in("status", ["setup_required", "pending_verification", "active"]).order("created_at", { ascending: true }).limit(1).maybeSingle(),
+      admin.from("org_payment_connections").select("provider,terminal_id")
+        .eq("org_id", orgId).eq("connection_kind", "regular").eq("status", "active").order("created_at", { ascending: true }).limit(1).maybeSingle(),
       10_000,
       "Payment terminal lookup timed out",
     );
@@ -100,25 +110,29 @@ export async function POST(request: NextRequest) {
       if (!product || product.org_id !== orgId || !product.active) return NextResponse.json({ error: "Product is not available" }, { status: 400 });
       amount = Number(product.price);
     }
-    const defaultReturn = typeof parsed.data.return_url === "string" && parsed.data.return_url.startsWith(origin) ? parsed.data.return_url : `${origin}/`;
-    const defaultCancel = typeof parsed.data.cancel_url === "string" && parsed.data.cancel_url.startsWith(origin) ? parsed.data.cancel_url : `${origin}/`;
+    const defaultReturn = sameOriginUrl(parsed.data.return_url, origin) ?? `${origin}/`;
+    const defaultCancel = sameOriginUrl(parsed.data.cancel_url, origin) ?? `${origin}/`;
     let returnUrl = defaultReturn;
     let cancelUrl = defaultCancel;
     let notifyUrl: string | undefined;
     if (connection.provider === "tranzila") {
-    await admin.from("payment_checkout_sessions").delete().lt("created_at", new Date(Date.now() - 30 * 86_400_000).toISOString());
-    const recent = await admin.from("payment_checkout_sessions").select("reference", { count: "exact", head: true }).eq("org_id", orgId).gte("created_at", new Date(Date.now() - 60_000).toISOString());
-    if ((recent.count ?? 0) >= 30) return NextResponse.json({ error: "Too many payment attempts" }, { status: 429 });
-    const callbackBase = `${origin}/api/payments/tranzila/callback?reference=${reference}`;
-    returnUrl = `${callbackBase}&outcome=success`;
-    cancelUrl = `${callbackBase}&outcome=failure`;
-    notifyUrl = `${callbackBase}&outcome=notify`;
-    const { error: sessionError } = await admin.from("payment_checkout_sessions").insert({
-      reference, provider: "tranzila", terminal_id: connection.terminal_id, org_id: orgId, campaign_id: campaignId,
-      product_id: productId, amount, currency: "ILS", customer_email: customer?.email ?? "", customer_name: customer?.contact ?? "",
-      customer_address: customer?.address ?? "", customer_city: customer?.city ?? "", customer_zip: customer?.zip ?? "", customer_country: customer?.country ?? "",
-    });
-    if (sessionError) throw new Error("Unable to create payment session");
+      const erased = { customer_email: "", customer_name: "", customer_address: "", customer_city: "", customer_zip: "", customer_country: "" };
+      const { error: expiredError } = await admin.from("payment_checkout_sessions").update({ ...erased, status: "expired" }).eq("status", "pending").lt("expires_at", new Date().toISOString());
+      const { error: retentionError } = await admin.from("payment_checkout_sessions").update(erased).eq("status", "completed").lt("completed_at", new Date(Date.now() - 7 * 86_400_000).toISOString());
+      if (expiredError || retentionError) throw new Error("Unable to enforce payment session retention");
+      const recent = await admin.from("payment_checkout_sessions").select("reference", { count: "exact", head: true }).eq("org_id", orgId).gte("created_at", new Date(Date.now() - 60_000).toISOString());
+      if (recent.error) throw new Error("Unable to enforce payment rate limit");
+      if ((recent.count ?? 0) >= 30) return NextResponse.json({ error: "Too many payment attempts" }, { status: 429 });
+      const callbackBase = `${origin}/api/payments/tranzila/callback?reference=${reference}`;
+      returnUrl = `${callbackBase}&outcome=success`;
+      cancelUrl = `${callbackBase}&outcome=failure`;
+      notifyUrl = `${callbackBase}&outcome=notify`;
+      const { error: sessionError } = await admin.from("payment_checkout_sessions").insert({
+        reference, provider: "tranzila", terminal_id: connection.terminal_id, org_id: orgId, campaign_id: campaignId,
+        product_id: productId, amount, currency: "ILS", customer_email: customer?.email ?? "", customer_name: customer?.contact ?? "",
+        customer_address: customer?.address ?? "", customer_city: customer?.city ?? "", customer_zip: customer?.zip ?? "", customer_country: customer?.country ?? "",
+      });
+      if (sessionError) throw new Error("Unable to create payment session");
     }
     stage = "provider handshake";
     const checkout = await withTimeout(

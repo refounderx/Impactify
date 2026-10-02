@@ -1,5 +1,17 @@
 # Technical Decisions — Impactify
 
+## 2026-10-02 — Require trusted terminal activation and retain payment replay evidence
+
+**Decision:** Hosted checkout may use only an `active` regular payment connection. Expired and completed checkout sessions erase temporary donor contact fields, but completed rows retain the provider transaction identifier and donation linkage instead of being deleted.
+
+**Context:** NGO owners can create `setup_required` terminal metadata, while server credentials are shared infrastructure. Treating setup rows as chargeable could cross the tenant boundary if a known terminal identifier were registered. Deleting completed checkout rows would also remove the unique provider-transaction key and reopen a replay path after the retention window.
+
+**Rationale:** Activation is a trusted operator/server decision, not proof supplied by an NGO browser. Permanent transaction identity is the smallest durable record that preserves idempotency; contact PII is not required for that purpose and is erased separately.
+
+**Consequences:** A newly entered terminal cannot charge until it is verified and activated. Operational cleanup must anonymize completed rows rather than delete them, and future providers must preserve an equivalent durable replay key.
+
+---
+
 ## 2026-08-30 — Treat payment completion as a server-verified event
 
 **Decision:** Impactify does not collect PAN/CVV in its own UI and does not accept a browser request as proof of payment. Production donation submission remains disabled until a hosted Cardcom/Grow flow and signed server callback exist; only development may explicitly simulate a completed donation.

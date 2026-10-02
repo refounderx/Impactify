@@ -37,7 +37,7 @@ async function handle(request: NextRequest) {
   if (!verifyTranzilaCallbackProof(session.terminal_id, reference, checkoutProof)) {
     return new NextResponse(null, { status: 400 });
   }
-  if (!Number.isInteger(transactionIndex) || transactionIndex <= 0) return new NextResponse(null, { status: 400 });
+  if (!Number.isSafeInteger(transactionIndex) || transactionIndex <= 0) return new NextResponse(null, { status: 400 });
   try {
     const verified = await verifyTranzilaTransaction(session.terminal_id, transactionIndex, Number(session.amount));
     const receiptId = `R-${new Date().getFullYear()}-${randomBytes(8).toString("hex").toUpperCase()}`;

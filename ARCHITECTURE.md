@@ -62,13 +62,14 @@ page.tsx → useAuth() → user.id
 **Payment and donation trust boundary:**
 ```
 production payment page → no PAN/CVV collection inside Impactify
-  → hosted Cardcom/Grow/Tranzila checkout + signed webhook (not implemented yet)
-  → only verified server callback may append a completed donation
+  → active regular Tranzila terminal → V2 HMAC Handshake → hosted DirectNG checkout
+  → proof-bound callback → authenticated report lookup → atomic completion RPC
+  → only the verified server path may append a completed donation
 
 development payment page → explicit simulation flag → validated server-only insert
 ```
 
-Mutation APIs require same-origin JSON and bounded bodies. Production responses receive CSP, anti-framing, referrer, MIME-sniffing, permissions, opener, and HSTS headers from `next.config.ts`. Migration `20260830170000` removes direct browser insert/update privileges from financial tables and routes recurring/payment-display mutations through caller-derived RPCs.
+Mutation APIs require same-origin requests and bounded bodies. Production responses receive CSP, anti-framing, referrer, MIME-sniffing, permissions, cross-origin resource/opener, cross-domain-policy, and HSTS headers from `next.config.ts`. Migration `20260830170000` removes direct browser insert/update privileges from financial tables and routes recurring/payment-display mutations through caller-derived RPCs. Completed checkout sessions retain only the transaction identity needed for replay prevention after temporary contact fields are erased.
 
 **Volunteer trust boundary:** Public opportunity reads are limited to active listings. The volunteer registration page requires an authenticated profile with a phone number and calls `register_for_volunteer_opportunity`; it never inserts a signup from the browser. NGO and community administration calls tenant-derived volunteer RPCs, which resolve organization/community identity from `auth.uid()`. They do not accept client-supplied tenant IDs. Opportunity signups expose contact details only through the relevant owner-scoped RPC; a community query is restricted to that community's attributed signups.
 
@@ -157,6 +158,9 @@ The donor home page remains `/`. Separate public acquisition pages at `/communit
 | `recurring_donations` | Standing orders (הוראות קבע) | Safe columns only; own reads; status changes through owner RPC |
 | `communities` | Community groups | Public descriptive/statistical columns; manager/referral fields hidden |
 | `payment_methods` | Saved brand + last-4 (no raw card data) | Own safe columns only; add/remove through owner RPC |
+| `org_payment_connections` | Per-NGO provider terminal metadata and activation state | No browser table grants; owner RPCs return metadata only; checkout requires `active` |
+| `payment_checkout_sessions` | Expiring server checkout state and permanent provider-transaction replay key | No browser grants; service role only; temporary contact fields are erased |
+| `donor_contact_details` | Contact address accepted after verified-payment account claim | Authenticated donor reads/updates own row only |
 | `profile_special_days` | User-defined dated occasions shown in the NGO-owner profile | Own only; anonymous has no privileges |
 | `system_updates` | Broadcast/per-donor update feed | Own or broadcast (`donor_id is null`) |
 | `hero_cards` | Landing hero image+caption pairs | Public read |
