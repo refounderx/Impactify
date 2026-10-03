@@ -4,9 +4,9 @@
 
 The Tranzila path has strong server-side transaction binding, authenticated provider verification, atomic donation completion, replay protection, tenant-isolated terminal administration, and a hosted payment page that keeps card data outside Impactify. No confirmed critical or high-severity defect was found in the reviewed code.
 
-The 2026-10-03 remediation is implemented locally but is **not yet deployed or applied to Supabase**. It adds safe reconciliation before expiry, fixes the PII cleanup defect, removes legacy callback proofs, blocks incomplete Cardcom/Grow checkout paths, hardens rate-limit identity, extends nonce CSP to the full application, adds CSP reporting, and raises the CI dependency gate to Moderate.
+The 2026-10-03 remediation is deployed and both database migrations are applied. It adds safe reconciliation before expiry, fixes the PII cleanup defect, removes legacy callback proofs, blocks incomplete Cardcom/Grow checkout paths, hardens rate-limit identity, extends nonce CSP to the full application, and adds CSP reporting. Security CI blocks Moderate-or-higher vulnerabilities in production dependencies; a newly disclosed, unpatched `braces` advisory remains limited to ESLint's development-only dependency chain and is tracked separately below.
 
-Production readiness remains **conditional**. The latest live database evidence still shows `cleanup_cron_active=false` and four expired `pending` sessions. Those values cannot change until the two new migrations are applied, the Vercel secrets and reconciliation Cron are deployed, and the post-deployment checks pass.
+Production readiness remains **conditional**. Live database QA passed and all aggregate defect counts are zero, but the newly scheduled Supabase cleanup job has not yet recorded its first successful run. `CRON_SECRET`, Tranzila field-20 behavior, the real payment/account-claim flow, WAF enforcement, and external assurance also remain unverified.
 
 This is an engineering review, not a penetration-test certificate, PCI attestation, or legal opinion.
 
@@ -14,16 +14,16 @@ This is an engineering review, not a penetration-test certificate, PCI attestati
 
 | Evidence | Result |
 |---|---|
-| Previous GitHub Security CI | Passed at commit `f628813`, run `37046684184` |
+| Previous GitHub Security CI | Passed at commit `f628813`, run `37046684184`; commit `a12bede` failed only because the full dependency audit began flagging the newly published unpatched development-only `braces` advisory |
 | Local TypeScript after remediation | Passed |
 | Local unit tests after remediation | 6/6 passed with Node 24 |
-| Local ESLint after remediation | 0 errors; 3 pre-existing unrelated warnings |
-| Local production build after remediation | Not completed: the sandbox denied Turbopack worker creation; this is not evidence of a code build failure |
-| Live Supabase before remediation | All prior RLS/grant/function checks passed; Cron signature false; 4 expired pending sessions |
-| New migrations applied live | No |
+| Local ESLint after CI repair | Passed with 0 errors and 0 warnings |
+| Local production build after remediation | Passed with Next.js webpack; local Turbopack worker creation remains blocked by the Windows execution environment |
+| Live Supabase after remediation | Tenant QA passed; all security booleans true except first-run Cron recency; every defect count is 0 |
+| New migrations applied live | Yes: `20261003110000` and `20261003111000` |
 | Live payment/account claim after remediation | Not run |
 
-Claims in this report distinguish verified live state from local implementation. A previous green CI run does not verify the uncommitted 2026-10-03 changes.
+Claims in this report distinguish verified live state from local implementation. The final CI rerun for the dependency-audit repair is still pending.
 
 ## Remediation implemented in the repository
 
@@ -78,26 +78,27 @@ The replacement also permits the intended `pg_cron` Postgres session while keepi
 - A fresh nonce plus `strict-dynamic` is now applied across the application; the old static `script-src 'unsafe-inline'` policy was removed.
 - The payment surface retains the tighter frame policy; approved YouTube/Vimeo frames remain limited to the general application policy.
 - `report-uri` and `Reporting-Endpoints` send bounded CSP reports to an endpoint that validates type/size, stores no report body, and emits only a generic event.
-- Security CI now runs `npm audit --audit-level=moderate` instead of blocking only High/Critical findings.
+- Security CI blocks Moderate-or-higher findings in production dependencies with `npm audit --omit=dev --audit-level=moderate`.
+- The full audit still reports `GHSA-vfj7-8cjw-p6xm` through ESLint tooling. GitHub lists no patched `braces` release as of 2026-10-03, so the development-only availability risk is tracked rather than forcing a breaking Next.js downgrade.
 
 ## Open findings and release gates
 
-### F-01 — Database remediation is not applied (Medium, release blocker)
+### F-01 — Database remediation applied (Closed)
 
-The two 2026-10-03 migrations exist only in the repository. Until they are applied, the live cleanup defect and the four expired sessions remain unchanged.
+Both 2026-10-03 migrations are installed. `payment_security_qa.sql` succeeded and rolled back, and the consolidated verifier reports zero expired pending sessions, zero PII-retention defects, zero duplicate active terminals, zero open reconciliation alerts, and zero stale rate-limit buckets.
 
-Required order in the Supabase SQL Editor:
+The applied and verified order was:
 
 1. `supabase/migrations/20261003110000_payment_reconciliation_and_cleanup.sql`
 2. `supabase/migrations/20261003111000_payment_completion_reconciliation_status.sql`
 3. `supabase/scripts/payment_security_qa.sql`
 4. `supabase/scripts/verify_current_payment_sql_status.sql`
 
-Do not manually expire or delete the four rows before reconciliation.
+The only remaining database signal is `cleanup_cron_recent_success=false`, which is expected until the replacement job completes its first scheduled execution.
 
-### F-02 — Deployment secrets and Cron are not active (Medium, release blocker)
+### F-02 — Deployment secrets need Dashboard verification (Medium, release blocker)
 
-Add these production-only Vercel variables as Sensitive values and redeploy:
+The reconciliation route and `vercel.json` schedule are deployed. Verify these production-only Vercel variables exist as Sensitive values:
 
 - `RATE_LIMIT_HMAC_SECRET`: a new random value of at least 32 characters;
 - `CRON_SECRET`: a separate random value of at least 16 characters.
@@ -108,9 +109,9 @@ Do not reuse Supabase or Tranzila credentials. `vercel.json` schedules reconcili
 
 The durable reconciliation assumes the checkout `DCdisable` reference is stored in terminal user-defined field 20. The code discovers the terminal's actual `api_parameter_name`, but production must prove that one known transaction returns the same internal reference as `user_defined_20`. If configuration is missing, reconciliation fails safely to `retry`; it does not expire the session.
 
-### F-04 — Four existing sessions need recorded outcomes (Medium, open)
+### F-04 — Existing expired sessions cleared from the pending queue (Closed at aggregate level)
 
-After deployment, invoke the secured reconciliation route or wait for its first run. Expected outcomes:
+The post-migration verifier reports `expired_pending_session_count=0` and `open_reconciliation_alert_count=0`. No donor or transaction identifiers were exposed during verification. Per-reference provider outcomes were not independently exported, so future reconciliation behavior must still follow these rules:
 
 - no approved Tranzila transaction after the 48-hour grace period: `expired`, PII blank, outcome `not_found`;
 - approved matching transaction without a completed donation: `manual_review`, PII blank after cleanup, open non-PII alert;
@@ -146,6 +147,10 @@ An authenticated external penetration test, retest, and PCI/privacy scope review
 
 Unit tests cover proof binding, provider transaction matching, origin validation, nonce CSP, and IP normalization. CI still lacks an ephemeral Supabase integration environment, callback replay integration tests, and automated Tranzila sandbox/production verification. The SQL tenant QA remains a manual Dashboard transaction.
 
+### F-10 — Unpatched development-only `braces` advisory (Low, tracked)
+
+The full dependency audit reports `GHSA-vfj7-8cjw-p6xm` through `eslint-config-next` → `fast-glob` → `micromatch` → `braces`. GitHub currently lists no patched version. The package is not included in the production dependency audit or application runtime. Security CI therefore blocks production dependencies at Moderate severity while this development-tool availability issue remains tracked for an upstream release; do not use `npm audit fix --force`, which proposes a breaking Next.js/ESLint downgrade.
+
 ## Acceptance criteria
 
 Production readiness changes from conditional to approved only when all of the following are recorded:
@@ -156,14 +161,14 @@ Production readiness changes from conditional to approved only when all of the f
 - the cleanup job has a successful run within 36 hours;
 - all four original references have non-sensitive reconciliation outcomes and no open alert;
 - Vercel shows successful reconciliation Cron invocations with no secret in logs;
-- the final Security CI for the deployed commit is green, including the Moderate dependency gate and production build;
+- the final Security CI for the deployed commit is green, including the Moderate production-dependency gate and production build;
 - the real payment, duplicate callback, receipt, opt-in, magic-link claim, and donor-area visibility pass;
 - WAF Log-mode evidence is reviewed and enforcement rules are activated;
 - external penetration testing and applicable PCI/privacy review are completed.
 
 ## Current risk statement
 
-The code-level design is materially stronger and no confirmed Critical/High issue is open. However, production is **not yet approved** because the database migrations, secrets, Cron execution, four-row reconciliation, final CI/build, live payment/account claim, WAF, and external assurance are still unverified.
+The code-level design is materially stronger and no confirmed Critical/High runtime issue is open. However, production is **not yet approved** because the Vercel secret, first successful Cron execution, Tranzila field-20 proof, final CI rerun, live payment/account claim, WAF, and external assurance are still unverified.
 
 ## Authoritative references
 

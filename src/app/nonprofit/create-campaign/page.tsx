@@ -189,7 +189,8 @@ export default function CreateCampaignPage() {
   function toggleProduct(id: string) {
     setForm((f) => {
       const selected = f.selectedProducts.includes(id);
-      const { [id]: removedQuantity, ...remainingQuantities } = f.productQuantities;
+      const remainingQuantities = { ...f.productQuantities };
+      delete remainingQuantities[id];
       return {
         ...f,
         selectedProducts: selected ? f.selectedProducts.filter((productId) => productId !== id) : [...f.selectedProducts, id],
