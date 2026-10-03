@@ -6,7 +6,7 @@ The Tranzila path has strong server-side transaction binding, authenticated prov
 
 The 2026-10-03 remediation is deployed and both database migrations are applied. It adds safe reconciliation before expiry, fixes the PII cleanup defect, removes legacy callback proofs, blocks incomplete Cardcom/Grow checkout paths, hardens rate-limit identity, extends nonce CSP to the full application, and adds CSP reporting. Security CI blocks Moderate-or-higher vulnerabilities in production dependencies; a newly disclosed, unpatched `braces` advisory remains limited to ESLint's development-only dependency chain and is tracked separately below.
 
-Production readiness remains **conditional**. Live database QA passed and all aggregate defect counts are zero, but the newly scheduled Supabase cleanup job has not yet recorded its first successful run. `CRON_SECRET`, Tranzila field-20 behavior, the real payment/account-claim flow, WAF enforcement, and external assurance also remain unverified.
+Production readiness remains **conditional**. Live database QA passed and all aggregate defect counts are zero, but the four original session outcomes lack provenance and the newly scheduled Supabase cleanup job has not yet recorded its first successful run. The field-20 lookup has no known-good circuit breaker, manual-review contact/alert operations are incomplete, and `CRON_SECRET`, the real payment/account-claim flow, production CSP/cache behavior, WAF enforcement, and external assurance remain unverified.
 
 This is an engineering review, not a penetration-test certificate, PCI attestation, or legal opinion.
 
@@ -111,9 +111,11 @@ Do not reuse Supabase or Tranzila credentials. `vercel.json` schedules reconcili
 
 The durable reconciliation assumes the checkout `DCdisable` reference is stored in terminal user-defined field 20. The code discovers the terminal's actual `api_parameter_name`, but production must prove that one known transaction returns the same internal reference as `user_defined_20`. If configuration is missing, reconciliation fails safely to `retry`; it does not expire the session.
 
-### F-04 — Existing expired sessions cleared from the pending queue (Closed at aggregate level)
+### F-04 — Original expired-session outcomes lack provenance (Medium, release blocker)
 
-The post-migration verifier reports `expired_pending_session_count=0` and `open_reconciliation_alert_count=0`. No donor or transaction identifiers were exposed during verification. Per-reference provider outcomes were not independently exported, so future reconciliation behavior must still follow these rules:
+The post-migration verifier reports `expired_pending_session_count=0` and `open_reconciliation_alert_count=0`, but that aggregate result does not prove how the four previously observed rows left `pending`. The migration neither invokes reconciliation nor directly changes a pending row's status, while the replacement Cron has no recorded successful run and field-20 behavior is unverified. This finding is therefore reopened until provenance is recorded.
+
+Run a non-PII diagnostic grouped by final `status`, `reconciliation_status`, attempt count, and whether `reconciliation_checked_at` is null. For each original reference, record the non-sensitive outcome and timestamp in a restricted operator record. Any row marked `expired/not_found` with no recorded provider lookup must be checked manually against Tranzila before it is treated as resolved. Future reconciliation behavior must follow these rules:
 
 - no approved Tranzila transaction after the 48-hour grace period: `expired`, PII blank, outcome `not_found`;
 - approved matching transaction without a completed donation: `manual_review`, PII blank after cleanup, open non-PII alert;
@@ -153,6 +155,68 @@ Unit tests cover proof binding, provider transaction matching, origin validation
 
 The full dependency audit reports `GHSA-vfj7-8cjw-p6xm` through `eslint-config-next` → `fast-glob` → `micromatch` → `braces`. GitHub currently lists no patched version. The package is not included in the production dependency audit or application runtime. Security CI therefore blocks production dependencies at Moderate severity while this development-tool availability issue remains tracked for an upstream release; do not use `npm audit fix --force`, which proposes a breaking Next.js/ESLint downgrade.
 
+### F-11 — Reconciliation has no known-good positive control (Medium, release blocker)
+
+The job treats a missing Reports match after 48 hours as `not_found`. A missing field-20 definition throws and becomes `retry`, but a terminal can be partially misconfigured: field 20 exists while checkout does not actually persist the reference. That condition looks like a legitimate “not found” and could expire a paid session.
+
+Before any run is allowed to record `not_found`, probe at least one recent known-completed checkout per terminal. If its reference cannot be found and validated, open an operational alert, stop all expiry decisions for that terminal, and leave candidate sessions in `retry`. This must be a recurring circuit breaker, not only a one-time setup test.
+
+### F-12 — Manual-review contact retention is unresolved (Medium, privacy and donor-remediation decision)
+
+The cleanup function blanks all contact fields for `manual_review`. Those rows represent possible paid-but-unrecorded donations; immediately losing every contact channel may prevent receipt correction, refund coordination, or donor notification. Define the minimum required contact data, likely email only, retain it only while the alert is open and for a bounded maximum period, restrict access to the incident operator, and scrub it when the alert is resolved or the retention limit expires. Privacy counsel must approve the lawful basis and duration before this behavior changes.
+
+### F-13 — Reconciliation alerts lack delivery and an operator runbook (Medium, release blocker)
+
+Alerts are stored in an RLS-protected table, but there is no operator UI, notification integration, named owner, or documented resolution procedure. A paid-but-unrecorded donation requires human attention within hours. Before live traffic, send every new/open manual-review alert to a named owner through an approved channel, monitor delivery failures, and document lookup, receipt/refund, donor-contact, resolution, and audit steps.
+
+### F-14 — Reconciliation route robustness needs hardening (Medium)
+
+- Missing or shorter-than-16-character `CRON_SECRET` already fails closed, so `Bearer undefined` is not accepted. The valid-secret comparison is ordinary string equality rather than constant-time and has no route-level regression test.
+- The job processes at most five sessions per daily invocation, with no backlog-age alert; a burst can outgrow cleanup capacity.
+- The exception path increments the retry count and returns an overall successful response without checking whether the retry RPC itself succeeded.
+- A rejected field-configuration promise remains cached for the lifetime of a warm instance, so a transient discovery failure can prevent recovery until a cold start.
+
+Use constant-time secret comparison, add unset/short/wrong/correct-secret tests, fail the invocation when reconciliation state cannot be persisted, emit backlog/oldest-age metrics, process a bounded paginated batch, and evict rejected field-configuration promises.
+
+### F-15 — Production nonce, caching, and capacity behavior is unverified (Medium, operational)
+
+App-wide nonce CSP makes requests dynamic. Verify two production responses have different nonces, confirm protected and public pages are not cached with a reused nonce, record CDN/origin cache headers, and compare latency/origin load against the prior baseline. The CSP-report endpoint already validates size/type and applies the database rate limiter; it still needs an outer WAF rule and capacity evidence because it is public and unauthenticated.
+
+### F-16 — Development-dependency audit exception is too broad (Low, supply-chain tracking)
+
+`npm audit --omit=dev` keeps the production gate green but stops new development-only advisories from failing CI. Replace the broad omission with a full audit plus a narrow allowlist for `GHSA-vfj7-8cjw-p6xm`, including an owner, tracking link, and expiry/review date. Any other Moderate-or-higher development advisory must continue to fail the build.
+
+## Confirmed challenges that are not open defects
+
+- The reconciliation route fails closed when `CRON_SECRET` is absent or too short; only constant-time comparison and regression coverage remain open.
+- The callback validates the version-2 HMAC proof and transaction index before calling the Tranzila Reports API.
+- Supabase cleanup does not expire a session based on schedule order; a stale pending row moves to `manual_review` with an alert. The unresolved problem is contact scrubbing and operator handling.
+- The CSP-report endpoint already has a database-backed rate limit. WAF and production load evidence remain open.
+
+## Next action plan
+
+### Phase 0 — Preserve evidence before changing data
+
+1. Run a read-only, non-PII provenance report for the original four sessions: grouped final status/outcome, attempt counts, and checked-at presence; manually verify any outcome that lacks a provider lookup.
+2. Verify `CRON_SECRET` and `RATE_LIMIT_HMAC_SECRET` exist as separate Sensitive Production values, then capture one authenticated Vercel Cron result without logging either secret.
+3. Prove field 20 round-trips the Impactify reference for a known completed transaction on every active terminal.
+4. Re-run the consolidated SQL verifier after the first Supabase cleanup execution and preserve the result showing every boolean true and every count zero.
+
+### Phase 1 — Implement financial-safety controls
+
+1. Add the per-terminal known-good positive control and circuit breaker before any `not_found` outcome.
+2. Harden Cron authentication and tests; make persistence failures fail the job; add bounded pagination, backlog-age telemetry, and rejected-cache recovery.
+3. Change manual-review retention only after privacy approval, retaining the minimum contact channel until resolution or a hard deadline.
+4. Deliver reconciliation alerts to a named operator and add a tested resolution runbook.
+5. Restore full dependency auditing with the single expiring advisory allowlist.
+
+### Phase 2 — Production verification
+
+1. Deploy the hardening changes and run unit, callback-replay, reconciliation, and tenant-isolation tests.
+2. Run a low-value real payment, duplicate Notify, receipt, account opt-in/magic-link claim, and deliberately late callback; verify the alert reaches the named operator.
+3. Measure production nonce rotation, cache headers, latency, and origin load; configure WAF rules in Log mode and then enforce reviewed thresholds.
+4. Complete external penetration testing and applicable PCI/privacy review before removing the conditional-readiness label.
+
 ## Acceptance criteria
 
 Production readiness changes from conditional to approved only when every row below is verified:
@@ -163,16 +227,21 @@ Production readiness changes from conditional to approved only when every row be
 | Tenant payment QA | Verified | `payment_security_qa.sql` succeeded and rolled back |
 | Consolidated SQL verifier | Partial | Every count is 0 and every structural boolean is true; `cleanup_cron_recent_success` remains false until the replacement job completes its first run |
 | Cleanup job successful within 36 hours | Open | Re-run the verifier after the next scheduled execution |
-| Original expired references have recorded non-sensitive outcomes | Partial | Aggregate pending and alert counts are 0; per-reference provider outcomes were not exported |
+| Original expired references have recorded non-sensitive outcomes | Open | Aggregate pending and alert counts are 0, but the transition path and per-reference provider outcomes are unproven |
 | Vercel reconciliation Cron | Open | Verify `CRON_SECRET` in Production and record a successful invocation with no secret in logs |
+| Known-good reconciliation circuit breaker | Open | A completed-reference positive control must block `not_found` decisions when terminal lookup is unhealthy |
+| Manual-review operations | Open | Approve bounded contact retention, deliver alerts to a named owner, and test the resolution runbook |
+| Reconciliation route robustness | Open | Add constant-time auth tests, persistence-failure handling, bounded pagination, backlog telemetry, and rejected-cache eviction |
 | Security CI and production build | Verified | Run `37116404477` passed at `c1bd19e` |
+| Full development-dependency audit | Partial | Production dependencies are gated; replace `--omit=dev` with an expiring single-advisory allowlist |
 | Real payment and account-claim flow | Open | Test payment, duplicate callback, receipt, opt-in, magic link, and donor-area visibility |
+| Production CSP/cache behavior | Open | Prove per-response nonce rotation, safe cache headers, acceptable latency, and bounded CSP-report load |
 | WAF controls | Open | Review Log-mode evidence, then activate enforcement without challenging provider callbacks or Cron |
 | Independent assurance | Open | Complete external penetration testing and applicable PCI/privacy review |
 
 ## Current risk statement
 
-The code-level design is materially stronger, Security CI is green, and no confirmed Critical/High runtime issue is open. Production remains **conditionally ready, not fully approved**, because the Vercel secret and scheduled invocation, first successful Supabase cleanup run, Tranzila field-20 proof, real payment/account claim, WAF, and external assurance are still unverified.
+The code-level design is materially stronger, Security CI is green, and no confirmed Critical/High runtime issue is open. Production remains **conditionally ready, not fully approved**, because historic reconciliation provenance, the field-20 positive control, Vercel/Supabase scheduled-run evidence, manual-review contact and alert operations, route robustness, production CSP/cache behavior, the real payment/account claim, WAF, and external assurance are still unverified.
 
 ## Authoritative references
 
@@ -183,4 +252,6 @@ The code-level design is materially stronger, Security CI is green, and no confi
 - [Supabase Cron](https://supabase.com/docs/guides/cron)
 - [Vercel Cron security](https://vercel.com/docs/cron-jobs/manage-cron-jobs)
 - [Vercel WAF custom rules](https://vercel.com/docs/vercel-firewall/vercel-waf/custom-rules)
+- [GitHub advisory GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
+- [Node.js constant-time comparison (`crypto.timingSafeEqual`)](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b)
 - [OWASP Web Security Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)

@@ -274,7 +274,12 @@ Built from 6 reference screenshots the user provided, describing a teal-sidebar 
   - [x] Add app-wide nonce CSP/reporting, dedicated rate-limit HMAC identity, IPv6 `/64` bucketing, strict registration limiting, legacy-proof removal, and server-side blocking for incomplete PSP flows.
   - [x] Apply `20261003110000_payment_reconciliation_and_cleanup.sql` and `20261003111000_payment_completion_reconciliation_status.sql` in Supabase SQL Editor.
   - [ ] Verify separate Sensitive Vercel values for `RATE_LIMIT_HMAC_SECRET` and `CRON_SECRET`; the code and `vercel.json` schedule are deployed, but Dashboard secret state is not yet evidenced.
-  - [ ] Prove terminal field 20 contains the `DCdisable` reference and record per-reference provider outcomes; aggregate verification now shows zero expired-pending sessions and zero open alerts.
+  - [ ] Run a read-only non-PII provenance report for the four formerly expired-pending sessions and manually verify any `expired/not_found` outcome without a recorded provider lookup. Aggregate zero counts alone do not close this item.
+  - [ ] Prove terminal field 20 contains the `DCdisable` reference, then add a recurring known-completed positive control that blocks `not_found` decisions and opens an alert when lookup health fails.
+  - [ ] Harden reconciliation execution: constant-time Cron-secret comparison and unset/short/wrong/correct tests; fail on retry-RPC persistence errors; bounded pagination beyond five rows; backlog-age metrics; and eviction of rejected field-configuration promises.
+  - [ ] Define privacy-approved bounded contact retention for `manual_review`, notify a named operator for every new alert, and test a runbook covering lookup, receipt/refund, donor contact, resolution, and audit evidence.
+  - [ ] Verify production nonce rotation, cache headers, latency/origin load, and CSP-report capacity; retain the existing database limiter and add reviewed WAF controls.
+  - [ ] Replace the broad development-dependency omission with a full audit and an expiring allowlist for only `GHSA-vfj7-8cjw-p6xm`.
   - [x] Re-run tenant QA and the consolidated verifier. Tenant QA passed, every defect count is zero, and every structural boolean is true; only recent successful cleanup execution remains pending.
 - [ ] Configure Vercel WAF rate limits for checkout and registration: observe in Log mode before enforcement; do not challenge the Tranzila callback without provider-compatible testing.
 - [ ] After deploying the 2026-10-02 security update, run a live low-value Tranzila payment to re-verify the reports-API response shape, atomic donation creation, duplicate Notify idempotency, receipt page, and opted-in magic-link claim. Do not enable general production traffic until this complete flow passes.
