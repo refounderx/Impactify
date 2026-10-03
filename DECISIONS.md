@@ -429,3 +429,12 @@
 **Context:** A standalone product can receive direct donations and may be used in multiple campaigns, so global product progress cannot represent a particular campaign's need.
 **Rationale:** Separate scopes let a product page present the relevant goal for its entry context without letting a client submit an arbitrary campaign target.
 **Consequences:** Creating or updating a campaign requires at least one product and one positive quantity per selected product. The public product page calls distinct RPCs for period-aware global and campaign-scoped progress.
+
+---
+
+## 2026-10-03 — Require a positive control before automatic payment expiry
+
+**Decision:** A missing Tranzila Reports match may become `not_found` only after the same run revalidates a known completed checkout for that terminal. Without a valid control, the candidate remains `retry` and the reconciliation job reports a degraded result.
+**Context:** Four legacy sessions had been marked `expired/not_found` by the original cleanup path even though their attempt counters and checked timestamps proved that no provider lookup occurred. A field can exist in terminal settings while checkout traffic fails to persist the internal reference, making a broken lookup indistinguishable from a genuine absence.
+**Rationale:** A known completed reference proves that field 20, report authentication, filtering, and the terminal mapping work together before a negative lookup is allowed to affect financial state.
+**Consequences:** A new terminal cannot automatically expire unmatched sessions until at least one completed checkout is available as a control. It may still detect a positive match and open manual review. The four unverified legacy rows are requeued without PII, and operations must resolve the queue after deployment rather than treating the old state as evidence.

@@ -50,7 +50,8 @@ New schema/seed changes should be added as a new timestamped file under `supabas
 - Before deploying the NGO/community sign-up color picker, apply `supabase/migrations/20260904100000_add_tenant_brand_colors.sql`.
 - Before deploying public organization-profile activity tabs, apply `supabase/migrations/20260904110000_public_organization_activity.sql`.
 - Apply `supabase/migrations/20260904120000_fix_partnership_requests_org_id_ambiguity.sql` to restore the community and NGO partnership inboxes.
-- In each new environment, apply the payment-security migrations through `20261003111000_payment_completion_reconciliation_status.sql` in timestamp order. Then run `supabase/scripts/payment_security_qa.sql` and the consolidated read-only `supabase/scripts/verify_current_payment_sql_status.sql` before relying on payment completion, reconciliation, global limits, or terminal activation auditing.
+- In each new environment, apply the payment-security migrations through `20261003120000_requeue_unverified_reconciliation.sql` in timestamp order. Then run `supabase/scripts/payment_security_qa.sql` and the consolidated read-only `supabase/scripts/verify_current_payment_sql_status.sql` before relying on payment completion, reconciliation, global limits, or terminal activation auditing.
+- Run `npm run security:audit` for the complete production-and-development dependency gate. The only temporary exception is the documented, expiring `GHSA-vfj7-8cjw-p6xm` development-tool allowlist; any other Moderate-or-higher advisory fails the command.
 - Enable Supabase Cron in Dashboard → Integrations. The `20261003110000` migration canonicalizes the daily cleanup job; after its first scheduled run, the verifier must show a valid definition, Postgres execution identity, and a recent success. The older setup passed initial checks on 2026-10-02 but later drift evidence requires this re-attestation.
 
 See `AGENTS.md` for the required agent workflow and security constraints.

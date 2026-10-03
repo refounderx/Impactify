@@ -44,7 +44,10 @@ async function loadReferenceField(terminalId: string) {
 function referenceField(terminalId: string) {
   const existing = referenceFields.get(terminalId);
   if (existing) return existing;
-  const pending = loadReferenceField(terminalId);
+  const pending = loadReferenceField(terminalId).catch((error: unknown) => {
+    referenceFields.delete(terminalId);
+    throw error;
+  });
   referenceFields.set(terminalId, pending);
   return pending;
 }

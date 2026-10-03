@@ -30,8 +30,9 @@ with function_oids as (
   from cron.job j
 ), checks as (
   select
-    (select count(*) = 5 from supabase_migrations.schema_migrations
-      where version in ('20261002150000','20261002151000','20261002160000','20261003110000','20261003111000'))
+    (select count(*) = 6 from supabase_migrations.schema_migrations
+      where version in ('20261002150000','20261002151000','20261002160000','20261003110000','20261003111000',
+        '20261003120000'))
       as latest_security_migrations_installed,
     (select count(*) = 6 from pg_class c join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relname in ('org_payment_connections','payment_checkout_sessions',
@@ -94,6 +95,13 @@ with function_oids as (
     (select count(*) from public.payment_checkout_sessions where status='pending' and expires_at < now()
       and (customer_email<>'' or customer_name<>'' or customer_address<>'' or customer_city<>'' or customer_zip<>'' or customer_country<>''))
       as expired_pending_pii_count,
+    (select count(*) from public.payment_checkout_sessions
+      where status='expired' and reconciliation_status='not_found'
+        and reconciliation_attempts=0 and reconciliation_checked_at is null)
+      as unverified_not_found_count,
+    (select count(*) from public.payment_checkout_sessions
+      where status in ('pending','expired') and reconciliation_status in ('pending','retry') and expires_at < now())
+      as open_reconciliation_queue_count,
     (select count(*) from public.payment_checkout_sessions where status in ('expired','failed','manual_review')
       and (customer_email<>'' or customer_name<>'' or customer_address<>'' or customer_city<>'' or customer_zip<>'' or customer_country<>''))
       as closed_session_pii_count,
@@ -111,6 +119,7 @@ select
     and active_terminal_unique_index_present and connection_audit_trigger_active
     and cleanup_cron_definition_valid and cleanup_cron_runs_as_postgres and cleanup_cron_recent_success
     and duplicate_active_terminal_count=0 and expired_pending_session_count=0 and expired_pending_pii_count=0
+    and unverified_not_found_count=0 and open_reconciliation_queue_count=0
     and closed_session_pii_count=0 and old_completed_session_pii_count=0
     and open_reconciliation_alert_count=0 and stale_rate_limit_bucket_count=0 as all_checks_pass,
   checks.*

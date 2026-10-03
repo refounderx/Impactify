@@ -4,6 +4,7 @@ import {
   createCallbackProof,
   sameOriginUrl,
   validateReportedTransaction,
+  verifyBearerSecret,
   verifyCallbackProof,
   type CheckoutProofInput,
 } from "../src/lib/payments/security-contract.ts";
@@ -41,6 +42,17 @@ test("callback proof is constant-format and bound to every checkout field", () =
     assert.equal(verifyCallbackProof(secret, { ...proofInput, ...mutation }, proof), false);
   }
   assert.equal(verifyCallbackProof(secret, proofInput, "not-a-proof"), false);
+});
+
+test("internal Cron bearer authentication fails closed and accepts only the exact secret", () => {
+  const secret = "test-only-cron-secret-value";
+  assert.equal(verifyBearerSecret(undefined, `Bearer ${secret}`), false);
+  assert.equal(verifyBearerSecret("too-short", "Bearer too-short"), false);
+  assert.equal(verifyBearerSecret(secret, null), false);
+  assert.equal(verifyBearerSecret(secret, `bearer ${secret}`), false);
+  assert.equal(verifyBearerSecret(secret, `Bearer ${secret}-wrong`), false);
+  assert.equal(verifyBearerSecret(secret, `Bearer ${secret} `), false);
+  assert.equal(verifyBearerSecret(secret, `Bearer ${secret}`), true);
 });
 
 test("rate-limit addresses reject invalid input and aggregate IPv6 by /64", () => {

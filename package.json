@@ -12,6 +12,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/payment-security.test.mts",
+    "security:audit": "node scripts/audit-dependencies.mjs",
     "security:history": "node scripts/scan-git-history-secrets.mjs",
     "security:client-bundle": "node scripts/scan-client-bundle-secrets.mjs"
   },

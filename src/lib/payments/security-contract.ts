@@ -56,6 +56,16 @@ export function verifyCallbackProof(secret: string, input: CheckoutProofInput, s
   return timingSafeEqual(expected, actual);
 }
 
+export function verifyBearerSecret(secret: string | undefined, authorization: string | null) {
+  if (!secret || secret.length < 16 || !authorization?.startsWith("Bearer ")) return false;
+  const supplied = authorization.slice("Bearer ".length);
+  if (!supplied) return false;
+  const context = "impactify:internal-cron:v1";
+  const expectedDigest = createHmac("sha256", secret).update(context).digest();
+  const suppliedDigest = createHmac("sha256", supplied).update(context).digest();
+  return timingSafeEqual(expectedDigest, suppliedDigest);
+}
+
 export function sameOriginUrl(value: unknown, origin: string) {
   if (typeof value !== "string") return null;
   try {
