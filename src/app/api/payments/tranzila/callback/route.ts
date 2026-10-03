@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
-  verifyLegacyTranzilaCallbackProof,
   verifyTranzilaCallbackProof,
   verifyTranzilaTransaction,
 } from "@/lib/payments/tranzila-verification";
 import { logSecurityEvent } from "@/lib/security-events";
+import { consumeRequestRateLimit } from "@/lib/request-rate-limit";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,10 +23,14 @@ async function handle(request: NextRequest) {
   const outcome = request.nextUrl.searchParams.get("outcome") ?? "notify";
   const notify = outcome === "notify";
   if (!UUID.test(reference)) return NextResponse.json({ error: "Invalid callback" }, { status: 400 });
+  const admin = createAdminClient();
+  const callbackLimit = await consumeRequestRateLimit(admin, request, "tranzila_callback", 300, 60)
+    .catch(() => ({ allowed: true, unavailable: true }));
+  if (callbackLimit.unavailable) logSecurityEvent("rate_limit_backend_unavailable", "tranzila_callback");
+  if (!callbackLimit.allowed) return new NextResponse(null, { status: 429, headers: { "Retry-After": "60" } });
   const values = await responseValues(request);
   const responseCode = values.get("Response") ?? values.get("response") ?? "";
   const transactionIndex = Number(values.get("transaction_id") ?? values.get("index"));
-  const admin = createAdminClient();
   const { data: session } = await admin.from("payment_checkout_sessions")
     .select("terminal_id,amount,currency,status,donation_id,receipt_id,expires_at,campaign_id,product_id").eq("reference", reference).maybeSingle();
   if (!session) return notify ? new NextResponse(null, { status: 404 }) : NextResponse.redirect(new URL("/", request.url));
@@ -34,6 +38,11 @@ async function handle(request: NextRequest) {
     const targetId = session.campaign_id ?? session.product_id;
     const url = new URL(`/donate/${targetId}/thanks?id=${session.donation_id}&receipt=${encodeURIComponent(session.receipt_id)}`, request.url);
     return notify ? new NextResponse(null, { status: 204 }) : NextResponse.redirect(url, 303);
+  }
+  if (session.status === "manual_review") {
+    return notify
+      ? new NextResponse(null, { status: 204 })
+      : NextResponse.redirect(new URL("/donate/cancelled?review=1", request.url), 303);
   }
   if (outcome === "failure" || !["000", "0"].includes(responseCode)) {
     return notify ? new NextResponse(null, { status: 204 }) : NextResponse.redirect(new URL("/donate/cancelled", request.url), 303);
@@ -47,9 +56,7 @@ async function handle(request: NextRequest) {
     currency: session.currency,
     expiresAt: session.expires_at,
   }, checkoutProof);
-  const inFlightLegacyProofValid = proofVersion === null
-    && verifyLegacyTranzilaCallbackProof(session.terminal_id, reference, checkoutProof);
-  if (values.get("reference") !== reference || (!currentProofValid && !inFlightLegacyProofValid)) {
+  if (values.get("reference") !== reference || !currentProofValid) {
     logSecurityEvent("payment_callback_rejected", "reference_or_proof_mismatch");
     return new NextResponse(null, { status: 400 });
   }
@@ -59,6 +66,19 @@ async function handle(request: NextRequest) {
   }
   try {
     const verified = await verifyTranzilaTransaction(session.terminal_id, transactionIndex, Number(session.amount), session.currency);
+    if (session.status !== "pending" || new Date(session.expires_at).getTime() < Date.now()) {
+      const review = await admin.rpc("record_payment_reconciliation", {
+        p_reference: reference,
+        p_outcome: "review",
+        p_transaction_id: verified.transactionId,
+        p_reason: "late_callback",
+      });
+      if (review.error || !review.data) throw new Error("Unable to record late verified payment");
+      logSecurityEvent("payment_reconciliation_review", "late_callback_requires_manual_review");
+      return notify
+        ? new NextResponse(null, { status: 204 })
+        : NextResponse.redirect(new URL("/donate/cancelled?review=1", request.url), 303);
+    }
     const receiptId = `R-${new Date().getFullYear()}-${randomBytes(8).toString("hex").toUpperCase()}`;
     const { data, error } = await admin.rpc("complete_verified_checkout", {
       p_reference: reference, p_transaction_id: verified.transactionId, p_receipt_id: receiptId,

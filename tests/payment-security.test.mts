@@ -1,15 +1,14 @@
 import assert from "node:assert/strict";
-import { createHmac } from "node:crypto";
 import test from "node:test";
 import {
   createCallbackProof,
   sameOriginUrl,
   validateReportedTransaction,
   verifyCallbackProof,
-  verifyLegacyCallbackProof,
   type CheckoutProofInput,
 } from "../src/lib/payments/security-contract.ts";
-import { paymentContentSecurityPolicy } from "../src/lib/content-security-policy.ts";
+import { applicationContentSecurityPolicy, paymentContentSecurityPolicy } from "../src/lib/content-security-policy.ts";
+import { normalizeRateLimitAddress } from "../src/lib/request-identity.ts";
 
 const proofInput: CheckoutProofInput = {
   terminalId: "terminal-a",
@@ -44,13 +43,11 @@ test("callback proof is constant-format and bound to every checkout field", () =
   assert.equal(verifyCallbackProof(secret, proofInput, "not-a-proof"), false);
 });
 
-test("legacy callback proof is accepted only for its original terminal and reference", () => {
-  const secret = "test-only-secret-value";
-  const legacy = createHmac("sha256", secret)
-    .update(`impactify:tranzila:${proofInput.terminalId}:${proofInput.reference}`)
-    .digest("hex");
-  assert.equal(verifyLegacyCallbackProof(secret, proofInput.terminalId, proofInput.reference, legacy), true);
-  assert.equal(verifyLegacyCallbackProof(secret, proofInput.terminalId, "different-reference", legacy), false);
+test("rate-limit addresses reject invalid input and aggregate IPv6 by /64", () => {
+  assert.equal(normalizeRateLimitAddress("203.0.113.7"), "203.0.113.7");
+  assert.equal(normalizeRateLimitAddress("2001:db8:1234:5678::1"), "2001:0db8:1234:5678::/64");
+  assert.equal(normalizeRateLimitAddress("2001:db8:1234:5678:ffff::9"), "2001:0db8:1234:5678::/64");
+  assert.equal(normalizeRateLimitAddress("unknown"), null);
 });
 
 test("reported transaction must match identity, approval, terminal, currency, and amount", () => {
@@ -83,4 +80,12 @@ test("payment CSP requires a nonce and never permits inline scripts", () => {
   assert.equal(scriptDirective?.includes("'strict-dynamic'"), true);
   assert.equal(scriptDirective?.includes("'unsafe-inline'"), false);
   assert.equal(policy.includes("form-action 'self' https://directng.tranzila.com"), true);
+  assert.equal(policy.includes("report-to impactify-csp"), true);
+});
+
+test("application CSP also uses a nonce while retaining approved media frames", () => {
+  const policy = applicationContentSecurityPolicy("app-nonce", false);
+  assert.equal(policy.includes("'nonce-app-nonce'"), true);
+  assert.equal(policy.includes("script-src 'self' 'unsafe-inline'"), false);
+  assert.equal(policy.includes("frame-src https://www.youtube-nocookie.com https://player.vimeo.com"), true);
 });

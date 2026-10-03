@@ -56,19 +56,6 @@ export function verifyCallbackProof(secret: string, input: CheckoutProofInput, s
   return timingSafeEqual(expected, actual);
 }
 
-export function verifyLegacyCallbackProof(
-  secret: string,
-  terminalId: string,
-  reference: string,
-  supplied: string,
-) {
-  if (!/^[a-f0-9]{64}$/i.test(supplied)) return false;
-  const expected = createHmac("sha256", secret)
-    .update(`impactify:tranzila:${terminalId}:${reference}`)
-    .digest();
-  return timingSafeEqual(expected, Buffer.from(supplied, "hex"));
-}
-
 export function sameOriginUrl(value: unknown, origin: string) {
   if (typeof value !== "string") return null;
   try {

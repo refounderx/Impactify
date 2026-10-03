@@ -49,6 +49,7 @@ function hostedNavigationResponse(checkout: Awaited<ReturnType<typeof createHost
       "Cache-Control": "no-store",
       "Content-Type": "text/html; charset=utf-8",
       "Content-Security-Policy": paymentContentSecurityPolicy(nonce, process.env.NODE_ENV === "development"),
+      "Reporting-Endpoints": 'impactify-csp="/api/security/csp-report"',
       "Referrer-Policy": "no-referrer",
     },
   });
@@ -102,7 +103,11 @@ export async function POST(request: NextRequest) {
       "Payment terminal lookup timed out",
     );
     if (!connection || !isPaymentProvider(connection.provider)) return NextResponse.json({ error: "No configured payment terminal" }, { status: 503 });
-    if (connection.provider === "tranzila" && !customer) return NextResponse.json({ error: "Invalid payment details" }, { status: 400 });
+    if (connection.provider !== "tranzila") {
+      logSecurityEvent("payment_provider_blocked", "unverified_completion_flow");
+      return NextResponse.json({ error: "This payment provider is not available" }, { status: 503 });
+    }
+    if (!customer) return NextResponse.json({ error: "Invalid payment details" }, { status: 400 });
     provider = connection.provider;
     const origin = request.nextUrl.origin;
     const reference = randomUUID();
@@ -125,10 +130,6 @@ export async function POST(request: NextRequest) {
     let notifyUrl: string | undefined;
     const sessionExpiresAt = new Date(Date.now() + 20 * 60_000).toISOString();
     if (connection.provider === "tranzila") {
-      const erased = { customer_email: "", customer_name: "", customer_address: "", customer_city: "", customer_zip: "", customer_country: "" };
-      const { error: expiredError } = await admin.from("payment_checkout_sessions").update({ ...erased, status: "expired" }).eq("status", "pending").lt("expires_at", new Date().toISOString());
-      const { error: retentionError } = await admin.from("payment_checkout_sessions").update(erased).eq("status", "completed").lt("completed_at", new Date(Date.now() - 7 * 86_400_000).toISOString());
-      if (expiredError || retentionError) throw new Error("Unable to enforce payment session retention");
       const recent = await admin.from("payment_checkout_sessions").select("reference", { count: "exact", head: true }).eq("org_id", orgId).gte("created_at", new Date(Date.now() - 60_000).toISOString());
       if (recent.error) throw new Error("Unable to enforce payment rate limit");
       if ((recent.count ?? 0) >= 30) {

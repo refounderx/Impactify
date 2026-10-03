@@ -1,6 +1,6 @@
 select version, name
 from supabase_migrations.schema_migrations
-where version in ('20261002150000', '20261002151000', '20261002160000')
+where version in ('20261002150000', '20261002151000', '20261002160000', '20261003110000', '20261003111000')
 order by version;
 
 select
@@ -24,13 +24,14 @@ select
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
 where n.nspname = 'public'
-  and p.proname in ('set_payment_connection_status', 'cleanup_payment_checkout_pii', 'consume_api_rate_limit')
+  and p.proname in ('set_payment_connection_status', 'cleanup_payment_checkout_pii', 'consume_api_rate_limit', 'record_payment_reconciliation')
 order by p.proname;
 
 select
   has_table_privilege('authenticated', 'public.org_payment_connections', 'UPDATE') as authenticated_connection_update,
   has_table_privilege('authenticated', 'public.payment_connection_audit', 'SELECT') as authenticated_audit_read,
   has_table_privilege('authenticated', 'public.payment_checkout_sessions', 'SELECT') as authenticated_checkout_read,
+  has_table_privilege('authenticated', 'public.payment_reconciliation_alerts', 'SELECT') as authenticated_reconciliation_read,
   has_table_privilege('authenticated', 'public.api_rate_limit_buckets', 'SELECT') as authenticated_rate_limit_read;
 
 do $$
@@ -69,7 +70,7 @@ having count(*) > 1;
 
 select count(*) as expired_sessions_with_pii
 from public.payment_checkout_sessions
-where status in ('expired', 'failed')
+where status in ('expired', 'failed', 'manual_review')
   and (
     customer_email <> '' or customer_name <> '' or customer_address <> ''
     or customer_city <> '' or customer_zip <> '' or customer_country <> ''

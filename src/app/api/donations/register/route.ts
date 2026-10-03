@@ -16,10 +16,16 @@ export async function POST(request: NextRequest) {
   const receiptId = typeof parsed.data.receipt_id === "string" ? parsed.data.receipt_id : "";
   if (!UUID.test(donationId) || !RECEIPT.test(receiptId)) return NextResponse.json({ error: "Invalid registration request" }, { status: 400 });
   const admin = createAdminClient();
-  const globalLimit = await consumeRequestRateLimit(admin, request, "donation_registration", 5, 3_600)
-    .catch(() => ({ allowed: true, unavailable: true }));
+  let globalLimit;
+  try {
+    globalLimit = await consumeRequestRateLimit(admin, request, "donation_registration", 5, 3_600);
+  } catch {
+    logSecurityEvent("rate_limit_backend_unavailable", "donation_registration");
+    return NextResponse.json({ error: "Registration is temporarily unavailable. Please try again later." }, { status: 503 });
+  }
   if (globalLimit.unavailable) {
     logSecurityEvent("rate_limit_backend_unavailable", "donation_registration");
+    return NextResponse.json({ error: "Registration is temporarily unavailable. Please try again later." }, { status: 503 });
   }
   if (!globalLimit.allowed) {
     logSecurityEvent("registration_rate_limited", "global_ip_window_exceeded");

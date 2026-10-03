@@ -204,9 +204,15 @@ export interface Database {
         Relationships: [];
       };
       payment_checkout_sessions: {
-        Row: { reference: string; provider: "tranzila"; terminal_id: string; org_id: string; campaign_id: string | null; product_id: string | null; amount: number; currency: string; customer_email: string; customer_name: string; customer_address: string; customer_city: string; customer_zip: string; customer_country: string; status: "pending" | "completed" | "failed" | "expired"; provider_transaction_id: number | null; donation_id: string | null; receipt_id: string | null; registration_opt_in_at: string | null; created_at: string; expires_at: string; completed_at: string | null };
-        Insert: Omit<Database["public"]["Tables"]["payment_checkout_sessions"]["Row"], "status" | "provider_transaction_id" | "donation_id" | "receipt_id" | "registration_opt_in_at" | "created_at" | "expires_at" | "completed_at"> & { status?: "pending" | "completed" | "failed" | "expired"; provider_transaction_id?: number | null; donation_id?: string | null; receipt_id?: string | null; registration_opt_in_at?: string | null; created_at?: string; expires_at?: string; completed_at?: string | null };
+        Row: { reference: string; provider: "tranzila"; terminal_id: string; org_id: string; campaign_id: string | null; product_id: string | null; amount: number; currency: string; customer_email: string; customer_name: string; customer_address: string; customer_city: string; customer_zip: string; customer_country: string; status: "pending" | "completed" | "failed" | "expired" | "manual_review"; provider_transaction_id: number | null; donation_id: string | null; receipt_id: string | null; registration_opt_in_at: string | null; reconciliation_status: "pending" | "retry" | "not_found" | "review" | "completed" | "not_required"; reconciliation_attempts: number; reconciliation_checked_at: string | null; created_at: string; expires_at: string; completed_at: string | null };
+        Insert: Omit<Database["public"]["Tables"]["payment_checkout_sessions"]["Row"], "status" | "provider_transaction_id" | "donation_id" | "receipt_id" | "registration_opt_in_at" | "reconciliation_status" | "reconciliation_attempts" | "reconciliation_checked_at" | "created_at" | "expires_at" | "completed_at"> & { status?: "pending" | "completed" | "failed" | "expired" | "manual_review"; provider_transaction_id?: number | null; donation_id?: string | null; receipt_id?: string | null; registration_opt_in_at?: string | null; reconciliation_status?: "pending" | "retry" | "not_found" | "review" | "completed" | "not_required"; reconciliation_attempts?: number; reconciliation_checked_at?: string | null; created_at?: string; expires_at?: string; completed_at?: string | null };
         Update: Partial<Database["public"]["Tables"]["payment_checkout_sessions"]["Insert"]>;
+        Relationships: [];
+      };
+      payment_reconciliation_alerts: {
+        Row: { id: number; reference: string; org_id: string; provider: "tranzila"; provider_transaction_id: number | null; reason: "provider_match" | "reconciliation_timeout" | "late_callback"; status: "open" | "resolved" | "dismissed"; created_at: string; resolved_at: string | null };
+        Insert: Omit<Database["public"]["Tables"]["payment_reconciliation_alerts"]["Row"], "id" | "status" | "created_at" | "resolved_at"> & { id?: number; status?: "open" | "resolved" | "dismissed"; created_at?: string; resolved_at?: string | null };
+        Update: Partial<Pick<Database["public"]["Tables"]["payment_reconciliation_alerts"]["Row"], "status" | "resolved_at">>;
         Relationships: [];
       };
       payment_connection_audit: {
@@ -542,6 +548,7 @@ export interface Database {
       set_payment_connection_status: { Args: { p_connection_id: string; p_status: string; p_reason: string }; Returns: boolean };
       cleanup_payment_checkout_pii: { Args: Record<string, never>; Returns: number };
       consume_api_rate_limit: { Args: { p_scope: string; p_bucket_key: string; p_limit: number; p_window_seconds: number }; Returns: boolean };
+      record_payment_reconciliation: { Args: { p_reference: string; p_outcome: string; p_transaction_id?: number | null; p_reason?: string | null }; Returns: boolean };
       start_ngo_payment_connection: { Args: { p_provider: "cardcom" | "grow" | "tranzila"; p_terminal_id: string; p_connection_kind: "regular" | "token" }; Returns: string };
     };
     Enums: {

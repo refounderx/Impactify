@@ -5,7 +5,6 @@ import {
   createCallbackProof,
   validateReportedTransaction,
   verifyCallbackProof,
-  verifyLegacyCallbackProof,
   type CheckoutProofInput,
   type ReportedTransaction,
 } from "@/lib/payments/security-contract";
@@ -20,12 +19,6 @@ export function verifyTranzilaCallbackProof(input: CheckoutProofInput, supplied:
   const credential = findTerminalCredential("tranzila", input.terminalId);
   if (!credential?.secret) return false;
   return verifyCallbackProof(credential.secret, input, supplied);
-}
-
-export function verifyLegacyTranzilaCallbackProof(terminalId: string, reference: string, supplied: string) {
-  const credential = findTerminalCredential("tranzila", terminalId);
-  if (!credential?.secret) return false;
-  return verifyLegacyCallbackProof(credential.secret, terminalId, reference, supplied);
 }
 
 export async function verifyTranzilaTransaction(

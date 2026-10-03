@@ -12,9 +12,9 @@ declare
 begin
   if not exists (
     select 1 from supabase_migrations.schema_migrations
-    where version = '20261002160000'
+    where version = '20261003111000'
   ) then
-    raise exception 'Apply migration 20261002160000 before running payment tenant QA';
+    raise exception 'Apply migration 20261003111000 before running payment tenant QA';
   end if;
   if has_table_privilege('authenticated', 'public.org_payment_connections', 'SELECT')
     or has_table_privilege('authenticated', 'public.org_payment_connections', 'INSERT')
@@ -24,6 +24,7 @@ begin
   end if;
   if has_table_privilege('authenticated', 'public.payment_checkout_sessions', 'SELECT')
     or has_table_privilege('authenticated', 'public.payment_connection_audit', 'SELECT')
+    or has_table_privilege('authenticated', 'public.payment_reconciliation_alerts', 'SELECT')
     or has_table_privilege('authenticated', 'public.api_rate_limit_buckets', 'SELECT') then
     raise exception 'authenticated has direct payment security table access';
   end if;
@@ -32,6 +33,9 @@ begin
   end if;
   if has_function_privilege('authenticated', 'public.consume_api_rate_limit(text,text,integer,integer)', 'EXECUTE') then
     raise exception 'authenticated can execute the global rate limiter';
+  end if;
+  if has_function_privilege('authenticated', 'public.record_payment_reconciliation(uuid,text,bigint,text)', 'EXECUTE') then
+    raise exception 'authenticated can execute payment reconciliation';
   end if;
   if not has_function_privilege('authenticated', 'public.get_ngo_payment_connections()', 'EXECUTE') then
     raise exception 'authenticated cannot execute the tenant-scoped read function';

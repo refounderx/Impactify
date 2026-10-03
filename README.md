@@ -30,9 +30,11 @@ NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...   # server-only, never commit
 PAYMENT_TERMINAL_CREDENTIALS_JSON=[{"provider":"tranzila","terminalId":"YOUR_REGULAR_TERMINAL","appKey":"YOUR_APP_KEY","secret":"YOUR_PRIVATE_API_KEY"},{"provider":"tranzila","terminalId":"YOUR_TOKEN_TERMINAL","appKey":"YOUR_APP_KEY","secret":"YOUR_PRIVATE_API_KEY"}]
+RATE_LIMIT_HMAC_SECRET=GENERATE_A_SEPARATE_RANDOM_VALUE_OF_AT_LEAST_32_CHARACTERS
+CRON_SECRET=GENERATE_A_DIFFERENT_RANDOM_VALUE_OF_AT_LEAST_16_CHARACTERS
 ```
 
-`PAYMENT_TERMINAL_CREDENTIALS_JSON` is server-only. Use placeholders in documentation and never commit real values. The current one-time flow selects only the active regular terminal; the token-terminal entry is reserved for a future recurring-charge implementation. Tranzila terminal/refund passwords are not used by the current Handshake or Reports API implementation.
+All four non-public values above are server-only Vercel secrets. Use placeholders in documentation and never commit real values. Do not reuse a Supabase or Tranzila credential for `RATE_LIMIT_HMAC_SECRET` or `CRON_SECRET`. The current one-time flow selects only the active regular terminal; the token-terminal entry is reserved for a future recurring-charge implementation. Tranzila terminal/refund passwords are not used by the current Handshake or Reports API implementation.
 
 ### 3. Run the database schema
 New schema/seed changes should be added as a new timestamped file under `supabase/migrations/` going forward (not appended to `schema.sql`/`seed.sql` — see `PROJECT_CONTEXT.md`/`DECISIONS.md` for the still-open question of whether the historical `schema.sql`/`seed.sql` files get retired in favor of `migrations/`).
@@ -48,8 +50,8 @@ New schema/seed changes should be added as a new timestamped file under `supabas
 - Before deploying the NGO/community sign-up color picker, apply `supabase/migrations/20260904100000_add_tenant_brand_colors.sql`.
 - Before deploying public organization-profile activity tabs, apply `supabase/migrations/20260904110000_public_organization_activity.sql`.
 - Apply `supabase/migrations/20260904120000_fix_partnership_requests_org_id_ambiguity.sql` to restore the community and NGO partnership inboxes.
-- In each new environment, apply `supabase/migrations/20261002150000_payment_security_operations.sql` and `supabase/migrations/20261002160000_fix_payment_connection_profile_ambiguity.sql`, then run `supabase/scripts/payment_security_qa.sql` and the consolidated read-only `supabase/scripts/verify_current_payment_sql_status.sql` before relying on global payment/registration limits or terminal activation auditing.
-- Enable Supabase Cron in Dashboard → Integrations, apply `supabase/migrations/20261002151000_schedule_payment_pii_cleanup.sql`, and run the verification script again. These steps passed in the live project on 2026-10-02.
+- In each new environment, apply the payment-security migrations through `20261003111000_payment_completion_reconciliation_status.sql` in timestamp order. Then run `supabase/scripts/payment_security_qa.sql` and the consolidated read-only `supabase/scripts/verify_current_payment_sql_status.sql` before relying on payment completion, reconciliation, global limits, or terminal activation auditing.
+- Enable Supabase Cron in Dashboard → Integrations. The `20261003110000` migration canonicalizes the daily cleanup job; after its first scheduled run, the verifier must show a valid definition, Postgres execution identity, and a recent success. The older setup passed initial checks on 2026-10-02 but later drift evidence requires this re-attestation.
 
 See `AGENTS.md` for the required agent workflow and security constraints.
 

@@ -1,212 +1,177 @@
-# Payment Security Review and Remediation Plan — 2026-10-02
+# Payment Security Review — updated 2026-10-03
 
 ## Executive summary
 
-The reviewed Tranzila payment path has strong server-side transaction binding, provider-side transaction verification, atomic completion, tenant-isolated terminal administration, a nonce-based payment CSP, and controlled post-payment account claiming. No confirmed critical or high-severity defect was found in the reviewed payment path.
+The Tranzila path has strong server-side transaction binding, authenticated provider verification, atomic donation completion, replay protection, tenant-isolated terminal administration, and a hosted payment page that keeps card data outside Impactify. No confirmed critical or high-severity defect was found in the reviewed code.
 
-The application security pipeline is green at commit `f628813`: GitHub Security CI run `37046684184` passed lint, typecheck, five unit tests, dependency audit, Git-history secret scanning, a production build, and built-client secret scanning. ESLint reported zero errors and three pre-existing warnings. This supersedes the earlier report statement that post-push CI was pending.
+The 2026-10-03 remediation is implemented locally but is **not yet deployed or applied to Supabase**. It adds safe reconciliation before expiry, fixes the PII cleanup defect, removes legacy callback proofs, blocks incomplete Cardcom/Grow checkout paths, hardens rate-limit identity, extends nonce CSP to the full application, adds CSP reporting, and raises the CI dependency gate to Moderate.
 
-The live Supabase status is not fully healthy. The latest read-only snapshot returned `all_checks_pass=false` for exactly two reasons:
+Production readiness remains **conditional**. The latest live database evidence still shows `cleanup_cron_active=false` and four expired `pending` sessions. Those values cannot change until the two new migrations are applied, the Vercel secrets and reconciliation Cron are deployed, and the post-deployment checks pass.
 
-- `cleanup_cron_active=false`: the verifier did not find a Cron row matching the required name, schedule, exact command, and active state. This is a configuration-signature mismatch until the job row and run history are inspected; it does not by itself prove that no cleanup job runs.
-- `expired_pending_session_count=4`: four payment checkout sessions are still `pending` after expiry. The aggregate supplied so far does not show whether those rows still contain personal data.
+This is an engineering review, not a penetration-test certificate, PCI attestation, or legal opinion.
 
-All other reported database checks passed: required migrations and tables exist; privileged functions have fixed `search_path`; grants and RLS are correct; browser roles are blocked from payment tables; terminal uniqueness and the audit trigger are active; no duplicate active terminal exists; no PII was found in rows already marked `expired`/`failed` or in old completed rows; and no stale rate-limit bucket was found.
+## Current evidence
 
-This is an engineering review, not a penetration-test certificate, PCI attestation, or legal opinion. Production approval still requires the Supabase remediation below, a real low-value payment and account claim, controlled WAF rollout, and independent external testing.
-
-## Scope and evidence
-
-Reviewed trust boundaries:
-
-- Tranzila V2 Handshake, DirectNG redirect, callback proof, Reports lookup, and donation completion
-- NGO terminal registration, activation, and tenant isolation
-- Temporary donor contact data, replay evidence, and post-payment account claim
-- Same-origin mutation checks, return URLs, input limits, CSP, HSTS, rate limiting, and security logging
-- Supabase RLS, grants, security-definer functions, audit records, and scheduled cleanup
-- CI dependency, repository-history, and built-client secret checks
-
-Evidence used:
-
-- Source and migrations at commit `f628813`
-- Successful Security CI run `37046684184`
-- The user-supplied live Supabase status row dated 2026-10-02
-- Earlier successful authenticated tenant-isolation QA
-- Local build, CSP, and browser-console probes recorded during implementation
-
-Not performed as part of this review: destructive production testing, a real payment after the final deployment, mailbox verification of the magic-link claim, WAF enforcement, infrastructure penetration testing, or PCI assessment.
-
-## Implemented controls
-
-| ID | Control | Current status |
-|---|---|---|
-| SR-01 | Next.js and `eslint-config-next` are pinned to `16.3.8`; Node `24.x` is used in CI. | Implemented; CI verified |
-| SR-02 | Checkout accepts only an active regular terminal. A unique active provider/terminal index, service-only status mutation, bounded reason, and non-PII audit record protect activation. | Implemented; tenant QA passed |
-| SR-03 | Completed checkout sessions retain provider transaction identity for replay prevention while old donor contact fields are anonymized. | Implemented |
-| SR-04 | The current checkout proof binds terminal, internal reference, exact amount, currency, and expiry. Legacy proof is limited to already-issued, expiring sessions. | Implemented; unit-tested |
-| SR-05 | Return and cancel URLs require an exact parsed-origin match; prefix lookalikes and protocol-relative URLs are rejected. | Implemented; unit-tested |
-| SR-06 | Payment pages use a fresh per-request nonce, `strict-dynamic`, and no `script-src 'unsafe-inline'`; the route is dynamically rendered. | Implemented; built and runtime-probed |
-| SR-07 | A service-only atomic database limiter stores only an HMAC-derived client key. Checkout is limited to 10/minute and registration to 5/hour per derived address. | Implemented; fail-open caveat below |
-| SR-08 | A service-only function scrubs expired/failed checkout PII, old completed-session PII, and stale rate-limit buckets. | Implemented; scheduling health unresolved |
-| SR-09 | Security events use allowlisted event and reason codes. Callback payloads, credentials, tokens, IP addresses, and donor contact fields are not intentionally logged. | Implemented |
-| SR-10 | CI runs lint, typecheck, tests, dependency audit, Git-history scan, production build, and client-bundle scan; Dependabot is configured. | Implemented; GitHub run passed |
-| SR-11 | HSTS remains enabled for two years on the application host without asserting unverified subdomain coverage. | Implemented |
-
-## Findings and residual risks
-
-### F-01 — Supabase cleanup schedule is not presently attested (Medium, open)
-
-The live verifier returned `cleanup_cron_active=false`. Its current predicate requires all of the following at once: the `pg_cron` extension, job name `impactify-payment-pii-cleanup`, schedule `17 2 * * *`, command exactly `select public.cleanup_payment_checkout_pii();` after outer trimming, and `active=true`.
-
-An earlier Dashboard screenshot showed a job with the intended name, schedule, command, and active state. The new result therefore indicates drift, an exact-text discrepancy, or a different current state. It is not safe to claim that scheduled cleanup works until the job row and `cron.job_run_details` show a recent successful run. Supabase documents `cron.job` as the job registry and `cron.job_run_details` as the execution history.
-
-### F-02 — Four expired sessions remain pending (Medium if PII remains; Low otherwise, open)
-
-The snapshot found four rows where `status='pending'` and `expires_at < now()`. The current cleanup function has a confirmed logic defect: the status transition to `expired` is inside an update that only runs when at least one contact field is non-empty. Consequently, an expired pending row whose PII is already blank remains `pending` indefinitely.
-
-The supplied snapshot does not distinguish expired pending rows with PII from those already scrubbed. That aggregate must be measured before assigning final severity or applying a repair.
-
-### F-03 — Global rate limiting fails open on backend failure (Medium, accepted transitional risk)
-
-Checkout and registration retain their older organization/resend controls, but callers deliberately continue when the new database rate-limit function is unavailable and emit `rate_limit_backend_unavailable`. This preserves payment availability during migration failure but weakens abuse resistance. Alerting and an outer Vercel WAF rule are required before treating this as a mature control.
-
-### F-04 — Final live payment and registration flow remains unverified (Medium release gate)
-
-A previous Tranzila hosted form opened and accepted a payment, but the final hardened deployment still needs an end-to-end test covering the callback, Reports lookup, idempotent donation creation, receipt page, unchecked registration choice, magic link, profile completion, and donation visibility. Unit tests cannot prove provider, deployment, email, and database behavior together.
-
-### F-05 — General-site CSP still permits inline scripts (Low defense-in-depth gap)
-
-The sensitive payment surface has a nonce CSP. The general site CSP in `next.config.ts` still uses `script-src 'unsafe-inline'`. Extending nonce-based CSP to the whole application would reduce XSS impact but requires dynamic-rendering/performance analysis; Next.js documents that per-request nonces require dynamic rendering and normally disable static optimization/CDN caching for those pages.
-
-### F-06 — WAF and external assurance are not complete (Medium operational gap)
-
-Application-level controls exist, but Vercel WAF rate limits have not been observed and enforced, and no independent authenticated penetration test has been performed. Vercel recommends starting a custom rule in Log mode and observing traffic before changing its action. The Tranzila callback must not receive an interactive challenge that the provider cannot solve.
-
-### F-07 — Automated test depth is limited (Low)
-
-The current five tests cover origin validation, current/legacy checkout proofs, provider transaction matching, and payment CSP. CI does not currently run route-level integration tests, callback replay tests against a database, authenticated SQL tenant QA, or a real provider sandbox/production test.
-
-### F-08 — Non-Tranzila and advanced payment operations are incomplete (Informational)
-
-Cardcom initialization exists without completion verification; Grow is not implemented; PSP token charging, recurring collection, and the actual provider refund operation are not implemented. These paths must remain disabled or clearly non-operational until they receive equivalent verification and replay controls.
-
-### F-09 — Production Supabase Auth policy is unknown (Open question)
-
-The current donor claim uses a one-time email link, but production Dashboard settings such as password policy, session lifetime, and abuse protection were not inspected. Local `supabase/config.toml` defaults are not evidence of production configuration.
-
-## Verification results
-
-| Check | Result |
+| Evidence | Result |
 |---|---|
-| GitHub Security CI | Passed in run `37046684184` at `f628813` |
-| ESLint | 0 errors; 3 pre-existing warnings |
-| TypeScript | Passed |
-| Unit tests | 5/5 passed |
-| Dependency audit | 0 known high-or-greater findings; CI audit passed |
-| Production build | Passed on GitHub with Node 24 |
-| Git-history and client-bundle secret scans | Passed; scanners do not print candidate values |
-| Payment CSP | Nonce and `strict-dynamic` present; no payment `script-src 'unsafe-inline'`; nonce rotated locally |
-| Tenant isolation QA | Previously passed in a transaction that rolled back |
-| Live Supabase status | 13 controls healthy; Cron signature false; four expired pending sessions |
-| Live Tranzila plus account claim after final deployment | Not yet run |
+| Previous GitHub Security CI | Passed at commit `f628813`, run `37046684184` |
+| Local TypeScript after remediation | Passed |
+| Local unit tests after remediation | 6/6 passed with Node 24 |
+| Local ESLint after remediation | 0 errors; 3 pre-existing unrelated warnings |
+| Local production build after remediation | Not completed: the sandbox denied Turbopack worker creation; this is not evidence of a code build failure |
+| Live Supabase before remediation | All prior RLS/grant/function checks passed; Cron signature false; 4 expired pending sessions |
+| New migrations applied live | No |
+| Live payment/account claim after remediation | Not run |
 
-The repository scanners are guardrails, not a substitute for a dedicated secret-scanning product or repository-host scanning. A passing dependency audit also does not prove the absence of unknown vulnerabilities.
+Claims in this report distinguish verified live state from local implementation. A previous green CI run does not verify the uncommitted 2026-10-03 changes.
 
-## Supabase diagnosis and repair plan
+## Remediation implemented in the repository
 
-Run every query in the authenticated Supabase Dashboard SQL Editor. Do not print, export, or paste row-level donor fields. Capture only aggregate counts and non-sensitive Cron metadata.
+### R-01 — Reconciliation before destructive cleanup
 
-### 1. Diagnose the Cron mismatch without changing data
+`20261003110000_payment_reconciliation_and_cleanup.sql` adds:
 
-```sql
-select
-  jobid, jobname, schedule, active, database, username,
-  length(command) as command_length,
-  octet_length(command) as command_bytes,
-  encode(convert_to(command, 'UTF8'), 'escape') as command_exact
-from cron.job
-where jobname = 'impactify-payment-pii-cleanup';
+- reconciliation state and attempt metadata on checkout sessions;
+- a service-only, RLS-protected, non-PII `payment_reconciliation_alerts` table;
+- a service-only `record_payment_reconciliation` function;
+- `manual_review` state for a verified provider charge that cannot be auto-completed;
+- a 48-hour grace period before a provider “not found” result can expire a session;
+- a seven-day safety transition from stale `pending` to `manual_review`, with PII scrubbing and an alert rather than silent loss;
+- a canonical daily Supabase Cron definition.
 
-select
-  jobid, status, return_message, start_time, end_time
-from cron.job_run_details
-where jobid in (
-  select jobid from cron.job
-  where jobname = 'impactify-payment-pii-cleanup'
-)
-order by start_time desc
-limit 20;
-```
+The Vercel route `/api/internal/payment-reconciliation` is protected by `CRON_SECRET`. It discovers Tranzila terminal field 20 through the official terminal-settings endpoint, filters the authenticated Reports API by the configured reference field, validates terminal, transaction index, approval code, amount, and currency, and records only non-sensitive aggregate outcomes.
 
-Acceptance evidence: exactly one active job with the intended schedule and a recent successful execution. Treat `return_message` as potentially sensitive operational output and do not publish it unreviewed.
+Late valid callbacks no longer retry forever. They are reverified through Tranzila, moved to manual review, and the donor is told not to pay again.
 
-### 2. Classify the four expired pending sessions using aggregates only
+### R-02 — Cleanup logic and Cron identity
 
-```sql
-select
-  count(*) as expired_pending_total,
-  count(*) filter (where
-    customer_email <> '' or customer_name <> '' or customer_address <> ''
-    or customer_city <> '' or customer_zip <> '' or customer_country <> ''
-  ) as expired_pending_with_pii,
-  min(expires_at) as oldest_expiry,
-  max(expires_at) as newest_expiry
-from public.payment_checkout_sessions
-where status = 'pending'
-  and expires_at < now();
-```
+The old function changed an expired `pending` row only when at least one PII field was non-empty. The replacement separates financial state handling from PII blanking, so an already-scrubbed row cannot remain pending forever.
 
-Do not select the contact columns themselves. If `expired_pending_with_pii > 0`, the privacy-retention gap is confirmed and should be remediated immediately. If it is zero, the remaining issue is stale state caused by F-02 rather than retained PII.
+The replacement also permits the intended `pg_cron` Postgres session while keeping browser roles revoked. The verifier now reports these independently:
 
-### 3. Apply the matching repair
+- canonical Cron definition;
+- execution username;
+- successful execution within 36 hours;
+- expired pending totals and expired-pending PII;
+- closed-session PII;
+- open reconciliation alerts.
 
-| Diagnostic result | Repair |
-|---|---|
-| Job missing, inactive, duplicated, or wrong schedule/command | Re-run the canonical scheduling migration, which unschedules same-name rows and creates one active `17 2 * * *` job calling only `public.cleanup_payment_checkout_pii()` |
-| Job exists but recent runs fail | Review only the failure metadata, confirm function existence/ownership and `pg_cron`, correct the cause, then run the cleanup function once manually |
-| Job runs successfully but only SQL whitespace differs | Prefer canonical rescheduling; optionally make the verifier normalize harmless whitespace while keeping an anchored, single-function-call check |
-| Expired pending rows contain PII | Run `select public.cleanup_payment_checkout_pii();` once after recording aggregate counts, then re-run the aggregate and consolidated verifier |
-| Expired pending rows contain no PII | Add a timestamped migration that marks every expired `pending` row as `expired` independently of PII scrubbing |
+`20261003111000_payment_completion_reconciliation_status.sql` makes atomic checkout completion update reconciliation state in the same transaction.
 
-The durable cleanup migration should perform two separate updates: first transition all expired `pending` sessions to `expired`; then blank contact fields for failed/expired sessions and completed sessions older than seven days. It should continue deleting stale rate-limit buckets and preserve completed-session transaction identity for replay protection.
+### R-03 — Callback and provider hardening
 
-### 4. Improve the verifier in the same future migration change
+- Legacy versionless callback proofs were removed. Only proof version 2, bound to terminal/reference/amount/currency/expiry, is accepted.
+- Callback verification remains provider-backed and transaction IDs remain unique.
+- The incomplete Cardcom initialization path is blocked server-side. Only Tranzila can start checkout until another provider has equivalent completion verification and replay protection.
+- Callback traffic has a high non-interactive application limit; limiter failure remains fail-open so a real PSP notification is not discarded.
 
-- Report `cron_definition_present`, `cron_recent_success`, `expired_pending_total`, and `expired_pending_with_pii` separately.
-- Accept only an anchored single call to the intended cleanup function if command whitespace is normalized.
-- Define a recent-success window that covers the daily schedule plus operational delay.
-- Keep `all_checks_pass` strict: definition present, recent run successful, zero expired pending rows, and zero retained PII.
+### R-04 — Rate-limit identity and secrets
 
-### 5. Validate after repair
+- The limiter now uses a dedicated `RATE_LIMIT_HMAC_SECRET`, not the Supabase service-role key.
+- Production trusts only Vercel's platform-set `x-vercel-forwarded-for`; generic forwarded headers are accepted only outside production.
+- IPv6 addresses are normalized to a `/64` bucket and IPv4-mapped addresses are handled as IPv4.
+- Donation registration now fails closed when rate limiting is unavailable. Checkout remains fail-open for availability and logs a bounded event; WAF remains the required outer control.
+- No IP address, donor field, credential, or token is logged.
 
-1. Run `supabase/scripts/verify_current_payment_sql_status.sql`; require `all_checks_pass=true`, every boolean true, and every count zero.
-2. Run `supabase/scripts/payment_security_qa.sql`; require success and confirm its transaction rolls back.
-3. Inspect the next scheduled entry in `cron.job_run_details`; require `status='succeeded'`.
-4. Re-run the aggregate query after the next scheduled execution to prove the job changes state, not merely that a row exists.
-5. Add monitoring for failed Cron runs, expired pending sessions, retained expired-session PII, and `rate_limit_backend_unavailable` events.
+### R-05 — CSP and dependency controls
 
-## Remaining release gates
+- A fresh nonce plus `strict-dynamic` is now applied across the application; the old static `script-src 'unsafe-inline'` policy was removed.
+- The payment surface retains the tighter frame policy; approved YouTube/Vimeo frames remain limited to the general application policy.
+- `report-uri` and `Reporting-Endpoints` send bounded CSP reports to an endpoint that validates type/size, stores no report body, and emits only a generic event.
+- Security CI now runs `npm audit --audit-level=moderate` instead of blocking only High/Critical findings.
 
-1. Complete the Supabase diagnosis and repair until the consolidated result is fully green.
-2. Configure Vercel WAF rules for checkout and registration in Log mode, observe legitimate traffic, then enforce an appropriate rate limit. Exclude the Tranzila callback from interactive challenge unless provider compatibility is proven.
-3. Complete one low-value payment and verify callback proof, Reports lookup, exactly one donation after a duplicate notification, receipt display, unchecked-by-default account opt-in, magic-link verification, profile completion, and personal-area visibility.
-4. Confirm no production organization uses a QA/demo terminal and only the intended regular terminal is active. Token terminals remain unused until recurring charging is implemented.
-5. Commission an authenticated external test using OWASP WSTG/ASVS-derived coverage and retest fixes.
-6. Confirm PCI scope with the acquirer or a qualified assessor. Hosted redirection reduces card-data exposure but does not establish compliance by itself.
-7. Obtain legal/privacy validation of temporary contact retention, account-link consent, notices, processor agreements, and applicable Israeli requirements.
+## Open findings and release gates
+
+### F-01 — Database remediation is not applied (Medium, release blocker)
+
+The two 2026-10-03 migrations exist only in the repository. Until they are applied, the live cleanup defect and the four expired sessions remain unchanged.
+
+Required order in the Supabase SQL Editor:
+
+1. `supabase/migrations/20261003110000_payment_reconciliation_and_cleanup.sql`
+2. `supabase/migrations/20261003111000_payment_completion_reconciliation_status.sql`
+3. `supabase/scripts/payment_security_qa.sql`
+4. `supabase/scripts/verify_current_payment_sql_status.sql`
+
+Do not manually expire or delete the four rows before reconciliation.
+
+### F-02 — Deployment secrets and Cron are not active (Medium, release blocker)
+
+Add these production-only Vercel variables as Sensitive values and redeploy:
+
+- `RATE_LIMIT_HMAC_SECRET`: a new random value of at least 32 characters;
+- `CRON_SECRET`: a separate random value of at least 16 characters.
+
+Do not reuse Supabase or Tranzila credentials. `vercel.json` schedules reconciliation daily at 01:30 UTC, before Supabase cleanup at 02:17 UTC. Vercel sends `CRON_SECRET` as a Bearer token.
+
+### F-03 — Tranzila field-20 configuration needs live proof (Medium, release blocker)
+
+The durable reconciliation assumes the checkout `DCdisable` reference is stored in terminal user-defined field 20. The code discovers the terminal's actual `api_parameter_name`, but production must prove that one known transaction returns the same internal reference as `user_defined_20`. If configuration is missing, reconciliation fails safely to `retry`; it does not expire the session.
+
+### F-04 — Four existing sessions need recorded outcomes (Medium, open)
+
+After deployment, invoke the secured reconciliation route or wait for its first run. Expected outcomes:
+
+- no approved Tranzila transaction after the 48-hour grace period: `expired`, PII blank, outcome `not_found`;
+- approved matching transaction without a completed donation: `manual_review`, PII blank after cleanup, open non-PII alert;
+- transient API/configuration failure: `retry`, never silently expired.
+
+Every open alert must be investigated and marked resolved/dismissed by an authorized operator. No operator UI exists yet; this remains a restricted database operation.
+
+### F-05 — Live end-to-end flow is unverified (Medium, release blocker)
+
+Run one low-value real payment after deployment and verify:
+
+1. hosted page opens and succeeds;
+2. version-2 proof and Reports lookup pass;
+3. exactly one donation is created after duplicate Notify delivery;
+4. receipt/thanks page displays;
+5. account opt-in is unchecked by default;
+6. magic link verifies email, completes the profile, and links the donation;
+7. a deliberately late callback enters manual review and tells the donor not to retry.
+
+### F-06 — WAF and monitoring remain external (Medium)
+
+Configure Vercel WAF rules for checkout, registration, CSP reports, and obvious abuse. Begin in Log mode, observe legitimate traffic, then enforce. Do not use an interactive challenge on the Tranzila callback or internal Cron route. Alert on reconciliation failures, open manual reviews, failed Supabase Cron runs, and `rate_limit_backend_unavailable`.
+
+### F-07 — Supabase Auth and email policy remain unverified (Medium)
+
+Confirm the production Site URL and exact redirect allowlist, short OTP expiry, abuse limits, session lifetime, and a production custom SMTP provider. Local configuration is not evidence of Dashboard settings.
+
+### F-08 — Independent assurance and compliance remain open
+
+An authenticated external penetration test, retest, and PCI/privacy scope review are still required before claiming “fully secure,” “penetration-tested,” or “PCI compliant.” Hosted redirection materially reduces card-data exposure but does not by itself prove compliance.
+
+### F-09 — Automated integration depth remains limited (Low)
+
+Unit tests cover proof binding, provider transaction matching, origin validation, nonce CSP, and IP normalization. CI still lacks an ephemeral Supabase integration environment, callback replay integration tests, and automated Tranzila sandbox/production verification. The SQL tenant QA remains a manual Dashboard transaction.
+
+## Acceptance criteria
+
+Production readiness changes from conditional to approved only when all of the following are recorded:
+
+- both new migration versions appear in `supabase_migrations.schema_migrations`;
+- `payment_security_qa.sql` succeeds and rolls back;
+- the consolidated verifier has every boolean `true` and every count `0`;
+- the cleanup job has a successful run within 36 hours;
+- all four original references have non-sensitive reconciliation outcomes and no open alert;
+- Vercel shows successful reconciliation Cron invocations with no secret in logs;
+- the final Security CI for the deployed commit is green, including the Moderate dependency gate and production build;
+- the real payment, duplicate callback, receipt, opt-in, magic-link claim, and donor-area visibility pass;
+- WAF Log-mode evidence is reviewed and enforcement rules are activated;
+- external penetration testing and applicable PCI/privacy review are completed.
 
 ## Current risk statement
 
-No confirmed critical or high-severity defect remains in the reviewed Tranzila code path. The application security CI is green, tenant controls passed, and the live database has strong RLS/grant/function controls. Production readiness is nevertheless **conditional**: scheduled cleanup is not currently attested, four expired pending sessions require classification and repair, the final live payment/account-claim flow is unverified, and WAF/external assurance remain open.
-
-Do not describe the platform as fully secure, penetration-tested, PCI compliant, or production-approved solely on the basis of this report.
+The code-level design is materially stronger and no confirmed Critical/High issue is open. However, production is **not yet approved** because the database migrations, secrets, Cron execution, four-row reconciliation, final CI/build, live payment/account claim, WAF, and external assurance are still unverified.
 
 ## Authoritative references
 
 - [Next.js CSP guide](https://nextjs.org/docs/app/guides/content-security-policy)
-- [Tranzila DirectNG integration](https://docs.tranzila.com/docs/payments-and-billing/iframe-integration-directng)
-- [Tranzila transaction reports](https://docs.tranzila.com/docs/reports/tranzila-transaction-reports-api/gettransactions)
+- [Tranzila DirectNG](https://docs.tranzila.com/docs/payments-and-billing/iframe-integration-directng)
+- [Tranzila Reports transactions](https://docs.tranzila.com/docs/reports/tranzila-transaction-reports-api/gettransactions)
+- [Tranzila terminal fields](https://docs.tranzila.com/docs/reports/tranzila-transaction-reports-api/listterminalfields)
 - [Supabase Cron](https://supabase.com/docs/guides/cron)
+- [Vercel Cron security](https://vercel.com/docs/cron-jobs/manage-cron-jobs)
 - [Vercel WAF custom rules](https://vercel.com/docs/vercel-firewall/vercel-waf/custom-rules)
-- [PCI SSC SAQ A eligibility clarification](https://blog.pcisecuritystandards.org/faq-clarifies-new-saq-a-eligibility-criteria-for-e-commerce-merchants)
 - [OWASP Web Security Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)

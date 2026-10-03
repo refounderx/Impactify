@@ -3,6 +3,10 @@ import "server-only";
 type SecurityEvent =
   | "payment_callback_rejected"
   | "payment_callback_verification_failed"
+  | "payment_provider_blocked"
+  | "payment_reconciliation_failed"
+  | "payment_reconciliation_review"
+  | "csp_violation"
   | "payment_checkout_rate_limited"
   | "registration_rate_limited"
   | "donation_claim_failed"
