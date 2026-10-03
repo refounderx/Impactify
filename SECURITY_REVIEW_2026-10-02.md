@@ -14,7 +14,7 @@ This is an engineering review, not a penetration-test certificate, PCI attestati
 
 | Evidence | Result |
 |---|---|
-| Latest GitHub Security CI | Passed at commit `c1bd19e`, run `37116404477`, in 56 seconds; lint, typecheck, tests, production dependency audit, history scan, production build, and client-bundle scan all completed |
+| Latest GitHub Security CI | Passed at commit `2478f97`, run `37124684278`, in 1 minute 7 seconds; lint, typecheck, 7 tests, the full dependency audit, history scan, production build, and client-bundle scan all completed |
 | Previous failed CI | Commit `a12bede`, run `37115752887`, failed because the full dependency audit began flagging the newly published unpatched development-only `braces` advisory; the CI policy was corrected without weakening the production dependency gate |
 | Local TypeScript after remediation | Passed |
 | Local unit tests after remediation | 7/7 passed with Node 24, including unset/short/wrong/exact Cron-secret cases |
@@ -236,7 +236,7 @@ Production readiness changes from conditional to approved only when every row be
 | Known-good reconciliation circuit breaker | Partial | Implemented in code; the live database has no completed checkout sample and the deployment path is unverified |
 | Manual-review operations | Open | Approve bounded contact retention, deliver alerts to a named owner, and test the resolution runbook |
 | Reconciliation route robustness | Partial | All listed code controls and local tests pass; deploy and capture one authenticated Cron result |
-| Security CI and production build | Verified | Run `37116404477` passed at `c1bd19e` |
+| Security CI and production build | Verified | Run `37124684278` passed at `2478f97` |
 | Full development-dependency audit | Verified locally | Zero production findings; only `GHSA-vfj7-8cjw-p6xm` is allowlisted, through 2026-10-31; confirm the next Security CI run |
 | Real payment and account-claim flow | Open | Test payment, duplicate callback, receipt, opt-in, magic link, and donor-area visibility |
 | Production CSP/cache behavior | Open | Prove per-response nonce rotation, safe cache headers, acceptable latency, and bounded CSP-report load |
