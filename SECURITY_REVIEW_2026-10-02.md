@@ -14,16 +14,18 @@ This is an engineering review, not a penetration-test certificate, PCI attestati
 
 | Evidence | Result |
 |---|---|
-| Previous GitHub Security CI | Passed at commit `f628813`, run `37046684184`; commit `a12bede` failed only because the full dependency audit began flagging the newly published unpatched development-only `braces` advisory |
+| Latest GitHub Security CI | Passed at commit `c1bd19e`, run `37116404477`, in 56 seconds; lint, typecheck, tests, production dependency audit, history scan, production build, and client-bundle scan all completed |
+| Previous failed CI | Commit `a12bede`, run `37115752887`, failed because the full dependency audit began flagging the newly published unpatched development-only `braces` advisory; the CI policy was corrected without weakening the production dependency gate |
 | Local TypeScript after remediation | Passed |
 | Local unit tests after remediation | 6/6 passed with Node 24 |
 | Local ESLint after CI repair | Passed with 0 errors and 0 warnings |
 | Local production build after remediation | Passed with Next.js webpack; local Turbopack worker creation remains blocked by the Windows execution environment |
 | Live Supabase after remediation | Tenant QA passed; all security booleans true except first-run Cron recency; every defect count is 0 |
 | New migrations applied live | Yes: `20261003110000` and `20261003111000` |
+| Production deployment | Commit `c1bd19e` is pushed; the reconciliation route is present and rejects an unauthenticated request; Vercel Dashboard secret state and a successful scheduled invocation are not yet evidenced |
 | Live payment/account claim after remediation | Not run |
 
-Claims in this report distinguish verified live state from local implementation. The final CI rerun for the dependency-audit repair is still pending.
+Claims in this report distinguish verified live state from local implementation. Security CI is now verified green; external configuration and live transaction claims remain conditional until separately evidenced.
 
 ## Remediation implemented in the repository
 
@@ -153,22 +155,24 @@ The full dependency audit reports `GHSA-vfj7-8cjw-p6xm` through `eslint-config-n
 
 ## Acceptance criteria
 
-Production readiness changes from conditional to approved only when all of the following are recorded:
+Production readiness changes from conditional to approved only when every row below is verified:
 
-- both new migration versions appear in `supabase_migrations.schema_migrations`;
-- `payment_security_qa.sql` succeeds and rolls back;
-- the consolidated verifier has every boolean `true` and every count `0`;
-- the cleanup job has a successful run within 36 hours;
-- all four original references have non-sensitive reconciliation outcomes and no open alert;
-- Vercel shows successful reconciliation Cron invocations with no secret in logs;
-- the final Security CI for the deployed commit is green, including the Moderate production-dependency gate and production build;
-- the real payment, duplicate callback, receipt, opt-in, magic-link claim, and donor-area visibility pass;
-- WAF Log-mode evidence is reviewed and enforcement rules are activated;
-- external penetration testing and applicable PCI/privacy review are completed.
+| Criterion | Status | Evidence / remaining action |
+|---|---|---|
+| Both migration versions installed | Verified | `20261003110000` and `20261003111000` are present |
+| Tenant payment QA | Verified | `payment_security_qa.sql` succeeded and rolled back |
+| Consolidated SQL verifier | Partial | Every count is 0 and every structural boolean is true; `cleanup_cron_recent_success` remains false until the replacement job completes its first run |
+| Cleanup job successful within 36 hours | Open | Re-run the verifier after the next scheduled execution |
+| Original expired references have recorded non-sensitive outcomes | Partial | Aggregate pending and alert counts are 0; per-reference provider outcomes were not exported |
+| Vercel reconciliation Cron | Open | Verify `CRON_SECRET` in Production and record a successful invocation with no secret in logs |
+| Security CI and production build | Verified | Run `37116404477` passed at `c1bd19e` |
+| Real payment and account-claim flow | Open | Test payment, duplicate callback, receipt, opt-in, magic link, and donor-area visibility |
+| WAF controls | Open | Review Log-mode evidence, then activate enforcement without challenging provider callbacks or Cron |
+| Independent assurance | Open | Complete external penetration testing and applicable PCI/privacy review |
 
 ## Current risk statement
 
-The code-level design is materially stronger and no confirmed Critical/High runtime issue is open. However, production is **not yet approved** because the Vercel secret, first successful Cron execution, Tranzila field-20 proof, final CI rerun, live payment/account claim, WAF, and external assurance are still unverified.
+The code-level design is materially stronger, Security CI is green, and no confirmed Critical/High runtime issue is open. Production remains **conditionally ready, not fully approved**, because the Vercel secret and scheduled invocation, first successful Supabase cleanup run, Tranzila field-20 proof, real payment/account claim, WAF, and external assurance are still unverified.
 
 ## Authoritative references
 
